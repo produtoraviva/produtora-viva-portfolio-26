@@ -7,7 +7,7 @@ interface ImageModalProps {
   isOpen: boolean;
   onClose: () => void;
   images: Array<{
-    id: number;
+    id: string | number;
     image: string;
     title: string;
     description: string;

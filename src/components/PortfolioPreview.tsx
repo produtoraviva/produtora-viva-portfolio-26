@@ -1,88 +1,133 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Video, Heart, Gift, Users, Play, Eye, ArrowRight } from "lucide-react";
+import { Camera, Video, Play, Eye, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import ImageModal from "./ImageModal";
 
 type CategoryType = "all" | "photo" | "video";
 
 interface PortfolioItem {
-  id: number;
+  id: string;
   title: string;
-  category: "photo" | "video";
-  subcategory: "casamento" | "aniversario" | "corporativo" | "familia";
+  category: string;
+  subcategory?: string;
   image: string;
-  description: string;
+  description?: string;
+  media_type: "photo" | "video";
+  file_url: string;
+  thumbnail_url?: string;
 }
 
 const PortfolioPreview = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
 
-  // Apenas os 6 melhores trabalhos para preview
-  const featuredItems: PortfolioItem[] = [
-    {
-      id: 1,
-      title: "Casamento Ana & João",
-      category: "photo",
-      subcategory: "casamento",
-      image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=600&h=400&fit=crop",
-      description: "Cerimônia emocionante no campo"
-    },
-    {
-      id: 2,
-      title: "Wedding Video - Maria & Carlos",
-      category: "video",
-      subcategory: "casamento",
-      image: "https://images.unsplash.com/photo-1606216794074-735e91aa2c92?w=600&h=400&fit=crop",
-      description: "Trailer cinematográfico do grande dia"
-    },
-    {
-      id: 3,
-      title: "Aniversário 15 Anos - Sofia",
-      category: "photo",
-      subcategory: "aniversario",
-      image: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600&h=400&fit=crop",
-      description: "Festa dos sonhos em tons dourados"
-    },
-    {
-      id: 4,
-      title: "Evento Corporativo - TechCorp",
-      category: "video",
-      subcategory: "corporativo",
-      image: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=600&h=400&fit=crop",
-      description: "Cobertura completa do lançamento"
-    },
-    {
-      id: 5,
-      title: "Ensaio Família Santos",
-      category: "photo",
-      subcategory: "familia",
-      image: "https://images.unsplash.com/photo-1511895426328-dc8714aecd2d?w=600&h=400&fit=crop",
-      description: "Momentos especiais em família"
-    },
-    {
-      id: 6,
-      title: "Festa 50 Anos - Roberto",
-      category: "video",
-      subcategory: "aniversario",
-      image: "https://images.unsplash.com/photo-1464207687429-7505649dae38?w=600&h=400&fit=crop",
-      description: "Celebração memorável com amigos"
-    },
-  ];
+  useEffect(() => {
+    loadFeaturedItems();
+    loadCategories();
+  }, []);
 
-  const categories = [
-    { id: "all", label: "Todos", icon: Eye },
-    { id: "photo", label: "Fotografia", icon: Camera },
-    { id: "video", label: "Videografia", icon: Video },
-  ] as const;
+  const loadFeaturedItems = async () => {
+    try {
+      // Primeiro buscar os itens da homepage
+      const { data: items, error: itemsError } = await supabase
+        .from('portfolio_items')
+        .select('*')
+        .eq('homepage_featured', true)
+        .eq('publish_status', 'published')
+        .order('display_order');
 
-  const filteredItems = featuredItems.filter((item) => {
-    return activeCategory === "all" || item.category === activeCategory;
-  });
+      if (itemsError) throw itemsError;
+
+      // Buscar categorias separadamente
+      const { data: categories, error: categoriesError } = await supabase
+        .from('portfolio_categories')
+        .select('*')
+        .eq('is_active', true);
+
+      if (categoriesError) throw categoriesError;
+
+      // Buscar subcategorias separadamente  
+      const { data: subcategories, error: subcategoriesError } = await supabase
+        .from('portfolio_subcategories')
+        .select('*')
+        .eq('is_active', true);
+
+      if (subcategoriesError) throw subcategoriesError;
+
+      const processedItems = items?.map(item => {
+        const category = categories?.find(cat => cat.id === item.category);
+        const subcategory = subcategories?.find(sub => sub.id === item.subcategory);
+        
+        return {
+          id: item.id,
+          title: item.title,
+          category: category?.name || 'Sem categoria',
+          subcategory: subcategory?.name,
+          image: item.thumbnail_url || item.file_url,
+          description: item.description,
+          media_type: item.media_type as "photo" | "video",
+          file_url: item.file_url,
+          thumbnail_url: item.thumbnail_url
+        };
+      }) || [];
+
+      setFeaturedItems(processedItems);
+    } catch (error) {
+      console.error('Error loading featured items:', error);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (error) throw error;
+
+      const categoryFilters = [
+        { id: "all", label: "Todos", icon: Eye },
+        { id: "photo", label: "Fotografia", icon: Camera },
+        { id: "video", label: "Videografia", icon: Video },
+      ];
+
+      setCategories(categoryFilters);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      // Fallback para categorias padrão
+      setCategories([
+        { id: "all", label: "Todos", icon: Eye },
+        { id: "photo", label: "Fotografia", icon: Camera },
+        { id: "video", label: "Videografia", icon: Video },
+      ]);
+    }
+  };
+
+  const getRandomSelection = (items: PortfolioItem[], type: "photo" | "video", count: number) => {
+    const filtered = items.filter(item => item.media_type === type);
+    const shuffled = [...filtered].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, count);
+  };
+
+  const filteredItems = (() => {
+    if (activeCategory === "all") {
+      // Seleciona aleatoriamente 3 fotos + 3 vídeos dos itens da homepage
+      const randomPhotos = getRandomSelection(featuredItems, "photo", 3);
+      const randomVideos = getRandomSelection(featuredItems, "video", 3);
+      return [...randomPhotos, ...randomVideos].sort(() => Math.random() - 0.5);
+    }
+    
+    return featuredItems.filter((item) => item.media_type === activeCategory);
+  })();
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);
@@ -145,7 +190,7 @@ const PortfolioPreview = () => {
                 />
                 <div className="portfolio-overlay">
                   <div className="text-center text-white space-y-2">
-                    {item.category === "video" ? (
+                {item.media_type === "video" ? (
                       <Play className="h-12 w-12 mx-auto mb-2 opacity-80" />
                     ) : (
                       <Camera className="h-12 w-12 mx-auto mb-2 opacity-80" />
@@ -164,7 +209,7 @@ const PortfolioPreview = () => {
                     variant="secondary" 
                     className="capitalize bg-primary/10 text-primary border-0"
                   >
-                    {item.subcategory}
+                    {item.subcategory || item.category}
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground mt-2">{item.description}</p>
@@ -200,7 +245,14 @@ const PortfolioPreview = () => {
       <ImageModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        images={filteredItems}
+        images={filteredItems.map(item => ({
+          id: item.id,
+          image: item.image,
+          title: item.title,
+          description: item.description || '',
+          category: item.category,
+          subcategory: item.subcategory || ''
+        }))}
         currentIndex={currentImageIndex}
         onIndexChange={setCurrentImageIndex}
       />

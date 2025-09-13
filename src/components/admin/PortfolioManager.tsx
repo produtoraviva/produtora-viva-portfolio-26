@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -155,6 +155,62 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       toast({
         title: 'Erro',
         description: 'Erro ao atualizar visibilidade.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleHomepage = async (item: PortfolioItem) => {
+    try {
+      // Verificar limite antes de adicionar
+      if (!item.homepage_featured) {
+        const { data: homepageItems, error: countError } = await supabase
+          .from('portfolio_items')
+          .select('media_type')
+          .eq('homepage_featured', true);
+
+        if (countError) throw countError;
+
+        const photoCount = homepageItems?.filter(i => i.media_type === 'photo').length || 0;
+        const videoCount = homepageItems?.filter(i => i.media_type === 'video').length || 0;
+
+        if (item.media_type === 'photo' && photoCount >= 6) {
+          toast({
+            title: 'Limite atingido',
+            description: 'Máximo de 6 fotos podem ser destacadas na homepage.',
+            variant: 'destructive',
+          });
+          return;
+        }
+
+        if (item.media_type === 'video' && videoCount >= 6) {
+          toast({
+            title: 'Limite atingido', 
+            description: 'Máximo de 6 vídeos podem ser destacados na homepage.',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('portfolio_items')
+        .update({ homepage_featured: !item.homepage_featured })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: `Item ${!item.homepage_featured ? 'adicionado à' : 'removido da'} homepage!`,
+      });
+
+      onItemsChange();
+    } catch (error) {
+      console.error('Error updating homepage featured:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar destaque da homepage.',
         variant: 'destructive',
       });
     }
@@ -355,6 +411,11 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                               ⭐ Destaque
                             </Badge>
                           )}
+                          {item.homepage_featured && (
+                            <Badge variant="default" className="text-xs bg-blue-500">
+                              🏠 Homepage
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-1">
@@ -379,6 +440,15 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           ) : (
                             <Eye className="h-3 w-3" />
                           )}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleToggleHomepage(item)}
+                          title={item.homepage_featured ? 'Remover da Homepage' : 'Adicionar à Homepage'}
+                          className="h-8 w-8 p-0"
+                        >
+                          <HomeIcon className={`h-3 w-3 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
