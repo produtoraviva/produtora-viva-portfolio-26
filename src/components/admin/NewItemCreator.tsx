@@ -15,7 +15,8 @@ import { MediaSelector } from './MediaSelector';
 interface Category {
   id: string;
   name: string;
-  type: 'photo' | 'video';
+  type?: 'photo' | 'video';
+  custom_type?: string;
   is_active: boolean;
 }
 
@@ -83,9 +84,6 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
         ...prev,
         title: selectedMedia.title,
         media_type: selectedMedia.media_type,
-        category: selectedMedia.media_type === 'photo' 
-          ? '550e8400-e29b-41d4-a716-446655440001' 
-          : '550e8400-e29b-41d4-a716-446655440002'
       }));
     }
   }, [selectedMedia]);
@@ -110,7 +108,7 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
 
       setCategories((categoriesResponse.data || []).map(cat => ({
         ...cat,
-        type: cat.type as 'photo' | 'video'
+        type: cat.type as 'photo' | 'video' | undefined
       })));
       setSubcategories(subcategoriesResponse.data || []);
     } catch (error) {
@@ -313,9 +311,7 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
                       setFormData({ 
                         ...formData, 
                         media_type: value,
-                        category: value === 'photo' 
-                          ? '550e8400-e29b-41d4-a716-446655440001' 
-                          : '550e8400-e29b-41d4-a716-446655440002',
+                        category: '',
                         subcategory: ''
                       });
                     }}
@@ -327,6 +323,35 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
                     <SelectContent>
                       <SelectItem value="photo">Foto</SelectItem>
                       <SelectItem value="video">Vídeo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Categoria *</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      category: value,
+                      subcategory: ''
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories
+                        .filter(cat => 
+                          (!cat.type && !cat.custom_type) || 
+                          cat.type === formData.media_type ||
+                          cat.custom_type
+                        )
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.custom_type || category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>

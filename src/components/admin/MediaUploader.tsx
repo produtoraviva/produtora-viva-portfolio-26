@@ -184,7 +184,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
         ? maxOrderData[0].display_order + 1 
         : 0;
 
-      // Insert into database
+      // Insert into database - upload files don't create portfolio items, just store media
       const { error: dbError } = await supabase
         .from('portfolio_items')
         .insert({
@@ -192,12 +192,8 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
           media_type: file.type.startsWith('image/') ? 'photo' : 'video',
           file_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          category: file.type.startsWith('image/') 
-            ? '550e8400-e29b-41d4-a716-446655440001' 
-            : '550e8400-e29b-41d4-a716-446655440002',
-          subcategory: defaultSettings.subcategory || null,
-          publish_status: defaultSettings.publish_status,
-          is_featured: defaultSettings.is_featured,
+          category: 'temp', // Temporary category, will be set when creating actual portfolio item
+          publish_status: 'draft', // Always draft when just uploading media
           display_order: nextOrder,
           file_size: file.size,
           dimensions: dimensions,
@@ -308,14 +304,6 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Nenhuma</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440001">Casamento (Foto)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440002">Aniversário (Foto)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440003">Corporativo (Foto)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440004">Família (Foto)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440005">Casamento (Vídeo)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440006">Aniversário (Vídeo)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440007">Corporativo (Vídeo)</SelectItem>
-                      <SelectItem value="660e8400-e29b-41d4-a716-446655440008">Família (Vídeo)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
