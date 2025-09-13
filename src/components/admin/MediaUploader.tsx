@@ -9,9 +9,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image, Video, CheckCircle, AlertCircle } from 'lucide-react';
+import { MediaSelector } from './MediaSelector';
 
 interface FileWithPreview extends File {
   preview: string;
@@ -30,7 +32,8 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
   const { toast } = useToast();
 
   const [defaultSettings, setDefaultSettings] = useState({
-    category: 'casamento' as const,
+    media_type: 'photo' as 'photo' | 'video',
+    subcategory: '',
     publish_status: 'draft' as const,
     is_featured: false,
   });
@@ -189,7 +192,10 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
           media_type: file.type.startsWith('image/') ? 'photo' : 'video',
           file_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          category: defaultSettings.category,
+          category: file.type.startsWith('image/') 
+            ? '550e8400-e29b-41d4-a716-446655440001' 
+            : '550e8400-e29b-41d4-a716-446655440002',
+          subcategory: defaultSettings.subcategory || null,
           publish_status: defaultSettings.publish_status,
           is_featured: defaultSettings.is_featured,
           display_order: nextOrder,
@@ -270,73 +276,88 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Configurações Padrão</CardTitle>
-          <CardDescription>
-            Essas configurações serão aplicadas a todos os arquivos enviados
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="default-category">Categoria Padrão</Label>
-              <Select
-                value={defaultSettings.category}
-                onValueChange={(value: any) => 
-                  setDefaultSettings(prev => ({ ...prev, category: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="casamento">Casamento</SelectItem>
-                  <SelectItem value="aniversario">Aniversário</SelectItem>
-                  <SelectItem value="corporativo">Corporativo</SelectItem>
-                  <SelectItem value="familia">Família</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="default-status">Status Padrão</Label>
-              <Select
-                value={defaultSettings.publish_status}
-                onValueChange={(value: any) => 
-                  setDefaultSettings(prev => ({ ...prev, publish_status: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Rascunho</SelectItem>
-                  <SelectItem value="published">Publicado</SelectItem>
-                  <SelectItem value="hidden">Oculto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center space-x-2 pt-6">
-              <Switch
-                id="default-featured"
-                checked={defaultSettings.is_featured}
-                onCheckedChange={(checked) => 
-                  setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
-                }
-              />
-              <Label htmlFor="default-featured">Destaque por padrão</Label>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="upload" className="w-full">
+        <TabsList>
+          <TabsTrigger value="upload">Upload de Mídia</TabsTrigger>
+          <TabsTrigger value="library">Biblioteca de Mídia</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="upload" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Configurações Padrão</CardTitle>
+              <CardDescription>
+                Essas configurações serão aplicadas a todos os arquivos enviados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="default-subcategory">Subcategoria Padrão (Opcional)</Label>
+                  <Select
+                    value={defaultSettings.subcategory || "none"}
+                    onValueChange={(value) => 
+                      setDefaultSettings(prev => ({ 
+                        ...prev, 
+                        subcategory: value === "none" ? "" : value 
+                      }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma subcategoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440001">Casamento (Foto)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440002">Aniversário (Foto)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440003">Corporativo (Foto)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440004">Família (Foto)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440005">Casamento (Vídeo)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440006">Aniversário (Vídeo)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440007">Corporativo (Vídeo)</SelectItem>
+                      <SelectItem value="660e8400-e29b-41d4-a716-446655440008">Família (Vídeo)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="default-status">Status Padrão</Label>
+                  <Select
+                    value={defaultSettings.publish_status}
+                    onValueChange={(value: any) => 
+                      setDefaultSettings(prev => ({ ...prev, publish_status: value }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="draft">Rascunho</SelectItem>
+                      <SelectItem value="published">Publicado</SelectItem>
+                      <SelectItem value="hidden">Oculto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-center space-x-2 pt-6">
+                  <Switch
+                    id="default-featured"
+                    checked={defaultSettings.is_featured}
+                    onCheckedChange={(checked) => 
+                      setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
+                    }
+                  />
+                  <Label htmlFor="default-featured">Destaque por padrão</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload de Arquivos</CardTitle>
-          <CardDescription>
-            Arraste e solte ou clique para selecionar fotos e vídeos
-          </CardDescription>
-        </CardHeader>
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload de Arquivos</CardTitle>
+              <CardDescription>
+                Arraste e solte ou clique para selecionar fotos e vídeos
+              </CardDescription>
+            </CardHeader>
         <CardContent>
           <div
             {...getRootProps()}
@@ -456,8 +477,19 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="library">
+          <MediaSelector 
+            onSelect={(mediaItem) => {
+              // Just show details for now, can be extended later
+              console.log('Selected media:', mediaItem);
+            }} 
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

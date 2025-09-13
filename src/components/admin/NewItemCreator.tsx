@@ -6,9 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Save, X, Upload } from 'lucide-react';
+import { MediaSelector } from './MediaSelector';
 
 interface Category {
   id: string;
@@ -24,34 +26,25 @@ interface Subcategory {
   is_active: boolean;
 }
 
-interface PortfolioItem {
+interface MediaItem {
   id: string;
   title: string;
-  description?: string;
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
-  category: string; // Now UUID reference to portfolio_categories
-  subcategory?: string; // Now UUID reference to portfolio_subcategories
-  publish_status: 'draft' | 'published' | 'hidden';
-  is_featured: boolean;
-  homepage_featured: boolean;
-  display_order: number;
-  location?: string;
-  date_taken?: string;
   file_size?: number;
   dimensions?: { width: number; height: number };
   created_at: string;
-  updated_at: string;
 }
 
-interface ItemEditorProps {
-  item: PortfolioItem;
+interface NewItemCreatorProps {
   onSave: () => void;
   onCancel: () => void;
 }
 
-export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
+export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
+  const [activeTab, setActiveTab] = useState<'select' | 'upload'>('select');
+  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
@@ -84,6 +77,19 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
     loadCategories();
   }, []);
 
+  useEffect(() => {
+    if (selectedMedia) {
+      setFormData(prev => ({
+        ...prev,
+        title: selectedMedia.title,
+        media_type: selectedMedia.media_type,
+        category: selectedMedia.media_type === 'photo' 
+          ? '550e8400-e29b-41d4-a716-446655440001' 
+          : '550e8400-e29b-41d4-a716-446655440002'
+      }));
+    }
+  }, [selectedMedia]);
+
   const loadCategories = async () => {
     try {
       const [categoriesResponse, subcategoriesResponse] = await Promise.all([
@@ -112,29 +118,22 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
     }
   };
 
-  useEffect(() => {
-    if (item) {
-      setFormData({
-        title: item.title,
-        description: item.description || '',
-        media_type: item.media_type,
-        category: item.category,
-        subcategory: item.subcategory || '',
-        publish_status: item.publish_status,
-        is_featured: item.is_featured,
-        homepage_featured: (item as any).homepage_featured || false,
-        location: item.location || '',
-        date_taken: item.date_taken || '',
-      });
-    }
-  }, [item]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.category || !formData.media_type) {
+    
+    if (!selectedMedia) {
       toast({
         title: 'Erro',
-        description: 'Título, tipo de mídia e categoria são obrigatórios.',
+        description: 'Por favor, selecione uma mídia primeiro.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.title.trim() || !formData.category) {
+      toast({
+        title: 'Erro',
+        description: 'Título e categoria são obrigatórios.',
         variant: 'destructive',
       });
       return;
@@ -142,13 +141,25 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
 
     setIsLoading(true);
     try {
-      // Update existing item
+      // Get next display order
+      const { data: maxOrderData } = await supabase
+        .from('portfolio_items')
+        .select('display_order')
+        .order('display_order', { ascending: false })
+        .limit(1);
+
+      const nextOrder = maxOrderData && maxOrderData.length > 0 
+        ? maxOrderData[0].display_order + 1 
+        : 0;
+
       const { error } = await supabase
         .from('portfolio_items')
-        .update({
+        .insert({
           title: formData.title,
           description: formData.description || null,
-          media_type: formData.media_type,
+          media_type: selectedMedia.media_type,
+          file_url: selectedMedia.file_url,
+          thumbnail_url: selectedMedia.thumbnail_url,
           category: formData.category,
           subcategory: formData.subcategory || null,
           publish_status: formData.publish_status,
@@ -156,22 +167,24 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
           homepage_featured: formData.homepage_featured,
           location: formData.location || null,
           date_taken: formData.date_taken || null,
-        })
-        .eq('id', item.id);
+          file_size: selectedMedia.file_size,
+          dimensions: selectedMedia.dimensions,
+          display_order: nextOrder,
+        });
 
       if (error) throw error;
 
       toast({
         title: 'Sucesso',
-        description: 'Item atualizado com sucesso!',
+        description: 'Item criado com sucesso!',
       });
 
       onSave();
     } catch (error) {
-      console.error('Error saving item:', error);
+      console.error('Error creating item:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao salvar item.',
+        description: 'Erro ao criar item.',
         variant: 'destructive',
       });
     } finally {
@@ -183,9 +196,9 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Editar Item</h2>
+          <h2 className="text-2xl font-semibold">Criar Novo Item</h2>
           <p className="text-muted-foreground">
-            Edite as informações do item do portfólio
+            Selecione uma mídia e configure as informações do item
           </p>
         </div>
         <Button variant="outline" onClick={onCancel}>
@@ -194,11 +207,82 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
         </Button>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Media Selection */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>1. Selecionar Mídia</CardTitle>
+              <CardDescription>
+                Escolha uma mídia já enviada ou faça upload de uma nova
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="select">Selecionar Existente</TabsTrigger>
+                  <TabsTrigger value="upload">Fazer Upload</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="select" className="mt-4">
+                  <MediaSelector 
+                    onSelect={setSelectedMedia}
+                    selectedMediaId={selectedMedia?.id}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="upload" className="mt-4">
+                  <div className="text-center py-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">
+                      Use a aba "Upload de Mídia" para enviar novos arquivos
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+              
+              {selectedMedia && (
+                <div className="mt-4 p-4 border rounded-lg">
+                  <div className="flex items-center gap-4">
+                    <div className="relative w-16 h-16 flex-shrink-0">
+                      {selectedMedia.media_type === 'video' ? (
+                        <video
+                          src={selectedMedia.file_url}
+                          poster={selectedMedia.thumbnail_url}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      ) : (
+                        <img
+                          src={selectedMedia.thumbnail_url || selectedMedia.file_url}
+                          alt={selectedMedia.title}
+                          className="w-full h-full object-cover rounded"
+                        />
+                      )}
+                    </div>
+                    <div>
+                      <h4 className="font-medium">{selectedMedia.title}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {selectedMedia.media_type === 'photo' ? 'Foto' : 'Vídeo'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Item Configuration */}
+        <div>
+          <Card>
+            <CardHeader>
+              <CardTitle>2. Configurar Item</CardTitle>
+              <CardDescription>
+                Configure as informações do item do portfólio
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <Label htmlFor="title">Título *</Label>
                   <Input
@@ -222,28 +306,6 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="location">Local</Label>
-                  <Input
-                    id="location"
-                    value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="Local onde foi capturado"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="date_taken">Data</Label>
-                  <Input
-                    id="date_taken"
-                    type="date"
-                    value={formData.date_taken}
-                    onChange={(e) => setFormData({ ...formData, date_taken: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
                   <Label htmlFor="media_type">Tipo de Mídia *</Label>
                   <Select
                     value={formData.media_type}
@@ -251,11 +313,13 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                       setFormData({ 
                         ...formData, 
                         media_type: value,
-                        category: '', // Reset category when media type changes
+                        category: value === 'photo' 
+                          ? '550e8400-e29b-41d4-a716-446655440001' 
+                          : '550e8400-e29b-41d4-a716-446655440002',
                         subcategory: ''
                       });
                     }}
-                    disabled={!!item} // Disable when editing existing item
+                    disabled={!!selectedMedia}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -268,32 +332,7 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                 </div>
 
                 <div>
-                  <Label htmlFor="category">Categoria *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) => setFormData({ 
-                      ...formData, 
-                      category: value,
-                      subcategory: '' // Reset subcategory when category changes
-                    })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories
-                        .filter(cat => cat.type === formData.media_type)
-                        .map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label htmlFor="subcategory">Subcategoria</Label>
+                  <Label htmlFor="subcategory">Subcategoria (Opcional)</Label>
                   <Select
                     value={formData.subcategory || "none"}
                     onValueChange={(value) => setFormData({ 
@@ -316,6 +355,26 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                         ))}
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="location">Local</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    placeholder="Local onde foi capturado"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="date_taken">Data</Label>
+                  <Input
+                    id="date_taken"
+                    type="date"
+                    value={formData.date_taken}
+                    onChange={(e) => setFormData({ ...formData, date_taken: e.target.value })}
+                  />
                 </div>
 
                 <div>
@@ -354,30 +413,30 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                     <Label htmlFor="homepage_featured">Exibir na homepage</Label>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={onCancel}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Salvando...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Save className="h-4 w-4" />
-                    Salvar
-                  </div>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={onCancel}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isLoading || !selectedMedia}>
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Criando...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Save className="h-4 w-4" />
+                        Criar Item
+                      </div>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

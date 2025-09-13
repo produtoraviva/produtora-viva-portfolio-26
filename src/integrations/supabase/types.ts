@@ -180,7 +180,15 @@ export type Database = {
           title?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_portfolio_items_subcategory"
+            columns: ["subcategory"]
+            isOneToOne: false
+            referencedRelation: "portfolio_subcategories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       portfolio_subcategories: {
         Row: {

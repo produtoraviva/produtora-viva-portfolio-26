@@ -3,6 +3,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from '@dnd-kit/sortable';
 import { SortableItem } from './SortableItem';
 import { ItemEditor } from './ItemEditor';
+import { NewItemCreator } from './NewItemCreator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,10 +29,11 @@ interface PortfolioItem {
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
-  category: 'casamento' | 'aniversario' | 'corporativo' | 'familia';
-  subcategory?: string;
+  category: string; // Now UUID reference to portfolio_categories
+  subcategory?: string; // Now UUID reference to portfolio_subcategories
   publish_status: 'draft' | 'published' | 'hidden';
   is_featured: boolean;
+  homepage_featured: boolean;
   display_order: number;
   location?: string;
   date_taken?: string;
@@ -179,17 +181,29 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     }
   };
 
-  if (editingItem || isCreating) {
+  if (editingItem) {
     return (
       <ItemEditor
-        item={isCreating ? null : editingItem}
+        item={editingItem}
         onSave={() => {
           setEditingItem(null);
-          setIsCreating(false);
           onItemsChange();
         }}
         onCancel={() => {
           setEditingItem(null);
+        }}
+      />
+    );
+  }
+
+  if (isCreating) {
+    return (
+      <NewItemCreator
+        onSave={() => {
+          setIsCreating(false);
+          onItemsChange();
+        }}
+        onCancel={() => {
           setIsCreating(false);
         }}
       />

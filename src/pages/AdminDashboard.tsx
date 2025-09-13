@@ -36,10 +36,11 @@ interface PortfolioItem {
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
-  category: 'casamento' | 'aniversario' | 'corporativo' | 'familia';
-  subcategory?: string;
+  category: string; // Now UUID reference to portfolio_categories
+  subcategory?: string; // Now UUID reference to portfolio_subcategories
   publish_status: 'draft' | 'published' | 'hidden';
   is_featured: boolean;
+  homepage_featured: boolean;
   display_order: number;
   location?: string;
   date_taken?: string;
