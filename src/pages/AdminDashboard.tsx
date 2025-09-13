@@ -177,15 +177,24 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-display font-bold">Admin Dashboard</h1>
-              <p className="text-muted-foreground">
-                Bem-vindo, {user?.full_name}
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-3">
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <Edit className="h-8 w-8 text-primary" />
+                </div>
+                Painel Administrativo
+              </h1>
+              <p className="text-lg text-muted-foreground">
+                Bem-vindo, <span className="font-semibold text-foreground">{user?.full_name}</span>
               </p>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
+            <Button 
+              variant="outline" 
+              onClick={handleLogout}
+              className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
+            >
               <LogOut className="h-4 w-4 mr-2" />
               Sair
             </Button>
@@ -196,14 +205,50 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="portfolio" onClick={loadPortfolioItems}>Gerenciar Portfólio</TabsTrigger>
-            <TabsTrigger value="upload">Upload de Mídia</TabsTrigger>
-            <TabsTrigger value="categories">Categorias</TabsTrigger>  
-            <TabsTrigger value="homepage-bg">Fundo Homepage</TabsTrigger>
-            <TabsTrigger value="visualizer">Visualização</TabsTrigger>
-            <TabsTrigger value="history">Histórico</TabsTrigger>
-            <TabsTrigger value="accounts">Contas</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-7 h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto">
+            <TabsTrigger 
+              value="portfolio" 
+              onClick={loadPortfolioItems}
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Portfólio
+            </TabsTrigger>
+            <TabsTrigger 
+              value="upload"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Upload
+            </TabsTrigger>
+            <TabsTrigger 
+              value="categories"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Categorias
+            </TabsTrigger>  
+            <TabsTrigger 
+              value="homepage-bg"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Fundo Home
+            </TabsTrigger>
+            <TabsTrigger 
+              value="visualizer"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Visualização
+            </TabsTrigger>
+            <TabsTrigger 
+              value="history"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Histórico
+            </TabsTrigger>
+            <TabsTrigger 
+              value="accounts"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Contas
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="portfolio" className="space-y-6">
