@@ -69,6 +69,37 @@ const PortfolioFull = () => {
       loadCategories(),
       loadSubcategories()
     ]);
+    
+    // Listen for realtime updates to categories and subcategories
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'portfolio_categories'
+        },
+        () => {
+          loadCategories();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'portfolio_subcategories'
+        },
+        () => {
+          loadSubcategories();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadCategories = async () => {
@@ -337,15 +368,15 @@ const PortfolioFull = () => {
               </div>
               
               <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                <div className="mb-2">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
                     {item.title}
                   </h3>
-                  <div className="flex gap-1 ml-2">
+                  <div className="flex flex-wrap gap-1">
                     {item.category && (
                       <Badge 
                         variant="secondary" 
-                        className="capitalize bg-primary/10 text-primary border-0 flex-shrink-0"
+                        className="capitalize bg-primary/10 text-primary border-0 text-xs"
                       >
                         {getCategoryLabel(item.category)}
                       </Badge>
@@ -353,7 +384,7 @@ const PortfolioFull = () => {
                     {item.subcategory && (
                       <Badge 
                         variant="outline" 
-                        className="capitalize text-xs flex-shrink-0"
+                        className="capitalize text-xs"
                       >
                         {getSubcategoryLabel(item.subcategory)}
                       </Badge>

@@ -129,12 +129,16 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 <h3 className="text-xl font-semibold mb-1">{currentImage.title}</h3>
                 <p className="text-sm text-white/80 mb-2">{currentImage.description}</p>
                 <div className="flex space-x-2">
-                  <span className="px-2 py-1 bg-primary/20 rounded text-xs capitalize">
-                    {currentImage.category}
-                  </span>
-                  <span className="px-2 py-1 bg-white/20 rounded text-xs capitalize">
-                    {currentImage.subcategory}
-                  </span>
+                  {currentImage.category && currentImage.category !== currentImage.id?.toString() && (
+                    <span className="px-2 py-1 bg-primary/20 rounded text-xs capitalize">
+                      {currentImage.category}
+                    </span>
+                  )}
+                  {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && (
+                    <span className="px-2 py-1 bg-white/20 rounded text-xs capitalize">
+                      {currentImage.subcategory}
+                    </span>
+                  )}
                 </div>
               </div>
               

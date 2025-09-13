@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAdmin } from '@/hooks/useAdmin';
 import { Plus, Edit, Trash2, Save, X, Folder, Tag } from 'lucide-react';
 
 interface Category {
@@ -45,6 +46,7 @@ export function CategoryManager() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { isAuthenticated } = useAdmin();
 
   useEffect(() => {
     loadData();
@@ -292,6 +294,17 @@ export function CategoryManager() {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold mb-2">Acesso negado</h3>
+          <p className="text-muted-foreground">Você precisa estar logado como admin para gerenciar categorias.</p>
+        </div>
       </div>
     );
   }
