@@ -15,8 +15,8 @@ const getCategoryIcon = (categoryName: string) => {
   return Eye;
 };
 
-type CategoryType = "all" | "photo" | "video";
-type SubcategoryType = "all" | string; // Now it can be any category name
+type CategoryType = "all" | string;
+type SubcategoryType = "all" | string;
 type ViewType = "grid" | "masonry";
 
 interface Category {
@@ -170,28 +170,29 @@ const PortfolioFull = () => {
     }
   };
 
-  // Dynamic categories based on loaded data
+  // Dynamic categories based on loaded data from database
   const dynamicCategories = [
     { id: "all", label: "Todos", icon: Eye },
-    { id: "photo", label: "Fotografia", icon: Camera },
-    { id: "video", label: "Videografia", icon: Video },
+    ...categories.map(cat => ({
+      id: cat.id,
+      label: cat.name,
+      icon: getCategoryIcon(cat.name)
+    }))
   ];
 
   // Dynamic subcategories based on loaded subcategories data  
   const dynamicSubcategories = [
     { id: "all", label: "Todos", icon: Eye },
     ...subcategories.map(sub => ({
-      id: sub.name.toLowerCase(),
+      id: sub.id,
       label: sub.name,
       icon: getCategoryIcon(sub.name)
     }))
   ];
 
   const filteredItems = portfolioItems.filter((item) => {
-    const categoryMatch = activeCategory === "all" || item.media_type === activeCategory;
-    const subcategoryName = item.subcategory ? subcategoryMap.get(item.subcategory) : '';
-    const subcategoryMatch = activeSubcategory === "all" || 
-      (subcategoryName && subcategoryName.toLowerCase() === activeSubcategory);
+    const categoryMatch = activeCategory === "all" || item.category === activeCategory;
+    const subcategoryMatch = activeSubcategory === "all" || item.subcategory === activeSubcategory;
     return categoryMatch && subcategoryMatch;
   });
 
@@ -430,8 +431,8 @@ const PortfolioFull = () => {
         images={filteredItems.map(item => ({
           id: parseInt(item.id),
           title: item.title,
-          category: item.media_type,
-          subcategory: item.category as any,
+          category: item.category ? getCategoryLabel(item.category) : '',
+          subcategory: item.subcategory ? getSubcategoryLabel(item.subcategory) : '',
           image: item.thumbnail_url || item.file_url,
           description: item.description || '',
           date: item.date_taken ? new Date(item.date_taken).toLocaleDateString('pt-BR') : '',
