@@ -124,7 +124,7 @@ export type Database = {
       }
       portfolio_items: {
         Row: {
-          category: string
+          category: string | null
           created_at: string | null
           date_taken: string | null
           description: string | null
@@ -135,6 +135,7 @@ export type Database = {
           homepage_featured: boolean
           id: string
           is_featured: boolean | null
+          item_status: string | null
           location: string | null
           media_type: string
           publish_status: string
@@ -144,7 +145,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          category: string
+          category?: string | null
           created_at?: string | null
           date_taken?: string | null
           description?: string | null
@@ -155,6 +156,7 @@ export type Database = {
           homepage_featured?: boolean
           id?: string
           is_featured?: boolean | null
+          item_status?: string | null
           location?: string | null
           media_type: string
           publish_status?: string
@@ -164,7 +166,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          category?: string
+          category?: string | null
           created_at?: string | null
           date_taken?: string | null
           description?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           homepage_featured?: boolean
           id?: string
           is_featured?: boolean | null
+          item_status?: string | null
           location?: string | null
           media_type?: string
           publish_status?: string
@@ -227,50 +230,6 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "portfolio_categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      temp_media: {
-        Row: {
-          created_at: string
-          dimensions: Json | null
-          file_size: number | null
-          file_url: string
-          filename: string
-          id: string
-          media_type: string
-          thumbnail_url: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          created_at?: string
-          dimensions?: Json | null
-          file_size?: number | null
-          file_url: string
-          filename: string
-          id?: string
-          media_type: string
-          thumbnail_url?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          created_at?: string
-          dimensions?: Json | null
-          file_size?: number | null
-          file_url?: string
-          filename?: string
-          id?: string
-          media_type?: string
-          thumbnail_url?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "temp_media_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
             referencedColumns: ["id"]
           },
         ]

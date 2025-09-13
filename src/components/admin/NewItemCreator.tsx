@@ -30,7 +30,6 @@ interface Subcategory {
 interface MediaItem {
   id: string;
   title: string;
-  filename?: string;
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
@@ -154,12 +153,9 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
 
       const { error } = await supabase
         .from('portfolio_items')
-        .insert({
+        .update({
           title: formData.title,
           description: formData.description || null,
-          media_type: selectedMedia.media_type,
-          file_url: selectedMedia.file_url,
-          thumbnail_url: selectedMedia.thumbnail_url,
           category: formData.category,
           subcategory: formData.subcategory || null,
           publish_status: formData.publish_status,
@@ -167,10 +163,9 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
           homepage_featured: formData.homepage_featured,
           location: formData.location || null,
           date_taken: formData.date_taken || null,
-          file_size: selectedMedia.file_size,
-          dimensions: selectedMedia.dimensions,
-          display_order: nextOrder,
-        });
+          item_status: 'published', // Mark as published item
+        })
+        .eq('id', selectedMedia.id);
 
       if (error) throw error;
 

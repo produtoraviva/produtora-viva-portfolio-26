@@ -11,7 +11,6 @@ import { Search, Image, Video, Check, RefreshCw } from 'lucide-react';
 interface MediaItem {
   id: string;
   title: string;
-  filename?: string;
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
@@ -39,14 +38,14 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('temp_media')
-        .select('id, filename, media_type, file_url, thumbnail_url, file_size, dimensions, created_at')
+        .from('portfolio_items')
+        .select('id, title, media_type, file_url, thumbnail_url, file_size, dimensions, created_at')
+        .eq('item_status', 'uploaded') // Only get uploaded media, not published items
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setMediaItems((data || []).map(item => ({
         ...item,
-        title: item.filename.replace(/\.[^/.]+$/, ''), // Use filename without extension as title
         media_type: item.media_type as 'photo' | 'video',
         dimensions: item.dimensions as { width: number; height: number } | undefined
       })));

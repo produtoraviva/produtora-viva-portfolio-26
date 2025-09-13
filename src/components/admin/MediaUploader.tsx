@@ -112,14 +112,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
 
   const uploadFile = async (file: FileWithPreview) => {
     try {
-      // Check if user is authenticated
-      const { data: { user } } = await supabase.auth.getUser();
-      console.log('Current user:', user);
-      
-      if (!user) {
-        throw new Error('Usuário não autenticado');
-      }
-      
       setUploadStatus(prev => ({ ...prev, [file.id]: 'uploading' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
 
@@ -136,97 +128,80 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
         }));
       }, 200);
 
-      // Upload main file
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('portfolio-media')
-        .upload(filePath, file);
+      try {
+        // Upload main file
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('portfolio-media')
+          .upload(filePath, file);
 
-      clearInterval(progressInterval);
-      setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw uploadError;
+        }
 
-      if (uploadError) {
-        console.error('Storage upload error:', uploadError);
+        setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
+
+        // Get public URL
+        const { data: { publicUrl } } = supabase.storage
+          .from('portfolio-media')
+          .getPublicUrl(filePath);
+
+        // Get file dimensions
+        let dimensions = null;
+        if (file.type.startsWith('image/')) {
+          dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+            const img = document.createElement('img');
+            img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            img.onerror = () => resolve({ width: 0, height: 0 });
+            img.src = file.preview;
+          });
+        } else if (file.type.startsWith('video/')) {
+          dimensions = await new Promise<{width: number, height: number}>((resolve) => {
+            const video = document.createElement('video');
+            video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
+            video.onerror = () => resolve({ width: 0, height: 0 });
+            video.src = file.preview;
+          });
+        }
+
+        // Get next display order
+        const { data: maxOrderData } = await supabase
+          .from('portfolio_items')
+          .select('display_order')
+          .order('display_order', { ascending: false })
+          .limit(1);
+
+        const nextOrder = maxOrderData && maxOrderData.length > 0 
+          ? maxOrderData[0].display_order + 1 
+          : 0;
+
+        // Insert into portfolio_items as uploaded media
+        const { error: dbError } = await supabase
+          .from('portfolio_items')
+          .insert({
+            title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+            media_type: file.type.startsWith('image/') ? 'photo' : 'video',
+            file_url: publicUrl,
+            item_status: 'uploaded', // Mark as uploaded media
+            publish_status: 'draft',
+            display_order: nextOrder,
+            file_size: file.size,
+            dimensions: dimensions,
+          });
+
+        if (dbError) {
+          console.error('Database insert error:', dbError);
+          throw dbError;
+        }
+
+        clearInterval(progressInterval);
+        setUploadStatus(prev => ({ ...prev, [file.id]: 'success' }));
+        setUploadProgress(prev => ({ ...prev, [file.id]: 100 }));
+
+      } catch (uploadError) {
+        clearInterval(progressInterval);
         throw uploadError;
       }
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('portfolio-media')
-        .getPublicUrl(filePath);
-
-      // Generate thumbnail if needed
-      let thumbnailUrl = null;
-      if (file.type.startsWith('video/')) {
-        const thumbnailBlob = await generateThumbnail(file);
-        if (thumbnailBlob) {
-          const thumbnailFileName = `thumbnail-${fileName.replace(/\.[^/.]+$/, '.jpg')}`;
-          const thumbnailPath = `thumbnails/${thumbnailFileName}`;
-          
-          const response = await fetch(thumbnailBlob);
-          const blob = await response.blob();
-          
-          const { error: thumbnailError } = await supabase.storage
-            .from('portfolio-media')
-            .upload(thumbnailPath, blob);
-
-          if (!thumbnailError) {
-            const { data: { publicUrl: thumbnailPublicUrl } } = supabase.storage
-              .from('portfolio-media')
-              .getPublicUrl(thumbnailPath);
-            thumbnailUrl = thumbnailPublicUrl;
-          }
-        }
-      }
-
-      // Get file dimensions
-      let dimensions = null;
-      if (file.type.startsWith('image/')) {
-        dimensions = await new Promise<{width: number, height: number}>((resolve) => {
-          const img = document.createElement('img');
-          img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-          img.onerror = () => resolve({ width: 0, height: 0 });
-          img.src = file.preview;
-        });
-      } else if (file.type.startsWith('video/')) {
-        dimensions = await new Promise<{width: number, height: number}>((resolve) => {
-          const video = document.createElement('video');
-          video.onloadedmetadata = () => resolve({ width: video.videoWidth, height: video.videoHeight });
-          video.onerror = () => resolve({ width: 0, height: 0 });
-          video.src = file.preview;
-        });
-      }
-
-      // Get next display order
-      const { data: maxOrderData } = await supabase
-        .from('portfolio_items')
-        .select('display_order')
-        .order('display_order', { ascending: false })
-        .limit(1);
-
-      const nextOrder = maxOrderData && maxOrderData.length > 0 
-        ? maxOrderData[0].display_order + 1 
-        : 0;
-
-      // Insert into temp_media table for later use in portfolio items  
-      const { error: dbError } = await supabase
-        .from('temp_media')
-        .insert({
-          filename: file.name,
-          file_url: publicUrl,
-          thumbnail_url: thumbnailUrl,
-          media_type: file.type.startsWith('image/') ? 'photo' : 'video',
-          file_size: file.size,
-          dimensions: dimensions,
-          uploaded_by: user.id,
-        });
-
-      if (dbError) {
-        console.error('Database insert error:', dbError);
-        throw dbError;
-      }
-
-      setUploadStatus(prev => ({ ...prev, [file.id]: 'success' }));
-      setUploadProgress(prev => ({ ...prev, [file.id]: 100 }));
 
     } catch (error) {
       console.error('Upload error:', error);
