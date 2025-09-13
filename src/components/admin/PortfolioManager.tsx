@@ -64,11 +64,11 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
+    if (active.id !== over?.id) {
       const oldIndex = items.findIndex(item => item.id === active.id);
       const newIndex = items.findIndex(item => item.id === over.id);
       
-      // Atualizar a ordem imediatamente na UI para feedback instantâneo
+      // Não chamar onItemsChange aqui para evitar o "pulo"
       const reorderedItems = arrayMove(items, oldIndex, newIndex);
       
       // Update display_order for all affected items
@@ -79,20 +79,21 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
         }));
 
         // Usar Promise.all para atualizar em paralelo
-        await Promise.all(
-          updates.map(update => 
-            supabase
-              .from('portfolio_items')
-              .update({ display_order: update.display_order })
-              .eq('id', update.id)
-          )
+        const updatePromises = updates.map(update => 
+          supabase
+            .from('portfolio_items')
+            .update({ display_order: update.display_order })
+            .eq('id', update.id)
         );
+
+        await Promise.all(updatePromises);
 
         toast({
           title: 'Sucesso',
           description: 'Ordem dos itens atualizada!',
         });
 
+        // Só chamar onItemsChange depois de todas as atualizações
         onItemsChange();
       } catch (error) {
         console.error('Error reordering items:', error);

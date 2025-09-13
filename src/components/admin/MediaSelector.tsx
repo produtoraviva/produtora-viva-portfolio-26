@@ -116,11 +116,42 @@ export function MediaSelector({
 
 
   const handleEdit = (item: MediaItem) => {
-    // TODO: Implementar modal de edição de mídia
-    toast({
-      title: 'Funcionalidade em desenvolvimento',
-      description: 'A edição de mídia será implementada em breve.',
-    });
+    const newTitle = prompt('Novo título:', item.title);
+    if (newTitle && newTitle.trim() !== item.title) {
+      updateItemTitle(item.id, newTitle.trim());
+    }
+  };
+
+  const updateItemTitle = async (itemId: string, newTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('portfolio_items')
+        .update({ title: newTitle })
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Título atualizado com sucesso!',
+      });
+
+      // Atualizar localmente
+      setMediaItems(prev => 
+        prev.map(mediaItem => 
+          mediaItem.id === itemId 
+            ? { ...mediaItem, title: newTitle }
+            : mediaItem
+        )
+      );
+    } catch (error) {
+      console.error('Error updating title:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar título.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleToggleStatus = async (item: MediaItem) => {
@@ -129,22 +160,25 @@ export function MediaSelector({
     try {
       const { error } = await supabase
         .from('portfolio_items')
-        .update({ item_status: newStatus })
+        .update({ 
+          item_status: newStatus,
+          publish_status: newStatus === 'published' ? 'published' : 'draft'
+        })
         .eq('id', item.id);
 
       if (error) throw error;
 
       toast({
         title: 'Sucesso',
-        description: `Status alterado para ${newStatus === 'uploaded' ? 'mídia' : 'item publicado'}!`,
+        description: `Item ${newStatus === 'published' ? 'publicado' : 'despublicado'} com sucesso!`,
       });
 
       // Atualizar o item localmente sem recarregar toda a lista
-      setMediaItems(prevItems => 
-        prevItems.map(prevItem => 
-          prevItem.id === item.id 
-            ? { ...prevItem, item_status: newStatus }
-            : prevItem
+      setMediaItems(prev => 
+        prev.map(mediaItem => 
+          mediaItem.id === item.id 
+            ? { ...mediaItem, item_status: newStatus }
+            : mediaItem
         )
       );
     } catch (error) {
@@ -301,10 +335,15 @@ export function MediaSelector({
                       className="w-full h-full object-cover"
                     />
                   )}
-                  <div className="absolute top-2 right-2">
+                  <div className="absolute top-2 right-2 flex gap-1">
                     <Badge variant="secondary" className="text-xs">
                       {item.media_type === 'photo' ? '📷' : '🎥'}
                     </Badge>
+                    {item.item_status === 'published' && (
+                      <Badge variant="default" className="text-xs">
+                        Pub
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 <div className="p-3 border-t">
@@ -341,11 +380,11 @@ export function MediaSelector({
                         title={item.item_status === 'uploaded' ? 'Publicar item' : 'Manter como mídia'}
                         className="h-8 w-8 p-0"
                       >
-                        {item.item_status === 'uploaded' ? (
-                          <Eye className="h-3 w-3" />
-                        ) : (
-                          <EyeOff className="h-3 w-3" />
-                        )}
+                      {item.item_status === 'published' ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
