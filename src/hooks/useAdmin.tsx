@@ -53,19 +53,27 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Get admin user from database
+      // Get admin user from database with simpler query
       const { data: adminUser, error: fetchError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('email', email)
         .single();
 
-      if (fetchError || !adminUser) {
+      if (fetchError) {
+        console.error('Fetch error:', fetchError);
+        return { success: false, error: 'Credenciais inválidas' };
+      }
+
+      if (!adminUser) {
         return { success: false, error: 'Credenciais inválidas' };
       }
 
       // Verify password
+      console.log('Comparing password for user:', adminUser.email);
       const isValidPassword = await bcrypt.compare(password, adminUser.password_hash);
+      console.log('Password valid:', isValidPassword);
+      
       if (!isValidPassword) {
         return { success: false, error: 'Credenciais inválidas' };
       }
