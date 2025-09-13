@@ -146,21 +146,21 @@ const PortfolioFull = () => {
     { id: "video", label: "Videografia", icon: Video },
   ];
 
-  // Dynamic subcategories based on loaded data  
+  // Dynamic subcategories based on loaded subcategories data  
   const dynamicSubcategories = [
     { id: "all", label: "Todos", icon: Eye },
-    ...categories.map(cat => ({
-      id: cat.name.toLowerCase(),
-      label: cat.name,
-      icon: getCategoryIcon(cat.name)
+    ...subcategories.map(sub => ({
+      id: sub.name.toLowerCase(),
+      label: sub.name,
+      icon: getCategoryIcon(sub.name)
     }))
   ];
 
   const filteredItems = portfolioItems.filter((item) => {
     const categoryMatch = activeCategory === "all" || item.media_type === activeCategory;
-    const categoryName = item.category ? categoryMap.get(item.category) : '';
+    const subcategoryName = item.subcategory ? subcategoryMap.get(item.subcategory) : '';
     const subcategoryMatch = activeSubcategory === "all" || 
-      (categoryName && categoryName.toLowerCase() === activeSubcategory);
+      (subcategoryName && subcategoryName.toLowerCase() === activeSubcategory);
     return categoryMatch && subcategoryMatch;
   });
 

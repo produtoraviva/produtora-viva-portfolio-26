@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,10 +52,15 @@ interface PortfolioManagerProps {
 export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioManagerProps) {
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isDragEnabled, setIsDragEnabled] = useState(false);
   const { toast } = useToast();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -222,10 +227,30 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             {items.length} {items.length === 1 ? 'item encontrado' : 'itens encontrados'}
           </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Item
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => setIsDragEnabled(!isDragEnabled)}
+            variant={isDragEnabled ? "default" : "outline"}
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Move className="h-4 w-4" />
+            {isDragEnabled ? "Desativar reordenação" : "Ativar reordenação"}
+          </Button>
+          <Button 
+            onClick={onItemsChange}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Atualizar
+          </Button>
+          <Button onClick={() => setIsCreating(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Item
+          </Button>
+        </div>
       </div>
 
       {items.length === 0 ? (
@@ -245,7 +270,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
         </Card>
       ) : (
         <DndContext
-          sensors={sensors}
+          sensors={isDragEnabled ? sensors : []}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
@@ -259,7 +284,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                 : 'space-y-4'
             }>
               {items.map((item) => (
-                <SortableItem key={item.id} id={item.id}>
+                <SortableItem key={item.id} id={item.id} isDragEnabled={isDragEnabled}>
                   <Card className="overflow-hidden">
                     {viewMode === 'grid' && (
                       <div className="aspect-video relative overflow-hidden">
