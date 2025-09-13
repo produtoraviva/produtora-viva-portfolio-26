@@ -14,7 +14,141 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_users: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          last_login_at: string | null
+          password_hash: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          last_login_at?: string | null
+          password_hash: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          last_login_at?: string | null
+          password_hash?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      portfolio_edit_history: {
+        Row: {
+          action: string
+          admin_user_id: string | null
+          created_at: string | null
+          id: string
+          new_data: Json | null
+          portfolio_item_id: string | null
+          previous_data: Json | null
+        }
+        Insert: {
+          action: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          portfolio_item_id?: string | null
+          previous_data?: Json | null
+        }
+        Update: {
+          action?: string
+          admin_user_id?: string | null
+          created_at?: string | null
+          id?: string
+          new_data?: Json | null
+          portfolio_item_id?: string | null
+          previous_data?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_edit_history_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_edit_history_portfolio_item_id_fkey"
+            columns: ["portfolio_item_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      portfolio_items: {
+        Row: {
+          category: string
+          created_at: string | null
+          date_taken: string | null
+          description: string | null
+          dimensions: Json | null
+          display_order: number | null
+          file_size: number | null
+          file_url: string
+          id: string
+          is_featured: boolean | null
+          location: string | null
+          media_type: string
+          publish_status: string
+          subcategory: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          date_taken?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          display_order?: number | null
+          file_size?: number | null
+          file_url: string
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          media_type: string
+          publish_status?: string
+          subcategory?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          date_taken?: string | null
+          description?: string | null
+          dimensions?: Json | null
+          display_order?: number | null
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          media_type?: string
+          publish_status?: string
+          subcategory?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
