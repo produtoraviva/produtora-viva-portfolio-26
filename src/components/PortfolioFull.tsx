@@ -6,6 +6,15 @@ import { Camera, Video, Heart, Gift, Users, Play, Eye, Grid, List } from "lucide
 import ImageModal from "./ImageModal";
 import { supabase } from "@/integrations/supabase/client";
 
+const getCategoryIcon = (categoryName: string) => {
+  const name = categoryName.toLowerCase();
+  if (name.includes('casamento')) return Heart;
+  if (name.includes('aniversario')) return Gift;
+  if (name.includes('corporativo')) return Users;
+  if (name.includes('familia')) return Users;
+  return Eye;
+};
+
 type CategoryType = "all" | "photo" | "video";
 type SubcategoryType = "all" | string; // Now it can be any category name
 type ViewType = "grid" | "masonry";
@@ -128,15 +137,6 @@ const PortfolioFull = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getCategoryIcon = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('casamento')) return Heart;
-    if (name.includes('aniversario')) return Gift;
-    if (name.includes('corporativo')) return Users;
-    if (name.includes('familia')) return Users;
-    return Eye;
   };
 
   // Dynamic categories based on loaded data
