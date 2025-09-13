@@ -40,6 +40,15 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
   }, [refreshTrigger]);
 
   useEffect(() => {
+    // Auto-refresh every 5 seconds to check for new uploads
+    const interval = setInterval(() => {
+      loadMediaItems();
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     if (filterByType) {
       setTypeFilter(filterByType);
     }

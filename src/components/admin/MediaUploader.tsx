@@ -112,6 +112,10 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
 
   const uploadFile = async (file: FileWithPreview) => {
     try {
+      // Check if user is authenticated
+      const { data: { user } } = await supabase.auth.getUser();
+      console.log('Current user:', user);
+      
       setUploadStatus(prev => ({ ...prev, [file.id]: 'uploading' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
 
