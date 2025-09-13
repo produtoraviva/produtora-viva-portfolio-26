@@ -61,7 +61,7 @@ export function HomepageBackgroundManager() {
   const loadBackgrounds = async () => {
     try {
       const { data, error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .select('*')
         .order('display_order');
 
@@ -93,7 +93,7 @@ export function HomepageBackgroundManager() {
 
         const updatePromises = updates.map(update => 
           supabase
-            .from('portfolio_backgrounds')
+            .from('homepage_backgrounds')
             .update({ display_order: update.display_order })
             .eq('id', update.id)
         );
@@ -121,7 +121,7 @@ export function HomepageBackgroundManager() {
       const maxOrder = Math.max(...backgrounds.map(bg => bg.display_order), -1);
       
       const { error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .insert({
           name: `Background ${backgrounds.length + 1}`,
           file_url: fileUrl,
@@ -152,7 +152,7 @@ export function HomepageBackgroundManager() {
   const handleUpdateOpacity = async (id: string, opacity: number) => {
     try {
       const { error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .update({ opacity: opacity / 100 })
         .eq('id', id);
 
@@ -174,7 +174,7 @@ export function HomepageBackgroundManager() {
   const handleUpdateName = async (id: string, name: string) => {
     try {
       const { error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .update({ name })
         .eq('id', id);
 
@@ -201,7 +201,7 @@ export function HomepageBackgroundManager() {
   const handleToggleActive = async (id: string, isActive: boolean) => {
     try {
       const { error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .update({ is_active: !isActive })
         .eq('id', id);
 
@@ -228,7 +228,7 @@ export function HomepageBackgroundManager() {
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('portfolio_backgrounds')
+        .from('homepage_backgrounds')
         .delete()
         .eq('id', id);
 
@@ -286,12 +286,10 @@ export function HomepageBackgroundManager() {
         </CardHeader>
         <CardContent>
           <MediaUploader
-            onUploadStart={() => setIsUploading(true)}
-            onUploadComplete={handleUploadSuccess}
-            onUploadError={() => setIsUploading(false)}
-            maxFiles={1}
-            acceptedTypes={['image/*']}
-            bucketName="portfolio-media"
+            onUploadComplete={() => {
+              setIsUploading(false);
+              loadBackgrounds();
+            }}
           />
         </CardContent>
       </Card>

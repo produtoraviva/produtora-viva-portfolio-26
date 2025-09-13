@@ -44,6 +44,78 @@ export type Database = {
         }
         Relationships: []
       }
+      homepage_backgrounds: {
+        Row: {
+          created_at: string
+          display_order: number
+          file_url: string
+          id: string
+          is_active: boolean
+          name: string
+          opacity: number
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          file_url: string
+          id?: string
+          is_active?: boolean
+          name: string
+          opacity?: number
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          file_url?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          opacity?: number
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      portfolio_backgrounds: {
+        Row: {
+          created_at: string
+          display_order: number
+          file_url: string
+          id: string
+          is_active: boolean
+          name: string
+          opacity: number | null
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          file_url: string
+          id?: string
+          is_active?: boolean
+          name: string
+          opacity?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          file_url?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          opacity?: number | null
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portfolio_categories: {
         Row: {
           created_at: string

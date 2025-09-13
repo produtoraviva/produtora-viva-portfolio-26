@@ -28,6 +28,7 @@ import { PortfolioManager } from '@/components/admin/PortfolioManager';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { EditHistory } from '@/components/admin/EditHistory';
 import { CategoryManager } from '@/components/admin/CategoryManager';
+import { HomepageBackgroundManager } from '@/components/admin/HomepageBackgroundManager';
 import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
 
 interface PortfolioItem {
@@ -194,10 +195,11 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="portfolio" onClick={loadPortfolioItems}>Gerenciar Portfólio</TabsTrigger>
             <TabsTrigger value="upload">Upload de Mídia</TabsTrigger>
-            <TabsTrigger value="categories">Categorias</TabsTrigger>
+            <TabsTrigger value="categories">Categorias</TabsTrigger>  
+            <TabsTrigger value="homepage-bg">Fundo Homepage</TabsTrigger>
             <TabsTrigger value="visualizer">Visualização</TabsTrigger>
             <TabsTrigger value="history">Histórico</TabsTrigger>
           </TabsList>
@@ -296,6 +298,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="categories">
             <CategoryManager />
+          </TabsContent>
+
+          <TabsContent value="homepage-bg">
+            <HomepageBackgroundManager />
           </TabsContent>
 
           <TabsContent value="visualizer">

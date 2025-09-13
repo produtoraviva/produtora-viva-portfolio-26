@@ -102,7 +102,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       }
     };
     
-    loadCategoriesAndSubcategory();
+    loadCategoriesAndSubcategories();
   }, []);
 
   // Aplicar filtros
