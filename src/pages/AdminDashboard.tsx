@@ -21,7 +21,8 @@ import {
   Filter,
   Grid,
   List,
-  History
+  History,
+  RefreshCw
 } from 'lucide-react';
 import { PortfolioManager } from '@/components/admin/PortfolioManager';
 import { MediaUploader } from '@/components/admin/MediaUploader';
@@ -194,7 +195,7 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
           <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="portfolio">Gerenciar Portfólio</TabsTrigger>
+            <TabsTrigger value="portfolio" onClick={loadPortfolioItems}>Gerenciar Portfólio</TabsTrigger>
             <TabsTrigger value="upload">Upload de Mídia</TabsTrigger>
             <TabsTrigger value="categories">Categorias</TabsTrigger>
             <TabsTrigger value="visualizer">Visualização</TabsTrigger>
@@ -254,6 +255,14 @@ export default function AdminDashboard() {
                     </SelectContent>
                   </Select>
                   <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={loadPortfolioItems}
+                      title="Atualizar itens"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
                     <Button
                       variant={viewMode === 'grid' ? 'default' : 'outline'}
                       size="sm"

@@ -68,17 +68,14 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       const oldIndex = items.findIndex(item => item.id === active.id);
       const newIndex = items.findIndex(item => item.id === over.id);
       
-      // Não chamar onItemsChange aqui para evitar o "pulo"
-      const reorderedItems = arrayMove(items, oldIndex, newIndex);
-      
       // Update display_order for all affected items
       try {
+        const reorderedItems = arrayMove(items, oldIndex, newIndex);
         const updates = reorderedItems.map((item, index) => ({
           id: item.id,
           display_order: index
         }));
 
-        // Usar Promise.all para atualizar em paralelo
         const updatePromises = updates.map(update => 
           supabase
             .from('portfolio_items')
@@ -93,7 +90,6 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           description: 'Ordem dos itens atualizada!',
         });
 
-        // Só chamar onItemsChange depois de todas as atualizações
         onItemsChange();
       } catch (error) {
         console.error('Error reordering items:', error);
@@ -102,7 +98,6 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           description: 'Erro ao reordenar itens.',
           variant: 'destructive',
         });
-        // Recarregar a lista original em caso de erro
         onItemsChange();
       }
     }

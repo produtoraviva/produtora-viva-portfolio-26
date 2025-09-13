@@ -19,7 +19,8 @@ export function SortableItem({ id, children }: SortableItemProps) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: isDragging ? 'none' : transition,
+    zIndex: isDragging ? 1000 : 'auto',
   };
 
   return (
