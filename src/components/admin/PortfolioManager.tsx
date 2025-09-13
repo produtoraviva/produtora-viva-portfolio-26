@@ -164,15 +164,19 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     try {
       // Verificar limite antes de adicionar
       if (!item.homepage_featured) {
+        // Buscar itens atuais da homepage (excluindo o item atual)
         const { data: homepageItems, error: countError } = await supabase
           .from('portfolio_items')
-          .select('media_type')
-          .eq('homepage_featured', true);
+          .select('media_type, id')
+          .eq('homepage_featured', true)
+          .neq('id', item.id);
 
         if (countError) throw countError;
 
         const photoCount = homepageItems?.filter(i => i.media_type === 'photo').length || 0;
         const videoCount = homepageItems?.filter(i => i.media_type === 'video').length || 0;
+
+        console.log(`Tentando adicionar ${item.media_type}. Counts atuais: fotos=${photoCount}, vídeos=${videoCount}`);
 
         if (item.media_type === 'photo' && photoCount >= 6) {
           toast({
