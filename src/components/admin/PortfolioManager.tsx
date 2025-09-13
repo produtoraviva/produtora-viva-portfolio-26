@@ -337,7 +337,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           size="sm"
                           variant="outline"
                           onClick={() => setEditingItem(item)}
-                          title="Editar"
+                          title="Editar publicação"
                           className="h-8 w-8 p-0"
                         >
                           <Edit className="h-3 w-3" />

@@ -7,8 +7,22 @@ import ImageModal from "./ImageModal";
 import { supabase } from "@/integrations/supabase/client";
 
 type CategoryType = "all" | "photo" | "video";
-type SubcategoryType = "all" | "casamento" | "aniversario" | "corporativo" | "familia";
+type SubcategoryType = "all" | string; // Now it can be any category name
 type ViewType = "grid" | "masonry";
+
+interface Category {
+  id: string;
+  name: string;
+  type?: string;
+  is_active: boolean;
+}
+
+interface Subcategory {
+  id: string;
+  name: string;
+  category_id: string;
+  is_active: boolean;
+}
 
 interface PortfolioItem {
   id: string;
@@ -33,12 +47,66 @@ const PortfolioFull = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [categoryMap, setCategoryMap] = useState<Map<string, string>>(new Map());
+  const [subcategoryMap, setSubcategoryMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
   const itemsPerPage = 12;
 
   useEffect(() => {
-    loadPortfolioItems();
+    Promise.all([
+      loadPortfolioItems(),
+      loadCategories(),
+      loadSubcategories()
+    ]);
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      setCategories(data || []);
+      
+      // Create category map (UUID -> name)
+      const catMap = new Map();
+      (data || []).forEach(cat => {
+        catMap.set(cat.id, cat.name);
+      });
+      setCategoryMap(catMap);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadSubcategories = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('portfolio_subcategories')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+
+      setSubcategories(data || []);
+      
+      // Create subcategory map (UUID -> name)
+      const subMap = new Map();
+      (data || []).forEach(sub => {
+        subMap.set(sub.id, sub.name);
+      });
+      setSubcategoryMap(subMap);
+    } catch (error) {
+      console.error('Error loading subcategories:', error);
+    }
+  };
 
   const loadPortfolioItems = async () => {
     try {
@@ -62,23 +130,37 @@ const PortfolioFull = () => {
     }
   };
 
-  const categories = [
+  // Dynamic categories based on loaded data
+  const dynamicCategories = [
     { id: "all", label: "Todos", icon: Eye },
     { id: "photo", label: "Fotografia", icon: Camera },
     { id: "video", label: "Videografia", icon: Video },
-  ] as const;
+  ];
 
-  const subcategories = [
+  // Dynamic subcategories based on loaded data  
+  const dynamicSubcategories = [
     { id: "all", label: "Todos", icon: Eye },
-    { id: "casamento", label: "Casamentos", icon: Heart },
-    { id: "aniversario", label: "Aniversários", icon: Gift },
-    { id: "corporativo", label: "Corporativo", icon: Users },
-    { id: "familia", label: "Família", icon: Users },
-  ] as const;
+    ...categories.map(cat => ({
+      id: cat.name.toLowerCase(),
+      label: cat.name,
+      icon: getCategoryIcon(cat.name)
+    }))
+  ];
+
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('casamento')) return Heart;
+    if (name.includes('aniversario')) return Gift;
+    if (name.includes('corporativo')) return Users;
+    if (name.includes('familia')) return Users;
+    return Eye;
+  };
 
   const filteredItems = portfolioItems.filter((item) => {
     const categoryMatch = activeCategory === "all" || item.media_type === activeCategory;
-    const subcategoryMatch = activeSubcategory === "all" || item.category === activeSubcategory;
+    const categoryName = item.category ? categoryMap.get(item.category) : '';
+    const subcategoryMatch = activeSubcategory === "all" || 
+      (categoryName && categoryName.toLowerCase() === activeSubcategory);
     return categoryMatch && subcategoryMatch;
   });
 
@@ -99,24 +181,22 @@ const PortfolioFull = () => {
   };
 
   // Reset page when filters change
-  const handleCategoryChange = (category: CategoryType) => {
-    setActiveCategory(category);
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category as CategoryType);
     setCurrentPage(1);
   };
 
-  const handleSubcategoryChange = (subcategory: SubcategoryType) => {
+  const handleSubcategoryChange = (subcategory: string) => {
     setActiveSubcategory(subcategory);
     setCurrentPage(1);
   };
 
-  const getCategoryLabel = (category: string) => {
-    switch (category) {
-      case 'casamento': return 'Casamento';
-      case 'aniversario': return 'Aniversário';
-      case 'corporativo': return 'Corporativo';
-      case 'familia': return 'Família';
-      default: return category;
-    }
+  const getCategoryLabel = (categoryId: string) => {
+    return categoryMap.get(categoryId) || categoryId;
+  };
+
+  const getSubcategoryLabel = (subcategoryId: string) => {
+    return subcategoryMap.get(subcategoryId) || subcategoryId;
   };
 
   if (loading) {
@@ -148,7 +228,7 @@ const PortfolioFull = () => {
         <div className="space-y-6 mb-8 animate-fade-in-delayed">
           {/* Category Filters */}
           <div className="flex flex-wrap justify-center gap-4">
-            {categories.map((category) => {
+            {dynamicCategories.map((category) => {
               const Icon = category.icon;
               return (
                 <Button
@@ -170,7 +250,7 @@ const PortfolioFull = () => {
 
           {/* Subcategory Filters */}
           <div className="flex flex-wrap justify-center gap-2">
-            {subcategories.map((subcategory) => {
+            {dynamicSubcategories.map((subcategory) => {
               const Icon = subcategory.icon;
               return (
                 <Button
@@ -261,14 +341,24 @@ const PortfolioFull = () => {
                   <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                     {item.title}
                   </h3>
-                  {item.category && (
-                    <Badge 
-                      variant="secondary" 
-                      className="capitalize bg-primary/10 text-primary border-0 flex-shrink-0 ml-2"
-                    >
-                      {getCategoryLabel(item.category)}
-                    </Badge>
-                  )}
+                  <div className="flex gap-1 ml-2">
+                    {item.category && (
+                      <Badge 
+                        variant="secondary" 
+                        className="capitalize bg-primary/10 text-primary border-0 flex-shrink-0"
+                      >
+                        {getCategoryLabel(item.category)}
+                      </Badge>
+                    )}
+                    {item.subcategory && (
+                      <Badge 
+                        variant="outline" 
+                        className="capitalize text-xs flex-shrink-0"
+                      >
+                        {getSubcategoryLabel(item.subcategory)}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 {item.description && (
                   <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
