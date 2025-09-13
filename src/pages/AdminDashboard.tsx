@@ -87,6 +87,9 @@ export default function AdminDashboard() {
 
       setPortfolioItems((data || []).map(item => ({
         ...item,
+        media_type: item.media_type as 'photo' | 'video',
+        category: item.category as 'casamento' | 'aniversario' | 'corporativo' | 'familia',
+        publish_status: item.publish_status as 'draft' | 'published' | 'hidden',
         dimensions: item.dimensions as { width: number; height: number } | null
       })));
     } catch (error) {

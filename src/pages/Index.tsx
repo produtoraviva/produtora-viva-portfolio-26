@@ -88,6 +88,14 @@ const Index = () => {
             <p className="text-muted-foreground text-xs mt-2">
               Fotografia e Videografia Profissional | São Paulo, SP
             </p>
+            <div className="mt-4">
+              <a 
+                href="/admin/login" 
+                className="text-xs text-muted-foreground hover:text-primary transition-colors"
+              >
+                Área Administrativa
+              </a>
+            </div>
           </div>
         </div>
       </footer>
