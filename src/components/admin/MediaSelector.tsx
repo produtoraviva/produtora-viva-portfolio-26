@@ -37,18 +37,26 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
   const loadMediaItems = async () => {
     try {
       setIsLoading(true);
+      console.log('Loading media items...');
+      
       const { data, error } = await supabase
         .from('portfolio_items')
-        .select('id, title, media_type, file_url, thumbnail_url, file_size, dimensions, created_at')
+        .select('id, title, media_type, file_url, thumbnail_url, file_size, dimensions, created_at, item_status')
         .eq('item_status', 'uploaded') // Only get uploaded media, not published items
         .order('created_at', { ascending: false });
 
+      console.log('Media query result:', { data, error });
+
       if (error) throw error;
-      setMediaItems((data || []).map(item => ({
+      
+      const mappedItems = (data || []).map(item => ({
         ...item,
         media_type: item.media_type as 'photo' | 'video',
         dimensions: item.dimensions as { width: number; height: number } | undefined
-      })));
+      }));
+      
+      console.log('Mapped media items:', mappedItems);
+      setMediaItems(mappedItems);
     } catch (error) {
       console.error('Error loading media items:', error);
       toast({
