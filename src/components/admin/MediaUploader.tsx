@@ -116,7 +116,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user);
       
-      
       if (!user) {
         throw new Error('Usuário não autenticado');
       }
@@ -129,12 +128,26 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExtension}`;
       const filePath = `uploads/${fileName}`;
 
+      // Simulate progress for better UX
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => ({
+          ...prev,
+          [file.id]: Math.min((prev[file.id] || 0) + Math.random() * 15, 90)
+        }));
+      }, 200);
+
       // Upload main file
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('portfolio-media')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      clearInterval(progressInterval);
+      setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw uploadError;
+      }
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -204,10 +217,13 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           media_type: file.type.startsWith('image/') ? 'photo' : 'video',
           file_size: file.size,
           dimensions: dimensions,
-          uploaded_by: 'd3743515-3e84-4c70-a468-814237d05784', // TODO: Get from auth.uid()
+          uploaded_by: user.id,
         });
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        throw dbError;
+      }
 
       setUploadStatus(prev => ({ ...prev, [file.id]: 'success' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 100 }));
@@ -484,7 +500,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
               // Just show details for now, can be extended later
               console.log('Selected media:', mediaItem);
             }}
-            refreshTrigger={0}
           />
         </TabsContent>
       </Tabs>

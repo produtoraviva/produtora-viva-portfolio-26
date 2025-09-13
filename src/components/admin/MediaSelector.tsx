@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Image, Video, Check } from 'lucide-react';
+import { Search, Image, Video, Check, RefreshCw } from 'lucide-react';
 
 interface MediaItem {
   id: string;
@@ -35,29 +35,6 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
   const [typeFilter, setTypeFilter] = useState<'all' | 'photo' | 'video'>('all');
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadMediaItems();
-  }, [refreshTrigger]);
-
-  useEffect(() => {
-    // Auto-refresh every 5 seconds to check for new uploads
-    const interval = setInterval(() => {
-      loadMediaItems();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (filterByType) {
-      setTypeFilter(filterByType);
-    }
-  }, [filterByType]);
-
-  useEffect(() => {
-    filterItems();
-  }, [mediaItems, searchTerm, typeFilter]);
-
   const loadMediaItems = async () => {
     try {
       setIsLoading(true);
@@ -83,6 +60,26 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Only load on mount and when refreshTrigger changes manually
+  useEffect(() => {
+    loadMediaItems();
+  }, [refreshTrigger]);
+
+  // Separate effect for filtering
+  useEffect(() => {
+    if (filterByType) {
+      setTypeFilter(filterByType);
+    }
+  }, [filterByType]);
+
+  useEffect(() => {
+    filterItems();
+  }, [mediaItems, searchTerm, typeFilter]);
+
+  const handleRefresh = () => {
+    loadMediaItems();
   };
 
   const filterItems = () => {
@@ -136,7 +133,36 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Selecionar Mídia</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle>Selecionar Mídia</CardTitle>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+              ) : (
+                <RefreshCw className="w-4 h-4 mr-2" />
+              )}
+              Atualizar
+            </Button>
+            {!filterByType && (
+              <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="photo">Fotos</SelectItem>
+                  <SelectItem value="video">Vídeos</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+        </div>
         <div className="flex gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -149,18 +175,6 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
               />
             </div>
           </div>
-          {!filterByType && (
-            <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="photo">Fotos</SelectItem>
-                <SelectItem value="video">Vídeos</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
         </div>
       </CardHeader>
       <CardContent>
