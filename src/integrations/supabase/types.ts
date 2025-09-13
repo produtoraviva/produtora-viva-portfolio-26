@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       portfolio_edit_history: {
         Row: {
           action: string
@@ -99,6 +129,7 @@ export type Database = {
           display_order: number | null
           file_size: number | null
           file_url: string
+          homepage_featured: boolean
           id: string
           is_featured: boolean | null
           location: string | null
@@ -118,6 +149,7 @@ export type Database = {
           display_order?: number | null
           file_size?: number | null
           file_url: string
+          homepage_featured?: boolean
           id?: string
           is_featured?: boolean | null
           location?: string | null
@@ -137,6 +169,7 @@ export type Database = {
           display_order?: number | null
           file_size?: number | null
           file_url?: string
+          homepage_featured?: boolean
           id?: string
           is_featured?: boolean | null
           location?: string | null
@@ -148,6 +181,44 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      portfolio_subcategories: {
+        Row: {
+          category_id: string
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_subcategories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "portfolio_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

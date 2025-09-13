@@ -10,6 +10,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Save, X, Upload } from 'lucide-react';
 
+interface Category {
+  id: string;
+  name: string;
+  type: 'photo' | 'video';
+  is_active: boolean;
+}
+
+interface Subcategory {
+  id: string;
+  name: string;
+  category_id: string;
+  is_active: boolean;
+}
+
 interface PortfolioItem {
   id: string;
   title: string;
@@ -40,34 +54,74 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
-    category: 'casamento' | 'aniversario' | 'corporativo' | 'familia';
+    media_type: 'photo' | 'video';
+    category: string;
     subcategory: string;
     publish_status: 'draft' | 'published' | 'hidden';
     is_featured: boolean;
+    homepage_featured: boolean;
     location: string;
     date_taken: string;
   }>({
     title: '',
     description: '',
-    category: 'casamento',
+    media_type: 'photo',
+    category: '',
     subcategory: '',
     publish_status: 'draft',
     is_featured: false,
+    homepage_featured: false,
     location: '',
     date_taken: '',
   });
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    try {
+      const [categoriesResponse, subcategoriesResponse] = await Promise.all([
+        supabase
+          .from('portfolio_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order'),
+        supabase
+          .from('portfolio_subcategories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order')
+      ]);
+
+      if (categoriesResponse.error) throw categoriesResponse.error;
+      if (subcategoriesResponse.error) throw subcategoriesResponse.error;
+
+      setCategories((categoriesResponse.data || []).map(cat => ({
+        ...cat,
+        type: cat.type as 'photo' | 'video'
+      })));
+      setSubcategories(subcategoriesResponse.data || []);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+    }
+  };
 
   useEffect(() => {
     if (item) {
       setFormData({
         title: item.title,
         description: item.description || '',
+        media_type: item.media_type,
         category: item.category,
         subcategory: item.subcategory || '',
         publish_status: item.publish_status,
         is_featured: item.is_featured,
+        homepage_featured: (item as any).homepage_featured || false,
         location: item.location || '',
         date_taken: item.date_taken || '',
       });
@@ -76,10 +130,10 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) {
+    if (!formData.title.trim() || !formData.category || !formData.media_type) {
       toast({
         title: 'Erro',
-        description: 'O título é obrigatório.',
+        description: 'Título, tipo de mídia e categoria são obrigatórios.',
         variant: 'destructive',
       });
       return;
@@ -94,10 +148,12 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
           .update({
             title: formData.title,
             description: formData.description || null,
+            media_type: formData.media_type,
             category: formData.category,
             subcategory: formData.subcategory || null,
             publish_status: formData.publish_status,
             is_featured: formData.is_featured,
+            homepage_featured: formData.homepage_featured,
             location: formData.location || null,
             date_taken: formData.date_taken || null,
           })
@@ -200,31 +256,75 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
 
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="category">Categoria *</Label>
+                  <Label htmlFor="media_type">Tipo de Mídia *</Label>
                   <Select
-                    value={formData.category}
-                    onValueChange={(value: any) => setFormData({ ...formData, category: value })}
+                    value={formData.media_type}
+                    onValueChange={(value: 'photo' | 'video') => {
+                      setFormData({ 
+                        ...formData, 
+                        media_type: value,
+                        category: '', // Reset category when media type changes
+                        subcategory: ''
+                      });
+                    }}
+                    disabled={!!item} // Disable when editing existing item
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="casamento">Casamento</SelectItem>
-                      <SelectItem value="aniversario">Aniversário</SelectItem>
-                      <SelectItem value="corporativo">Corporativo</SelectItem>
-                      <SelectItem value="familia">Família</SelectItem>
+                      <SelectItem value="photo">Foto</SelectItem>
+                      <SelectItem value="video">Vídeo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="category">Categoria *</Label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      category: value,
+                      subcategory: '' // Reset subcategory when category changes
+                    })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories
+                        .filter(cat => cat.type === formData.media_type)
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <Label htmlFor="subcategory">Subcategoria</Label>
-                  <Input
-                    id="subcategory"
+                  <Select
                     value={formData.subcategory}
-                    onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
-                    placeholder="Subcategoria opcional"
-                  />
+                    onValueChange={(value) => setFormData({ ...formData, subcategory: value })}
+                    disabled={!formData.category}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma subcategoria (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhuma</SelectItem>
+                      {subcategories
+                        .filter(sub => sub.category_id === formData.category)
+                        .map((subcategory) => (
+                          <SelectItem key={subcategory.id} value={subcategory.id}>
+                            {subcategory.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -244,13 +344,24 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                   </Select>
                 </div>
 
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="is_featured"
-                    checked={formData.is_featured}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
-                  />
-                  <Label htmlFor="is_featured">Item em destaque</Label>
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="is_featured"
+                      checked={formData.is_featured}
+                      onCheckedChange={(checked) => setFormData({ ...formData, is_featured: checked })}
+                    />
+                    <Label htmlFor="is_featured">Item em destaque</Label>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="homepage_featured"
+                      checked={formData.homepage_featured}
+                      onCheckedChange={(checked) => setFormData({ ...formData, homepage_featured: checked })}
+                    />
+                    <Label htmlFor="homepage_featured">Exibir na homepage</Label>
+                  </div>
                 </div>
               </div>
             </div>
