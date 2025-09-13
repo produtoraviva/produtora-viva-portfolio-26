@@ -7,6 +7,8 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import Contact from "@/components/Contact";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { Link } from "react-router-dom";
+import { Settings } from "lucide-react";
 
 const Index = () => {
   return (
