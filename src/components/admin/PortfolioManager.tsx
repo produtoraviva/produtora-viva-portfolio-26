@@ -330,11 +330,12 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col gap-1">
+                      <div className="flex flex-row gap-1">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setEditingItem(item)}
+                          title="Editar"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -342,6 +343,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           size="sm"
                           variant="outline"
                           onClick={() => handleToggleVisibility(item)}
+                          title={item.publish_status === 'published' ? 'Ocultar' : 'Publicar'}
                         >
                           {item.publish_status === 'published' ? (
                             <EyeOff className="h-4 w-4" />
@@ -351,7 +353,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" title="Excluir">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>

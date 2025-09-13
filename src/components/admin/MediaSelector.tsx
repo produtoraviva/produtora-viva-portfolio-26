@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Search, Image, Video, Check, RefreshCw } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface MediaItem {
   id: string;
@@ -17,21 +28,27 @@ interface MediaItem {
   file_size?: number;
   dimensions?: { width: number; height: number };
   created_at: string;
+  item_status: string;
 }
 
 interface MediaSelectorProps {
-  onSelect: (mediaItem: MediaItem) => void;
+  onSelect: (media: MediaItem) => void;
   selectedMediaId?: string;
   filterByType?: 'photo' | 'video';
   refreshTrigger?: number;
 }
 
-export function MediaSelector({ onSelect, selectedMediaId, filterByType, refreshTrigger }: MediaSelectorProps) {
+export function MediaSelector({ 
+  onSelect, 
+  selectedMediaId, 
+  filterByType,
+  refreshTrigger = 0 
+}: MediaSelectorProps) {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'photo' | 'video'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
   const { toast } = useToast();
 
   const loadMediaItems = async () => {
@@ -82,45 +99,118 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
   }, [filterByType]);
 
   useEffect(() => {
-    filterItems();
-  }, [mediaItems, searchTerm, typeFilter]);
-
-  const handleRefresh = () => {
-    loadMediaItems();
-  };
-
-  const filterItems = () => {
     let filtered = mediaItems;
 
-    // Filter by type
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter(item => item.media_type === typeFilter);
-    }
-
-    // Apply external filter if provided
-    if (filterByType) {
-      filtered = filtered.filter(item => item.media_type === filterByType);
-    }
-
-    // Filter by search term
-    if (searchTerm) {
+    if (searchTerm.trim()) {
       filtered = filtered.filter(item =>
         item.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(item => item.media_type === typeFilter);
+    }
+
     setFilteredItems(filtered);
+  }, [mediaItems, searchTerm, typeFilter]);
+
+  const handleEdit = (item: MediaItem) => {
+    // Implementar edição de mídia se necessário
+    toast({
+      title: 'Funcionalidade em desenvolvimento',
+      description: 'A edição de mídia será implementada em breve.',
+    });
   };
 
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return '';
-    const k = 1024;
+  const handleToggleStatus = async (item: MediaItem) => {
+    const newStatus = item.item_status === 'uploaded' ? 'published' : 'uploaded';
+    
+    try {
+      const { error } = await supabase
+        .from('portfolio_items')
+        .update({ item_status: newStatus })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: `Status alterado para ${newStatus === 'uploaded' ? 'mídia' : 'item publicado'}!`,
+      });
+
+      // Recarregar a lista
+      await loadMediaItems();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao alterar status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleDelete = async (itemId: string) => {
+    try {
+      // Primeiro, buscar o item para obter a URL do arquivo
+      const { data: item, error: fetchError } = await supabase
+        .from('portfolio_items')
+        .select('file_url')
+        .eq('id', itemId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Extrair o caminho do arquivo da URL
+      if (item?.file_url && item.file_url.includes('portfolio-media/')) {
+        const filePath = item.file_url.split('portfolio-media/')[1];
+        
+        // Deletar o arquivo do storage
+        const { error: storageError } = await supabase.storage
+          .from('portfolio-media')
+          .remove([filePath]);
+
+        if (storageError) {
+          console.warn('Erro ao deletar arquivo do storage:', storageError);
+        }
+      }
+
+      // Deletar o registro da base de dados
+      const { error } = await supabase
+        .from('portfolio_items')
+        .delete()
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Mídia excluída com sucesso!',
+      });
+
+      // Recarregar a lista
+      await loadMediaItems();
+    } catch (error) {
+      console.error('Error deleting media:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir mídia.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const formatFileSize = (bytes: number | undefined): string => {
+    if (!bytes) return 'N/A';
+    
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    if (bytes === 0) return '0 Bytes';
+    
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('pt-BR');
   };
 
@@ -128,10 +218,8 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-8">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-            Carregando mídias...
-          </div>
+          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+          <span>Carregando mídia...</span>
         </CardContent>
       </Card>
     );
@@ -141,77 +229,63 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>Selecionar Mídia</CardTitle>
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleRefresh}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-              ) : (
-                <RefreshCw className="w-4 h-4 mr-2" />
-              )}
-              Atualizar
-            </Button>
-            {!filterByType && (
-              <Select value={typeFilter} onValueChange={(value: any) => setTypeFilter(value)}>
-                <SelectTrigger className="w-32">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="photo">Fotos</SelectItem>
-                  <SelectItem value="video">Vídeos</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
+          <CardTitle>Biblioteca de Mídia</CardTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => loadMediaItems()}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Filtros */}
+        <div className="flex gap-2">
+          {!filterByType && (
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="photo">Fotos</SelectItem>
+                <SelectItem value="video">Vídeos</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          <Input
+            placeholder="Buscar mídia..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1"
+          />
+        </div>
+
+        {/* Grid de mídia */}
         {filteredItems.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              {mediaItems.length === 0 
-                ? 'Nenhuma mídia encontrada. Faça upload de algumas mídias primeiro.'
-                : 'Nenhuma mídia encontrada com os filtros aplicados.'
-              }
-            </p>
+          <div className="text-center py-8 text-muted-foreground">
+            {mediaItems.length === 0 
+              ? 'Nenhuma mídia encontrada.' 
+              : 'Nenhuma mídia corresponde aos filtros.'
+            }
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredItems.map((item) => (
-              <Card
-                key={item.id}
+              <Card 
+                key={item.id} 
                 className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedMediaId === item.id 
-                    ? 'ring-2 ring-primary shadow-md' 
-                    : ''
+                  selectedMediaId === item.id ? 'ring-2 ring-primary' : ''
                 }`}
                 onClick={() => onSelect(item)}
               >
-                <div className="relative aspect-video overflow-hidden rounded-t-lg">
+                <div className="aspect-square relative overflow-hidden rounded-t-lg">
                   {item.media_type === 'video' ? (
                     <video
                       src={item.file_url}
-                      poster={item.thumbnail_url}
                       className="w-full h-full object-cover"
+                      poster={item.thumbnail_url}
                     />
                   ) : (
                     <img
@@ -220,37 +294,80 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType, refresh
                       className="w-full h-full object-cover"
                     />
                   )}
-                  <div className="absolute top-2 right-2 flex gap-1">
+                  <div className="absolute top-2 right-2">
                     <Badge variant="secondary" className="text-xs">
-                      {item.media_type === 'photo' ? (
-                        <Image className="h-3 w-3" />
-                      ) : (
-                        <Video className="h-3 w-3" />
-                      )}
+                      {item.media_type === 'photo' ? '📷' : '🎥'}
                     </Badge>
-                    {selectedMediaId === item.id && (
-                      <Badge className="text-xs bg-primary">
-                        <Check className="h-3 w-3" />
-                      </Badge>
-                    )}
                   </div>
                 </div>
-                <div className="p-3">
-                  <h4 className="font-medium text-sm truncate mb-1">{item.title}</h4>
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(item.created_at)}
-                    </p>
-                    {item.file_size && (
+                <div className="p-3 border-t">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{item.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {formatFileSize(item.file_size)}
+                        {formatDate(item.created_at)} • {formatFileSize(item.file_size)}
+                        {item.dimensions && (
+                          <> • {item.dimensions.width}×{item.dimensions.height}</>
+                        )}
                       </p>
-                    )}
-                    {item.dimensions && (
-                      <p className="text-xs text-muted-foreground">
-                        {item.dimensions.width} × {item.dimensions.height}
-                      </p>
-                    )}
+                    </div>
+                    <div className="flex gap-1 ml-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEdit(item);
+                        }}
+                        title="Editar"
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleStatus(item);
+                        }}
+                        title={item.item_status === 'uploaded' ? 'Converter para item' : 'Converter para mídia'}
+                      >
+                        {item.item_status === 'uploaded' ? (
+                          <Eye className="h-3 w-3" />
+                        ) : (
+                          <EyeOff className="h-3 w-3" />
+                        )}
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            size="sm" 
+                            variant="outline" 
+                            title="Excluir"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Mídia</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Tem certeza que deseja excluir "{item.title}"? Esta ação não pode ser desfeita.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(item.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
                 </div>
               </Card>
