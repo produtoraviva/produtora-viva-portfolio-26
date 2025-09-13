@@ -22,9 +22,10 @@ interface FileWithPreview extends File {
 
 interface MediaUploaderProps {
   onUploadComplete: () => void;
+  onMediaUploaded?: () => void;
 }
 
-export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
+export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUploaderProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'uploading' | 'success' | 'error' }>({});
@@ -184,17 +185,14 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
         ? maxOrderData[0].display_order + 1 
         : 0;
 
-      // Insert into database - upload files don't create portfolio items, just store media
+      // Insert into temp_media table for later use in portfolio items  
       const { error: dbError } = await supabase
-        .from('portfolio_items')
+        .from('temp_media')
         .insert({
-          title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
-          media_type: file.type.startsWith('image/') ? 'photo' : 'video',
+          filename: file.name,
           file_url: publicUrl,
           thumbnail_url: thumbnailUrl,
-          category: 'temp', // Temporary category, will be set when creating actual portfolio item
-          publish_status: 'draft', // Always draft when just uploading media
-          display_order: nextOrder,
+          media_type: file.type.startsWith('image/') ? 'photo' : 'video',
           file_size: file.size,
           dimensions: dimensions,
         });
@@ -235,6 +233,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
       setUploadStatus({});
       
       onUploadComplete();
+      onMediaUploaded?.();
     } catch (error) {
       console.error('Upload error:', error);
     } finally {
@@ -474,7 +473,8 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
             onSelect={(mediaItem) => {
               // Just show details for now, can be extended later
               console.log('Selected media:', mediaItem);
-            }} 
+            }}
+            refreshTrigger={0}
           />
         </TabsContent>
       </Tabs>

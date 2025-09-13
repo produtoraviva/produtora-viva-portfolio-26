@@ -11,6 +11,7 @@ import { Search, Image, Video, Check } from 'lucide-react';
 interface MediaItem {
   id: string;
   title: string;
+  filename?: string;
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
@@ -23,9 +24,10 @@ interface MediaSelectorProps {
   onSelect: (mediaItem: MediaItem) => void;
   selectedMediaId?: string;
   filterByType?: 'photo' | 'video';
+  refreshTrigger?: number;
 }
 
-export function MediaSelector({ onSelect, selectedMediaId, filterByType }: MediaSelectorProps) {
+export function MediaSelector({ onSelect, selectedMediaId, filterByType, refreshTrigger }: MediaSelectorProps) {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<MediaItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -35,7 +37,7 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType }: Media
 
   useEffect(() => {
     loadMediaItems();
-  }, []);
+  }, [refreshTrigger]);
 
   useEffect(() => {
     if (filterByType) {
@@ -51,13 +53,14 @@ export function MediaSelector({ onSelect, selectedMediaId, filterByType }: Media
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('portfolio_items')
-        .select('id, title, media_type, file_url, thumbnail_url, file_size, dimensions, created_at')
+        .from('temp_media')
+        .select('id, filename, media_type, file_url, thumbnail_url, file_size, dimensions, created_at')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
       setMediaItems((data || []).map(item => ({
         ...item,
+        title: item.filename.replace(/\.[^/.]+$/, ''), // Use filename without extension as title
         media_type: item.media_type as 'photo' | 'video',
         dimensions: item.dimensions as { width: number; height: number } | undefined
       })));

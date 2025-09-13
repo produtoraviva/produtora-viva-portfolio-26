@@ -30,6 +30,7 @@ interface Subcategory {
 interface MediaItem {
   id: string;
   title: string;
+  filename?: string;
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
@@ -46,6 +47,7 @@ interface NewItemCreatorProps {
 export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
   const [activeTab, setActiveTab] = useState<'select' | 'upload'>('select');
   const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
+  const [refreshMediaTrigger, setRefreshMediaTrigger] = useState(0);
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
@@ -222,21 +224,30 @@ export function NewItemCreator({ onSave, onCancel }: NewItemCreatorProps) {
                   <TabsTrigger value="upload">Fazer Upload</TabsTrigger>
                 </TabsList>
                 
-                <TabsContent value="select" className="mt-4">
-                  <MediaSelector 
-                    onSelect={setSelectedMedia}
-                    selectedMediaId={selectedMedia?.id}
-                  />
-                </TabsContent>
+                 <TabsContent value="select" className="mt-4">
+                   <MediaSelector 
+                     onSelect={setSelectedMedia}
+                     selectedMediaId={selectedMedia?.id}
+                     refreshTrigger={refreshMediaTrigger}
+                   />
+                 </TabsContent>
                 
-                <TabsContent value="upload" className="mt-4">
-                  <div className="text-center py-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
-                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">
-                      Use a aba "Upload de Mídia" para enviar novos arquivos
-                    </p>
-                  </div>
-                </TabsContent>
+                 <TabsContent value="upload" className="mt-4">
+                   <div className="text-center py-8 border-2 border-dashed border-muted-foreground/25 rounded-lg">
+                     <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                     <p className="text-muted-foreground">
+                       Use a aba "Upload de Mídia" na seção principal para enviar novos arquivos.<br/>
+                       Depois retorne aqui para selecioná-los.
+                     </p>
+                     <Button 
+                       variant="outline" 
+                       className="mt-4"
+                       onClick={() => setRefreshMediaTrigger(prev => prev + 1)}
+                     >
+                       Atualizar Lista de Mídia
+                     </Button>
+                   </div>
+                 </TabsContent>
               </Tabs>
               
               {selectedMedia && (

@@ -231,6 +231,50 @@ export type Database = {
           },
         ]
       }
+      temp_media: {
+        Row: {
+          created_at: string
+          dimensions: Json | null
+          file_size: number | null
+          file_url: string
+          filename: string
+          id: string
+          media_type: string
+          thumbnail_url: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          dimensions?: Json | null
+          file_size?: number | null
+          file_url: string
+          filename: string
+          id?: string
+          media_type: string
+          thumbnail_url?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          dimensions?: Json | null
+          file_size?: number | null
+          file_url?: string
+          filename?: string
+          id?: string
+          media_type?: string
+          thumbnail_url?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "temp_media_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "admin_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
