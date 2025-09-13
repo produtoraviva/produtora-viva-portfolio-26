@@ -265,6 +265,15 @@ export function HomepageBackgroundManager() {
         </div>
         <div className="flex gap-2">
           <Button 
+            onClick={loadBackgrounds}
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Atualizar
+          </Button>
+          <Button 
             onClick={() => setIsDragEnabled(!isDragEnabled)}
             variant={isDragEnabled ? "default" : "outline"}
             size="sm"

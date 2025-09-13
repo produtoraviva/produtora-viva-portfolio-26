@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Camera, Award } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import heroImage from "@/assets/hero-wedding.jpg";
 
 const Hero = () => {
-  const [currentBackground, setCurrentBackground] = useState(heroImage);
+  const [currentBackground, setCurrentBackground] = useState<string | null>(null);
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.6);
 
   useEffect(() => {
@@ -29,6 +28,9 @@ const Hero = () => {
       if (data && data.length > 0) {
         setCurrentBackground(data[0].file_url);
         setBackgroundOpacity(data[0].opacity || 0.6);
+      } else {
+        // Use a default gradient background if no images are set
+        setCurrentBackground(null);
       }
     } catch (error) {
       console.error('Error loading homepage background:', error);
@@ -51,13 +53,17 @@ const Hero = () => {
 
   return (
     <section id="hero" className="min-h-screen relative flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image or Gradient */}
       <div className="absolute inset-0">
-        <img
-          src={currentBackground}
-          alt="Fotografia profissional de eventos"
-          className="w-full h-full object-cover"
-        />
+        {currentBackground ? (
+          <img
+            src={currentBackground}
+            alt="Fotografia profissional de eventos"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-background via-secondary/30 to-primary/20" />
+        )}
         <div className="absolute inset-0" style={{ backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity})` }}></div>
       </div>
       
