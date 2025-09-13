@@ -307,15 +307,18 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                 <div>
                   <Label htmlFor="subcategory">Subcategoria</Label>
                   <Select
-                    value={formData.subcategory}
-                    onValueChange={(value) => setFormData({ ...formData, subcategory: value })}
+                    value={formData.subcategory || "none"}
+                    onValueChange={(value) => setFormData({ 
+                      ...formData, 
+                      subcategory: value === "none" ? "" : value 
+                    })}
                     disabled={!formData.category}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione uma subcategoria (opcional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma</SelectItem>
+                      <SelectItem value="none">Nenhuma</SelectItem>
                       {subcategories
                         .filter(sub => sub.category_id === formData.category)
                         .map((subcategory) => (
