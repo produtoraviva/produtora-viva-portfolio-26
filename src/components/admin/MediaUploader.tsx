@@ -116,6 +116,11 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       const { data: { user } } = await supabase.auth.getUser();
       console.log('Current user:', user);
       
+      
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+      
       setUploadStatus(prev => ({ ...prev, [file.id]: 'uploading' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
 
@@ -211,7 +216,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       setUploadStatus(prev => ({ ...prev, [file.id]: 'error' }));
       toast({
         title: 'Erro no Upload',
-        description: `Erro ao fazer upload de ${file.name}`,
+        description: error instanceof Error ? error.message : `Erro ao fazer upload de ${file.name}`,
         variant: 'destructive',
       });
     }
