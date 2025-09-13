@@ -15,8 +15,7 @@ const getCategoryIcon = (categoryName: string) => {
   return Eye;
 };
 
-type CategoryType = "all" | string;
-type SubcategoryType = "all" | string;
+type CategoryType = "all" | "photo" | "video";
 type ViewType = "grid" | "masonry";
 
 interface Category {
@@ -50,7 +49,7 @@ interface PortfolioItem {
 
 const PortfolioFull = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
-  const [activeSubcategory, setActiveSubcategory] = useState<SubcategoryType>("all");
+  const [activePortfolioCategory, setActivePortfolioCategory] = useState<string>("all");
   const [viewType, setViewType] = useState<ViewType>("grid");
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -170,30 +169,78 @@ const PortfolioFull = () => {
     }
   };
 
-  // Dynamic categories based on loaded data from database
-  const dynamicCategories = [
-    { id: "all", label: "Todos", icon: Eye },
-    ...categories.map(cat => ({
-      id: cat.id,
-      label: cat.name,
-      icon: getCategoryIcon(cat.name)
-    }))
+  // Media type categories (first filter)
+  const mediaTypeCategories = [
+    { id: "all", label: "Tudo", icon: Eye },
+    { id: "photo", label: "Fotos", icon: Camera },
+    { id: "video", label: "Vídeos", icon: Video },
   ];
 
-  // Dynamic subcategories based on loaded subcategories data  
-  const dynamicSubcategories = [
-    { id: "all", label: "Todos", icon: Eye },
-    ...subcategories.map(sub => ({
-      id: sub.id,
-      label: sub.name,
-      icon: getCategoryIcon(sub.name)
-    }))
-  ];
+  // Get unique category names and filter by media type
+  const getAvailableCategories = () => {
+    if (activeCategory === "all") {
+      // Show all categories
+      const uniqueNames = new Set<string>();
+      const uniqueCategories: Array<{ id: string, label: string, icon: any }> = [];
+      
+      categories.forEach(cat => {
+        if (!uniqueNames.has(cat.name)) {
+          uniqueNames.add(cat.name);
+          uniqueCategories.push({
+            id: cat.name,
+            label: cat.name,
+            icon: getCategoryIcon(cat.name)
+          });
+        }
+      });
+      
+      return [
+        { id: "all", label: "Todas", icon: Eye },
+        ...uniqueCategories
+      ];
+    } else {
+      // Filter categories by media type and show only categories that have items of that type
+      const categoriesWithItems = new Set<string>();
+      
+      portfolioItems.forEach(item => {
+        if (item.media_type === activeCategory && item.category) {
+          const categoryName = categoryMap.get(item.category);
+          if (categoryName) {
+            categoriesWithItems.add(categoryName);
+          }
+        }
+      });
+      
+      const uniqueCategories: Array<{ id: string, label: string, icon: any }> = [];
+      categoriesWithItems.forEach(categoryName => {
+        uniqueCategories.push({
+          id: categoryName,
+          label: categoryName,
+          icon: getCategoryIcon(categoryName)
+        });
+      });
+      
+      return [
+        { id: "all", label: "Todas", icon: Eye },
+        ...uniqueCategories
+      ];
+    }
+  };
+
+  const availableCategories = getAvailableCategories();
 
   const filteredItems = portfolioItems.filter((item) => {
-    const categoryMatch = activeCategory === "all" || item.category === activeCategory;
-    const subcategoryMatch = activeSubcategory === "all" || item.subcategory === activeSubcategory;
-    return categoryMatch && subcategoryMatch;
+    // Filter by media type
+    const mediaTypeMatch = activeCategory === "all" || item.media_type === activeCategory;
+    
+    // Filter by category name
+    let categoryMatch = true;
+    if (activePortfolioCategory !== "all") {
+      const categoryName = item.category ? categoryMap.get(item.category) : '';
+      categoryMatch = categoryName === activePortfolioCategory;
+    }
+    
+    return mediaTypeMatch && categoryMatch;
   });
 
   // Paginação
@@ -213,13 +260,14 @@ const PortfolioFull = () => {
   };
 
   // Reset page when filters change
-  const handleCategoryChange = (category: string) => {
-    setActiveCategory(category as CategoryType);
+  const handleMediaTypeChange = (mediaType: string) => {
+    setActiveCategory(mediaType as CategoryType);
+    setActivePortfolioCategory("all"); // Reset category when media type changes
     setCurrentPage(1);
   };
 
-  const handleSubcategoryChange = (subcategory: string) => {
-    setActiveSubcategory(subcategory);
+  const handlePortfolioCategoryChange = (category: string) => {
+    setActivePortfolioCategory(category);
     setCurrentPage(1);
   };
 
@@ -258,46 +306,46 @@ const PortfolioFull = () => {
 
         {/* Filters and View Controls */}
         <div className="space-y-6 mb-8 animate-fade-in-delayed">
-          {/* Category Filters */}
+          {/* Media Type Filters */}
           <div className="flex flex-wrap justify-center gap-4">
-            {dynamicCategories.map((category) => {
-              const Icon = category.icon;
+            {mediaTypeCategories.map((mediaType) => {
+              const Icon = mediaType.icon;
               return (
                 <Button
-                  key={category.id}
-                  variant={activeCategory === category.id ? "default" : "outline"}
+                  key={mediaType.id}
+                  variant={activeCategory === mediaType.id ? "default" : "outline"}
                   className={`${
-                    activeCategory === category.id
+                    activeCategory === mediaType.id
                       ? "bg-gradient-primary"
                       : "border-primary/30 hover:bg-primary/10"
                   } transition-all hover-scale`}
-                  onClick={() => handleCategoryChange(category.id)}
+                  onClick={() => handleMediaTypeChange(mediaType.id)}
                 >
                   <Icon className="mr-2 h-4 w-4" />
-                  {category.label}
+                  {mediaType.label}
                 </Button>
               );
             })}
           </div>
 
-          {/* Subcategory Filters */}
+          {/* Portfolio Category Filters */}
           <div className="flex flex-wrap justify-center gap-2">
-            {dynamicSubcategories.map((subcategory) => {
-              const Icon = subcategory.icon;
+            {availableCategories.map((category) => {
+              const Icon = category.icon;
               return (
                 <Button
-                  key={subcategory.id}
+                  key={category.id}
                   variant="ghost"
                   size="sm"
                   className={`${
-                    activeSubcategory === subcategory.id
+                    activePortfolioCategory === category.id
                       ? "bg-primary/20 text-primary"
                       : "text-muted-foreground hover:text-foreground"
                   } transition-all`}
-                  onClick={() => handleSubcategoryChange(subcategory.id)}
+                  onClick={() => handlePortfolioCategoryChange(category.id)}
                 >
                   <Icon className="mr-1 h-3 w-3" />
-                  {subcategory.label}
+                  {category.label}
                 </Button>
               );
             })}
