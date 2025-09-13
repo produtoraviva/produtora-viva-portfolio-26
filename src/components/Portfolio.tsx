@@ -113,8 +113,8 @@ const Portfolio = () => {
   });
 
   const openImageModal = (index: number) => {
-    // This function would open an image modal - implementation depends on your modal component
-    console.log('Opening image modal for item', index);
+    // For now, just log - would need to implement modal similar to PortfolioFull
+    console.log('Opening image modal for item', index, filteredItems[index]);
   };
 
   if (isLoading) {

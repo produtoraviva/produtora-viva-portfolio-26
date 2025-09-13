@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff, Home } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -186,6 +186,35 @@ export function MediaSelector({
       toast({
         title: 'Erro',
         description: 'Erro ao alterar status.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleAddToHomepageBackgrounds = async (item: MediaItem) => {
+    try {
+      const { error } = await supabase
+        .from('homepage_backgrounds')
+        .insert({
+          name: item.title,
+          file_url: item.file_url,
+          thumbnail_url: item.thumbnail_url,
+          opacity: 0.5,
+          display_order: 0,
+          is_active: true
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Item adicionado à biblioteca de fundos da homepage!',
+      });
+    } catch (error) {
+      console.error('Error adding to homepage backgrounds:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao adicionar à biblioteca de fundos.',
         variant: 'destructive',
       });
     }
@@ -386,6 +415,20 @@ export function MediaSelector({
                         <Eye className="h-3 w-3" />
                       )}
                       </Button>
+                      {item.media_type === 'photo' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToHomepageBackgrounds(item);
+                          }}
+                          title="Adicionar à biblioteca de fundos da homepage"
+                          className="h-8 w-8 p-0"
+                        >
+                          <Home className="h-3 w-3" />
+                        </Button>
+                      )}
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
                           <Button 

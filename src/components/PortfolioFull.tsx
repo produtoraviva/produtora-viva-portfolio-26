@@ -484,7 +484,8 @@ const PortfolioFull = () => {
           image: item.thumbnail_url || item.file_url,
           description: item.description || '',
           date: item.date_taken ? new Date(item.date_taken).toLocaleDateString('pt-BR') : '',
-          location: item.location || ''
+          location: item.location || '',
+          media_type: item.media_type
         }))}
         currentIndex={currentImageIndex}
         onIndexChange={setCurrentImageIndex}

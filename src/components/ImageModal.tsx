@@ -13,6 +13,7 @@ interface ImageModalProps {
     description: string;
     category: string;
     subcategory: string;
+    media_type?: 'photo' | 'video';
   }>;
   currentIndex: number;
   onIndexChange: (index: number) => void;
@@ -104,7 +105,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             </>
           )}
 
-          {/* Image */}
+          {/* Media Content */}
           <div className="relative w-full h-full flex items-center justify-center p-4">
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
@@ -112,14 +113,26 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
               </div>
             )}
             
-            <img
-              src={currentImage.image}
-              alt={currentImage.title}
-              className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
-                imageLoaded ? 'opacity-100' : 'opacity-0'
-              }`}
-              onLoad={() => setImageLoaded(true)}
-            />
+            {currentImage.media_type === 'video' ? (
+              <video
+                src={currentImage.image}
+                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                controls
+                autoPlay
+                onLoadedData={() => setImageLoaded(true)}
+              />
+            ) : (
+              <img
+                src={currentImage.image}
+                alt={currentImage.title}
+                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImageLoaded(true)}
+              />
+            )}
           </div>
 
           {/* Image Info */}
