@@ -116,12 +116,13 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             {currentImage.media_type === 'video' ? (
               <video
                 src={currentImage.image}
-                className={`max-w-full max-h-full object-contain transition-opacity duration-300 ${
+                className={`w-full h-full object-contain transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 controls
                 autoPlay
                 onLoadedData={() => setImageLoaded(true)}
+                style={{ minHeight: '60vh', maxHeight: '85vh' }}
               />
             ) : (
               <img

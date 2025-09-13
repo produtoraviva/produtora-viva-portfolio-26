@@ -399,22 +399,6 @@ export function MediaSelector({
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStatus(item);
-                        }}
-                        title={item.item_status === 'uploaded' ? 'Publicar item' : 'Manter como mídia'}
-                        className="h-8 w-8 p-0"
-                      >
-                      {item.item_status === 'published' ? (
-                        <EyeOff className="h-3 w-3" />
-                      ) : (
-                        <Eye className="h-3 w-3" />
-                      )}
-                      </Button>
                       {item.media_type === 'photo' && (
                         <Button
                           size="sm"
