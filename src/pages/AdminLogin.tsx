@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -77,10 +78,8 @@ export default function AdminLogin() {
             </div>
           </div>
           
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
-              PRODUTORA VIVA
-            </h1>
+          <div className="text-center mb-6">
+            <Logo size="lg" className="mx-auto mb-4" />
             <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
               Painel Administrativo

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Menu, X, Camera, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Logo } from "./Logo";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,13 +59,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group cursor-pointer">
-            <div className="flex items-center space-x-1">
-              <Camera className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-              <Video className="h-6 w-6 text-primary transition-transform group-hover:scale-110" />
-            </div>
-            <span className="text-xl lg:text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-              PRODUTORA VIVA
-            </span>
+            <Logo size="sm" />
           </Link>
 
           {/* Desktop Menu */}

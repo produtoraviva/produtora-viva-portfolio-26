@@ -30,6 +30,7 @@ import { EditHistory } from '@/components/admin/EditHistory';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HomepageBackgroundManager } from '@/components/admin/HomepageBackgroundManager';
 import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
+import { AccountManager } from '@/components/admin/AccountManager';
 
 interface PortfolioItem {
   id: string;
@@ -202,6 +203,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="homepage-bg">Fundo Homepage</TabsTrigger>
             <TabsTrigger value="visualizer">Visualização</TabsTrigger>
             <TabsTrigger value="history">Histórico</TabsTrigger>
+            <TabsTrigger value="accounts">Contas</TabsTrigger>
           </TabsList>
 
           <TabsContent value="portfolio" className="space-y-6">
@@ -310,6 +312,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="history">
             <EditHistory />
+          </TabsContent>
+
+          <TabsContent value="accounts">
+            <AccountManager />
           </TabsContent>
         </Tabs>
       </main>

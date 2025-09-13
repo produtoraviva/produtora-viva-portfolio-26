@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home } from "lucide-react";
 import PortfolioFull from "@/components/PortfolioFull";
+import { Logo } from '@/components/Logo';
 import Navigation from "@/components/Navigation";
 import WhatsAppButton from "@/components/WhatsAppButton";
 
@@ -45,9 +46,7 @@ const PortfolioPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Logo & Description */}
             <div className="md:col-span-2">
-              <div className="text-2xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-4">
-                PRODUTORA VIVA
-              </div>
+              <Logo className="mb-4" />
               <p className="text-muted-foreground text-sm mb-4 max-w-md">
                 Especializada em fotografia e videografia de alta qualidade para casamentos, 
                 eventos corporativos e momentos especiais. Capturamos suas memórias com arte e emoção.
@@ -102,7 +101,7 @@ const PortfolioPage = () => {
           
           <div className="border-t border-border pt-8 text-center">
             <p className="text-muted-foreground text-sm">
-              © 2024 Produtora Viva. Todos os direitos reservados.
+              © 2024 Todos os direitos reservados.
             </p>
             <p className="text-muted-foreground text-xs mt-2">
               Fotografia e Videografia Profissional | Foz do Iguaçu, PR

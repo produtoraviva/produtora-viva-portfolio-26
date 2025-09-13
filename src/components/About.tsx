@@ -41,7 +41,7 @@ const About = () => {
               </h2>
               <div className="space-y-4 text-lg text-muted-foreground">
                 <p>
-                  A <strong className="text-foreground">Produtora Viva</strong> nasceu da paixão por capturar 
+                  Nossa empresa nasceu da paixão por capturar 
                   momentos únicos e transformá-los em memórias eternas. Há mais de 5 anos no mercado, 
                   especializamo-nos em fotografia e videografia de alta qualidade.
                 </p>

@@ -15,7 +15,7 @@ const Testimonials = () => {
       name: "Ana & João Silva",
       event: "Casamento - Dezembro 2023",
       rating: 5,
-      text: "A Produtora Viva superou todas nossas expectativas! As fotos ficaram incríveis e o vídeo do nosso casamento parece um filme. Profissionais extremamente atenciosos e talentosos. Recomendamos de olhos fechados!",
+      text: "A nossa fotógrafa superou todas nossas expectativas! As fotos ficaram incríveis e o vídeo do nosso casamento parece um filme. Profissionais extremamente atenciosos e talentosos. Recomendamos de olhos fechados!",
       image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face"
     },
     {
