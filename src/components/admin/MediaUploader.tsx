@@ -204,6 +204,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           media_type: file.type.startsWith('image/') ? 'photo' : 'video',
           file_size: file.size,
           dimensions: dimensions,
+          uploaded_by: 'd3743515-3e84-4c70-a468-814237d05784', // TODO: Get from auth.uid()
         });
 
       if (dbError) throw dbError;
