@@ -68,6 +68,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       const oldIndex = items.findIndex(item => item.id === active.id);
       const newIndex = items.findIndex(item => item.id === over.id);
       
+      // Atualizar a ordem imediatamente na UI para feedback instantâneo
       const reorderedItems = arrayMove(items, oldIndex, newIndex);
       
       // Update display_order for all affected items
@@ -77,16 +78,19 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           display_order: index
         }));
 
-        for (const update of updates) {
-          await supabase
-            .from('portfolio_items')
-            .update({ display_order: update.display_order })
-            .eq('id', update.id);
-        }
+        // Usar Promise.all para atualizar em paralelo
+        await Promise.all(
+          updates.map(update => 
+            supabase
+              .from('portfolio_items')
+              .update({ display_order: update.display_order })
+              .eq('id', update.id)
+          )
+        );
 
         toast({
           title: 'Sucesso',
-          description: 'Ordem dos itens atualizada com sucesso!',
+          description: 'Ordem dos itens atualizada!',
         });
 
         onItemsChange();
@@ -97,6 +101,8 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           description: 'Erro ao reordenar itens.',
           variant: 'destructive',
         });
+        // Recarregar a lista original em caso de erro
+        onItemsChange();
       }
     }
   };
@@ -330,31 +336,38 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-row gap-1">
+                      <div className="flex gap-1">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => setEditingItem(item)}
                           title="Editar"
+                          className="h-8 w-8 p-0"
                         >
-                          <Edit className="h-4 w-4" />
+                          <Edit className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleToggleVisibility(item)}
                           title={item.publish_status === 'published' ? 'Ocultar' : 'Publicar'}
+                          className="h-8 w-8 p-0"
                         >
                           {item.publish_status === 'published' ? (
-                            <EyeOff className="h-4 w-4" />
+                            <EyeOff className="h-3 w-3" />
                           ) : (
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3 w-3" />
                           )}
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="sm" variant="outline" title="Excluir">
-                              <Trash2 className="h-4 w-4" />
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              title="Excluir"
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3 w-3" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
@@ -368,7 +381,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                               <AlertDialogCancel>Cancelar</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleDelete(item.id)}
-                                className="bg-red-600 hover:bg-red-700"
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
                                 Excluir
                               </AlertDialogAction>

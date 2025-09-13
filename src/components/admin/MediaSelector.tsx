@@ -56,10 +56,10 @@ export function MediaSelector({
       setIsLoading(true);
       console.log('Loading media items...');
       
-      const { data, error } = await supabase
+  const { data, error } = await supabase
         .from('portfolio_items')
         .select('id, title, media_type, file_url, thumbnail_url, file_size, dimensions, created_at, item_status')
-        .eq('item_status', 'uploaded') // Only get uploaded media, not published items
+        .in('item_status', ['uploaded', 'published']) // Include both uploaded and published items
         .order('created_at', { ascending: false });
 
       console.log('Media query result:', { data, error });
@@ -114,8 +114,9 @@ export function MediaSelector({
     setFilteredItems(filtered);
   }, [mediaItems, searchTerm, typeFilter]);
 
+
   const handleEdit = (item: MediaItem) => {
-    // Implementar edição de mídia se necessário
+    // TODO: Implementar modal de edição de mídia
     toast({
       title: 'Funcionalidade em desenvolvimento',
       description: 'A edição de mídia será implementada em breve.',
@@ -138,8 +139,14 @@ export function MediaSelector({
         description: `Status alterado para ${newStatus === 'uploaded' ? 'mídia' : 'item publicado'}!`,
       });
 
-      // Recarregar a lista
-      await loadMediaItems();
+      // Atualizar o item localmente sem recarregar toda a lista
+      setMediaItems(prevItems => 
+        prevItems.map(prevItem => 
+          prevItem.id === item.id 
+            ? { ...prevItem, item_status: newStatus }
+            : prevItem
+        )
+      );
     } catch (error) {
       console.error('Error updating status:', error);
       toast({
@@ -188,8 +195,8 @@ export function MediaSelector({
         description: 'Mídia excluída com sucesso!',
       });
 
-      // Recarregar a lista
-      await loadMediaItems();
+      // Atualizar a lista localmente
+      setMediaItems(prevItems => prevItems.filter(prevItem => prevItem.id !== itemId));
     } catch (error) {
       console.error('Error deleting media:', error);
       toast({
@@ -320,6 +327,7 @@ export function MediaSelector({
                           handleEdit(item);
                         }}
                         title="Editar"
+                        className="h-8 w-8 p-0"
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -330,7 +338,8 @@ export function MediaSelector({
                           e.stopPropagation();
                           handleToggleStatus(item);
                         }}
-                        title={item.item_status === 'uploaded' ? 'Converter para item' : 'Converter para mídia'}
+                        title={item.item_status === 'uploaded' ? 'Publicar item' : 'Manter como mídia'}
+                        className="h-8 w-8 p-0"
                       >
                         {item.item_status === 'uploaded' ? (
                           <Eye className="h-3 w-3" />
@@ -345,6 +354,7 @@ export function MediaSelector({
                             variant="outline" 
                             title="Excluir"
                             onClick={(e) => e.stopPropagation()}
+                            className="h-8 w-8 p-0"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -360,7 +370,7 @@ export function MediaSelector({
                             <AlertDialogCancel>Cancelar</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDelete(item.id)}
-                              className="bg-red-600 hover:bg-red-700"
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             >
                               Excluir
                             </AlertDialogAction>
