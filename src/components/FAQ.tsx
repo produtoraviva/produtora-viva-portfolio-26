@@ -19,8 +19,8 @@ const FAQ = () => {
       answer: "As fotos são entregues em até 15 dias úteis após o evento, com prévia no mesmo dia. Os vídeos cinematográficos ficam prontos em até 30 dias úteis. Casos urgentes podem ser negociados com taxa adicional."
     },
     {
-      question: "Vocês atendem eventos fora de São Paulo?",
-      answer: "Sim! Atendemos todo o Brasil. Para eventos fora da Grande São Paulo, cobramos taxa de deslocamento que varia conforme a distância. Entre em contato para orçamento personalizado."
+      question: "Vocês atendem eventos fora de Foz do Iguaçu?",
+      answer: "Sim! Atendemos toda a região tríplice fronteira. Para eventos fora de Foz do Iguaçu e Ciudad del Este, cobramos taxa de deslocamento que varia conforme a distância. Entre em contato para orçamento personalizado."
     },
     {
       question: "É possível fazer alterações no pacote contratado?",
@@ -60,8 +60,8 @@ const FAQ = () => {
       answer: "Claro! Sempre marcamos uma reunião prévia, presencial ou online, para alinharmos todos os detalhes, conhecer o local e suas preferências. Essa reunião está inclusa no serviço."
     },
     {
-      question: "Vocês fazem eventos em outros estados?",
-      answer: "Sim, atendemos todo o território nacional. Para eventos fora de São Paulo, incluímos hospedagem e transporte no orçamento. Solicite seu orçamento personalizado."
+      question: "Vocês fazem eventos em outros países?",
+      answer: "Sim, atendemos toda a região tríplice fronteira (Brasil, Argentina e Paraguai). Para eventos fora da região, incluímos hospedagem e transporte no orçamento. Solicite seu orçamento personalizado."
     },
     {
       question: "Qual é a política de cancelamento?",

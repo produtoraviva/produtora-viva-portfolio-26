@@ -129,7 +129,7 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Localização</h4>
-                    <p className="text-muted-foreground">São Paulo, SP - Atendemos todo o Brasil</p>
+                    <p className="text-muted-foreground">Foz do Iguaçu e Ciudad del Este - Atendemos toda a região</p>
                   </div>
                 </div>
               </Card>

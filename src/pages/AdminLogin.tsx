@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Camera, Video, Lock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function AdminLogin() {
@@ -54,29 +54,63 @@ export default function AdminLogin() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-display">Admin Login</CardTitle>
-          <CardDescription>
-            Acesse o painel administrativo do portfólio
-          </CardDescription>
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary)) 1px, transparent 1px)`,
+          backgroundSize: '50px 50px'
+        }} />
+      </div>
+
+      {/* Floating Elements */}
+      <div className="absolute top-20 left-20 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute bottom-20 right-20 w-24 h-24 bg-primary/10 rounded-full blur-lg animate-pulse delay-500"></div>
+      
+      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/80 backdrop-blur-sm relative z-10">
+        {/* Header with Brand */}
+        <CardHeader className="text-center space-y-6 pb-8">
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <div className="flex items-center space-x-1 p-3 bg-primary/10 rounded-full">
+              <Camera className="h-6 w-6 text-primary" />
+              <Video className="h-6 w-6 text-primary" />
+            </div>
+          </div>
+          
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-2">
+              PRODUTORA VIVA
+            </h1>
+            <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Painel Administrativo
+            </CardTitle>
+            <CardDescription className="text-muted-foreground mt-2">
+              Faça login para gerenciar seu portfólio e conteúdo
+            </CardDescription>
+          </div>
         </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <CardContent className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@portfolio.com"
+                placeholder="seu@email.com"
                 required
+                className="h-12 bg-background/50 border-border focus:border-primary transition-all"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
+              <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                Senha
+              </Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -85,21 +119,27 @@ export default function AdminLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Digite sua senha"
                   required
+                  className="h-12 bg-background/50 border-border focus:border-primary transition-all pr-12"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary/10"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </Button>
               </div>
             </div>
+            
             <Button
               type="submit"
-              className="w-full"
+              className="w-full h-12 bg-gradient-primary hover:scale-[1.02] transition-all duration-200 font-medium"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -109,18 +149,25 @@ export default function AdminLogin() {
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Entrar
+                  <Lock className="h-4 w-4" />
+                  Acessar Painel
                 </div>
               )}
             </Button>
           </form>
-          <div className="mt-6 p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Credenciais de teste:</strong><br />
-              Email: admin@portfolio.com<br />
-              Senha: admin123456
-            </p>
+          
+          {/* Demo Credentials */}
+          <div className="border-t border-border/50 pt-6">
+            <div className="p-4 bg-muted/50 rounded-lg border border-border/30">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <p className="text-xs font-medium text-foreground">Credenciais de demonstração</p>
+              </div>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p><span className="font-medium">Email:</span> admin@portfolio.com</p>
+                <p><span className="font-medium">Senha:</span> admin123456</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -53,7 +53,7 @@ const About = () => {
                 <p>
                   Com mais de <strong className="text-primary">500 eventos realizados</strong> e 
                   uma taxa de satisfação de <strong className="text-primary">98%</strong>, 
-                  somos referência em São Paulo para casamentos, aniversários e eventos corporativos.
+                  somos referência em Foz do Iguaçu e Ciudad del Este para casamentos, aniversários e eventos corporativos.
                 </p>
               </div>
             </div>

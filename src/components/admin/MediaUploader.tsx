@@ -57,7 +57,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       'video/*': ['.mp4', '.webm', '.ogg', '.mov']
     },
     multiple: true,
-    maxSize: 100 * 1024 * 1024, // 100MB
+    maxSize: 200 * 1024 * 1024, // 200MB
   });
 
   const removeFile = (fileId: string) => {
@@ -368,7 +368,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                   Suporte para imagens (JPG, PNG, WebP, GIF) e vídeos (MP4, WebM, MOV)
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Tamanho máximo: 100MB por arquivo
+                  Tamanho máximo: 200MB por arquivo
                 </p>
               </div>
             )}

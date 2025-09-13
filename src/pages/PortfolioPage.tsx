@@ -94,7 +94,7 @@ const PortfolioPage = () => {
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>(11) 99999-9999</li>
                 <li>contato@produtoraviva.com</li>
-                <li>São Paulo, SP</li>
+                <li>Foz do Iguaçu, PR</li>
                 <li>Seg - Sex: 9h às 18h</li>
               </ul>
             </div>
@@ -105,7 +105,7 @@ const PortfolioPage = () => {
               © 2024 Produtora Viva. Todos os direitos reservados.
             </p>
             <p className="text-muted-foreground text-xs mt-2">
-              Fotografia e Videografia Profissional | São Paulo, SP
+              Fotografia e Videografia Profissional | Foz do Iguaçu, PR
             </p>
           </div>
         </div>

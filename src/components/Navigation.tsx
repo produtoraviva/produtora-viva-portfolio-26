@@ -100,26 +100,33 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - fixed panel to avoid clipping */}
+      {/* Mobile Menu - fixed panel with proper viewport handling */}
       {isOpen && (
-        <div className="md:hidden fixed left-0 right-0 top-16 bottom-0 z-40">
-          <div className="h-full bg-card border-t border-border rounded-t-2xl p-6 shadow-xl overflow-y-auto animate-enter">
-            <div className="container mx-auto px-4">
+        <div className="md:hidden fixed inset-0 z-40">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          />
+          
+          {/* Menu Panel */}
+          <div className="absolute left-0 right-0 top-16 max-h-[calc(100vh-4rem)] bg-card border-t border-border rounded-t-2xl shadow-2xl animate-enter overflow-hidden">
+            <div className="max-h-[calc(100vh-6rem)] overflow-y-auto p-6">
               <div className="flex flex-col space-y-1">
                 {navItems.map((item, index) => (
                   <button
                     key={item.label}
                     onClick={() => handleNavClick(item)}
-                    className="text-left text-foreground/80 hover:text-primary hover:bg-primary/5 transition-all duration-150 font-medium py-3 px-4 rounded-lg transform hover:translate-x-1"
+                    className="text-left text-foreground/80 hover:text-primary hover:bg-primary/5 transition-all duration-150 font-medium py-4 px-4 rounded-lg transform hover:translate-x-1 border-b border-border/30 last:border-b-0"
                     style={{ animationDelay: `${index * 40}ms` }}
                   >
                     {item.label}
                   </button>
                 ))}
-                <div className="pt-4 border-t border-border/50">
+                <div className="pt-6 mt-4 border-t border-border/50">
                   <Button 
                     onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
-                    className="bg-gradient-primary w-full py-3 hover:scale-105 transition-transform"
+                    className="bg-gradient-primary w-full py-4 hover:scale-[1.02] transition-transform font-medium"
                   >
                     Solicitar Orçamento
                   </Button>

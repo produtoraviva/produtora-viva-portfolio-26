@@ -1,8 +1,40 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Camera, Award } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import heroImage from "@/assets/hero-wedding.jpg";
 
 const Hero = () => {
+  const [currentBackground, setCurrentBackground] = useState(heroImage);
+  const [backgroundOpacity, setBackgroundOpacity] = useState(0.6);
+
+  useEffect(() => {
+    loadHomepageBackground();
+  }, []);
+
+  const loadHomepageBackground = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('homepage_backgrounds')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(1);
+
+      if (error) {
+        console.error('Error loading homepage background:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setCurrentBackground(data[0].file_url);
+        setBackgroundOpacity(data[0].opacity || 0.6);
+      }
+    } catch (error) {
+      console.error('Error loading homepage background:', error);
+    }
+  };
+
   const scrollToPortfolio = () => {
     const element = document.querySelector("#portfolio");
     if (element) {
@@ -22,11 +54,11 @@ const Hero = () => {
       {/* Background Image */}
       <div className="absolute inset-0">
         <img
-          src={heroImage}
-          alt="Fotografia de casamento cinematográfica"
+          src={currentBackground}
+          alt="Fotografia profissional de eventos"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/60"></div>
+        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity})` }}></div>
       </div>
       
       {/* Background Pattern */}
@@ -63,7 +95,7 @@ const Hero = () => {
 
           {/* Subtitle */}
           <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-delayed px-4 sm:px-0">
-            Especializados em casamentos, aniversários e eventos únicos. 
+            Especializados em casamentos, aniversários e eventos únicos em Foz do Iguaçu e Ciudad del Este. 
             Transformamos seus momentos especiais em obras de arte cinematográficas.
           </p>
 

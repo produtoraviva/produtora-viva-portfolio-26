@@ -114,16 +114,24 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             )}
             
             {currentImage.media_type === 'video' ? (
-              <video
-                src={currentImage.image}
-                className={`w-full h-full object-contain transition-opacity duration-300 ${
+              <div className="w-full h-full flex items-center justify-center" style={{ minHeight: '60vh', maxHeight: '85vh' }}>
+                <div className={`w-full h-full transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
-                }`}
-                controls
-                autoPlay
-                onLoadedData={() => setImageLoaded(true)}
-                style={{ minHeight: '60vh', maxHeight: '85vh' }}
-              />
+                }`}>
+                  <video
+                    src={currentImage.image}
+                    className="w-full h-full object-contain"
+                    controls
+                    controlsList="nodownload"
+                    onLoadedData={() => setImageLoaded(true)}
+                    style={{ 
+                      minHeight: '60vh', 
+                      maxHeight: '85vh',
+                      backgroundColor: 'transparent'
+                    }}
+                  />
+                </div>
+              </div>
             ) : (
               <img
                 src={currentImage.image}
