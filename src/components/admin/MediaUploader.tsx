@@ -117,7 +117,7 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
       // Generate unique filename
       const fileExtension = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExtension}`;
-      const filePath = `portfolio-media/${fileName}`;
+      const filePath = `uploads/${fileName}`;
 
       // Upload main file
       const { data: uploadData, error: uploadError } = await supabase.storage
@@ -137,18 +137,18 @@ export function MediaUploader({ onUploadComplete }: MediaUploaderProps) {
         const thumbnailBlob = await generateThumbnail(file);
         if (thumbnailBlob) {
           const thumbnailFileName = `thumbnail-${fileName.replace(/\.[^/.]+$/, '.jpg')}`;
-          const thumbnailPath = `portfolio-thumbnails/${thumbnailFileName}`;
+          const thumbnailPath = `thumbnails/${thumbnailFileName}`;
           
           const response = await fetch(thumbnailBlob);
           const blob = await response.blob();
           
           const { error: thumbnailError } = await supabase.storage
-            .from('portfolio-thumbnails')
+            .from('portfolio-media')
             .upload(thumbnailPath, blob);
 
           if (!thumbnailError) {
             const { data: { publicUrl: thumbnailPublicUrl } } = supabase.storage
-              .from('portfolio-thumbnails')
+              .from('portfolio-media')
               .getPublicUrl(thumbnailPath);
             thumbnailUrl = thumbnailPublicUrl;
           }

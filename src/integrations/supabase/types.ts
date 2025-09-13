@@ -47,29 +47,32 @@ export type Database = {
       portfolio_categories: {
         Row: {
           created_at: string
+          custom_type: string | null
           display_order: number
           id: string
           is_active: boolean
           name: string
-          type: string
+          type: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          custom_type?: string | null
           display_order?: number
           id?: string
           is_active?: boolean
           name: string
-          type: string
+          type?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          custom_type?: string | null
           display_order?: number
           id?: string
           is_active?: boolean
           name?: string
-          type?: string
+          type?: string | null
           updated_at?: string
         }
         Relationships: []

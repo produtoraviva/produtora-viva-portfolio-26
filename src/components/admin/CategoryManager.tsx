@@ -13,7 +13,8 @@ import { Plus, Edit, Trash2, Save, X, Folder, Tag } from 'lucide-react';
 interface Category {
   id: string;
   name: string;
-  type: 'photo' | 'video';
+  type?: 'photo' | 'video';
+  custom_type?: string;
   is_active: boolean;
   display_order: number;
 }
@@ -35,7 +36,8 @@ export function CategoryManager() {
   const [isCreatingSubcategory, setIsCreatingSubcategory] = useState(false);
   const [newCategoryData, setNewCategoryData] = useState({
     name: '',
-    type: 'photo' as 'photo' | 'video',
+    type: 'photo' as 'photo' | 'video' | 'custom',
+    customType: '',
   });
   const [newSubcategoryData, setNewSubcategoryData] = useState({
     name: '',
@@ -68,7 +70,8 @@ export function CategoryManager() {
 
       setCategories((categoriesResponse.data || []).map(cat => ({
         ...cat,
-        type: cat.type as 'photo' | 'video'
+        type: cat.type as 'photo' | 'video' | undefined,
+        custom_type: cat.custom_type
       })));
       setSubcategories(subcategoriesResponse.data || []);
     } catch (error) {
@@ -94,13 +97,28 @@ export function CategoryManager() {
     }
 
     try {
+      const insertData: any = {
+        name: newCategoryData.name,
+        display_order: categories.length + 1,
+      };
+
+      if (newCategoryData.type === 'custom') {
+        if (!newCategoryData.customType.trim()) {
+          toast({
+            title: 'Erro',
+            description: 'Tipo personalizado é obrigatório.',
+            variant: 'destructive',
+          });
+          return;
+        }
+        insertData.custom_type = newCategoryData.customType;
+      } else {
+        insertData.type = newCategoryData.type;
+      }
+
       const { error } = await supabase
         .from('portfolio_categories')
-        .insert({
-          name: newCategoryData.name,
-          type: newCategoryData.type,
-          display_order: categories.length + 1,
-        });
+        .insert(insertData);
 
       if (error) throw error;
 
@@ -109,7 +127,7 @@ export function CategoryManager() {
         description: 'Categoria criada com sucesso!',
       });
       
-      setNewCategoryData({ name: '', type: 'photo' });
+      setNewCategoryData({ name: '', type: 'photo', customType: '' });
       setIsCreatingCategory(false);
       loadData();
     } catch (error) {
@@ -326,7 +344,7 @@ export function CategoryManager() {
                   <Label htmlFor="category-type">Tipo</Label>
                   <Select
                     value={newCategoryData.type}
-                    onValueChange={(value: 'photo' | 'video') => setNewCategoryData({ ...newCategoryData, type: value })}
+                    onValueChange={(value: 'photo' | 'video' | 'custom') => setNewCategoryData({ ...newCategoryData, type: value })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -334,9 +352,21 @@ export function CategoryManager() {
                     <SelectContent>
                       <SelectItem value="photo">Foto</SelectItem>
                       <SelectItem value="video">Vídeo</SelectItem>
+                      <SelectItem value="custom">Tipo Personalizado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                {newCategoryData.type === 'custom' && (
+                  <div>
+                    <Label htmlFor="custom-type">Tipo Personalizado</Label>
+                    <Input
+                      id="custom-type"
+                      value={newCategoryData.customType}
+                      onChange={(e) => setNewCategoryData({ ...newCategoryData, customType: e.target.value })}
+                      placeholder="Ex: 3D, Drone, etc."
+                    />
+                  </div>
+                )}
                 <div className="flex items-end gap-2">
                   <Button onClick={handleCreateCategory} size="sm">
                     <Save className="h-4 w-4 mr-2" />
@@ -399,17 +429,17 @@ export function CategoryManager() {
                   </div>
                 ) : (
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h4 className="font-medium">{category.name}</h4>
-                      <div className="flex items-center gap-2">
-                        <Badge variant={category.type === 'photo' ? 'default' : 'secondary'}>
-                          {category.type === 'photo' ? 'Foto' : 'Vídeo'}
-                        </Badge>
-                        <Badge variant={category.is_active ? 'outline' : 'destructive'}>
-                          {category.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
+                      <div>
+                        <h4 className="font-medium">{category.name}</h4>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={category.type === 'photo' ? 'default' : category.type === 'video' ? 'secondary' : 'outline'}>
+                            {category.type === 'photo' ? 'Foto' : category.type === 'video' ? 'Vídeo' : category.custom_type || 'Personalizado'}
+                          </Badge>
+                          <Badge variant={category.is_active ? 'outline' : 'destructive'}>
+                            {category.is_active ? 'Ativo' : 'Inativo'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
