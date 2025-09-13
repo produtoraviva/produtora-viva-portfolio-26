@@ -130,6 +130,15 @@ const PortfolioFull = () => {
     }
   };
 
+  const getCategoryIcon = (categoryName: string) => {
+    const name = categoryName.toLowerCase();
+    if (name.includes('casamento')) return Heart;
+    if (name.includes('aniversario')) return Gift;
+    if (name.includes('corporativo')) return Users;
+    if (name.includes('familia')) return Users;
+    return Eye;
+  };
+
   // Dynamic categories based on loaded data
   const dynamicCategories = [
     { id: "all", label: "Todos", icon: Eye },
@@ -146,15 +155,6 @@ const PortfolioFull = () => {
       icon: getCategoryIcon(cat.name)
     }))
   ];
-
-  const getCategoryIcon = (categoryName: string) => {
-    const name = categoryName.toLowerCase();
-    if (name.includes('casamento')) return Heart;
-    if (name.includes('aniversario')) return Gift;
-    if (name.includes('corporativo')) return Users;
-    if (name.includes('familia')) return Users;
-    return Eye;
-  };
 
   const filteredItems = portfolioItems.filter((item) => {
     const categoryMatch = activeCategory === "all" || item.media_type === activeCategory;
