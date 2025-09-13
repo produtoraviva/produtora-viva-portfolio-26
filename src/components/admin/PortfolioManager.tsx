@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy } from '@dnd-kit/sortable';
 import { SortableItem } from './SortableItem';
@@ -7,9 +7,11 @@ import { NewItemCreator } from './NewItemCreator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,6 +55,17 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [isDragEnabled, setIsDragEnabled] = useState(false);
+  const [filteredItems, setFilteredItems] = useState<PortfolioItem[]>(items);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
+  
+  // Filtros
+  const [mediaTypeFilter, setMediaTypeFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>('all');
+  const [homepageFilter, setHomepageFilter] = useState<string>('all');
+  const [searchFilter, setSearchFilter] = useState<string>('');
+  
   const { toast } = useToast();
 
   const sensors = useSensors(
@@ -66,16 +79,86 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     })
   );
 
+  // Carregar categorias e subcategorias
+  useEffect(() => {
+    const loadCategoriesAndSubcategories = async () => {
+      try {
+        const { data: categoriesData } = await supabase
+          .from('portfolio_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order');
+        
+        const { data: subcategoriesData } = await supabase
+          .from('portfolio_subcategories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order');
+        
+        setCategories(categoriesData || []);
+        setSubcategories(subcategoriesData || []);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    
+    loadCategoriesAndSubcategory();
+  }, []);
+
+  // Aplicar filtros
+  useEffect(() => {
+    let filtered = [...items];
+    
+    // Filtro por tipo de mídia
+    if (mediaTypeFilter !== 'all') {
+      filtered = filtered.filter(item => item.media_type === mediaTypeFilter);
+    }
+    
+    // Filtro por categoria
+    if (categoryFilter !== 'all') {
+      filtered = filtered.filter(item => item.category === categoryFilter);
+    }
+    
+    // Filtro por subcategoria
+    if (subcategoryFilter !== 'all') {
+      filtered = filtered.filter(item => item.subcategory === subcategoryFilter);
+    }
+    
+    // Filtro por homepage
+    if (homepageFilter !== 'all') {
+      const isHomepage = homepageFilter === 'yes';
+      filtered = filtered.filter(item => item.homepage_featured === isHomepage);
+    }
+    
+    // Filtro por pesquisa
+    if (searchFilter) {
+      filtered = filtered.filter(item => 
+        item.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        (item.description && item.description.toLowerCase().includes(searchFilter.toLowerCase()))
+      );
+    }
+    
+    setFilteredItems(filtered);
+  }, [items, mediaTypeFilter, categoryFilter, subcategoryFilter, homepageFilter, searchFilter]);
+
+  const clearFilters = () => {
+    setMediaTypeFilter('all');
+    setCategoryFilter('all');
+    setSubcategoryFilter('all');
+    setHomepageFilter('all');
+    setSearchFilter('');
+  };
+
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
 
     if (active.id !== over?.id) {
-      const oldIndex = items.findIndex(item => item.id === active.id);
-      const newIndex = items.findIndex(item => item.id === over.id);
+      const oldIndex = filteredItems.findIndex(item => item.id === active.id);
+      const newIndex = filteredItems.findIndex(item => item.id === over.id);
       
       // Update display_order for all affected items
       try {
-        const reorderedItems = arrayMove(items, oldIndex, newIndex);
+        const reorderedItems = arrayMove(filteredItems, oldIndex, newIndex);
         const updates = reorderedItems.map((item, index) => ({
           id: item.id,
           display_order: index
@@ -284,7 +367,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
         <div>
           <h2 className="text-2xl font-semibold">Itens do Portfólio</h2>
           <p className="text-muted-foreground">
-            {items.length} {items.length === 1 ? 'item encontrado' : 'itens encontrados'}
+            {filteredItems.length} de {items.length} {items.length === 1 ? 'item' : 'itens'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -313,7 +396,103 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
         </div>
       </div>
 
-      {items.length === 0 ? (
+      {/* Filtros */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Filter className="h-5 w-5" />
+              Filtros
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={clearFilters}>
+              <X className="h-4 w-4 mr-1" />
+              Limpar
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Pesquisa */}
+            <div>
+              <label className="text-sm font-medium">Pesquisar</label>
+              <Input
+                placeholder="Título ou descrição..."
+                value={searchFilter}
+                onChange={(e) => setSearchFilter(e.target.value)}
+              />
+            </div>
+            
+            {/* Tipo de Mídia */}
+            <div>
+              <label className="text-sm font-medium">Tipo de Mídia</label>
+              <Select value={mediaTypeFilter} onValueChange={setMediaTypeFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="photo">📷 Fotos</SelectItem>
+                  <SelectItem value="video">🎥 Vídeos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Categoria */}
+            <div>
+              <label className="text-sm font-medium">Categoria</label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Subcategoria */}
+            <div>
+              <label className="text-sm font-medium">Subcategoria</label>
+              <Select value={subcategoryFilter} onValueChange={setSubcategoryFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {subcategories.map((subcategory) => (
+                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                      {subcategory.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Homepage */}
+            <div>
+              <label className="text-sm font-medium">Na Homepage</label>
+              <Select value={homepageFilter} onValueChange={setHomepageFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="yes">🏠 Na Homepage</SelectItem>
+                  <SelectItem value="no">Não na Homepage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {filteredItems.length === 0 ? (
+        items.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="text-center">
@@ -328,6 +507,22 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             </div>
           </CardContent>
         </Card>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="text-center">
+                <h3 className="text-lg font-semibold mb-2">Nenhum item encontrado</h3>
+                <p className="text-muted-foreground mb-4">
+                  Tente ajustar os filtros para encontrar o que procura.
+                </p>
+                <Button variant="outline" onClick={clearFilters}>
+                  <X className="h-4 w-4 mr-2" />
+                  Limpar Filtros
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )
       ) : (
         <DndContext
           sensors={isDragEnabled ? sensors : []}
@@ -335,7 +530,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={items.map(item => item.id)}
+            items={filteredItems.map(item => item.id)}
             strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}
           >
             <div className={
@@ -343,7 +538,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
                 : 'space-y-4'
             }>
-              {items.map((item) => (
+              {filteredItems.map((item) => (
                 <SortableItem key={item.id} id={item.id} isDragEnabled={isDragEnabled}>
                   <Card className="overflow-hidden">
                     {viewMode === 'grid' && (
@@ -408,16 +603,21 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                               <Badge className={`text-xs text-white ${getStatusColor(item.publish_status)}`}>
                                 {getStatusText(item.publish_status)}
                               </Badge>
+                              {item.homepage_featured && (
+                                <Badge variant="default" className="text-xs bg-blue-500">
+                                  Homepage
+                                </Badge>
+                              )}
+                          {item.homepage_featured && (
+                            <Badge variant="default" className="text-xs bg-blue-500">
+                              Homepage
+                            </Badge>
+                          )}
                             </>
                           )}
                           {item.is_featured && (
                             <Badge variant="default" className="text-xs">
                               ⭐ Destaque
-                            </Badge>
-                          )}
-                          {item.homepage_featured && (
-                            <Badge variant="default" className="text-xs bg-blue-500">
-                              🏠 Homepage
                             </Badge>
                           )}
                         </div>
