@@ -81,6 +81,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
 
   // Carregar categorias e subcategorias
   useEffect(() => {
+    console.log('Loading categories and subcategories...');
     const loadCategoriesAndSubcategories = async () => {
       try {
         const { data: categoriesData } = await supabase
