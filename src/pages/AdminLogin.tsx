@@ -79,7 +79,7 @@ export default function AdminLogin() {
           </div>
           
           <div className="text-center mb-6">
-            <Logo size="lg" className="mx-auto mb-4" />
+            <Logo size="lg" className="mx-auto mb-4 scale-[2] brightness-0 invert" />
             <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
               Painel Administrativo
