@@ -205,7 +205,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className="grid w-full grid-cols-7 h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto">
+          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-7' : 'grid-cols-6'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
             <TabsTrigger 
               value="portfolio" 
               onClick={loadPortfolioItems}
@@ -243,12 +243,14 @@ export default function AdminDashboard() {
             >
               Histórico
             </TabsTrigger>
-            <TabsTrigger 
-              value="accounts"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Contas
-            </TabsTrigger>
+            {user?.user_type === 'admin' && (
+              <TabsTrigger 
+                value="accounts"
+                className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Contas
+              </TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="portfolio" className="space-y-6">
@@ -359,9 +361,11 @@ export default function AdminDashboard() {
             <EditHistory />
           </TabsContent>
 
-          <TabsContent value="accounts">
-            <AccountManager />
-          </TabsContent>
+          {user?.user_type === 'admin' && (
+            <TabsContent value="accounts">
+              <AccountManager />
+            </TabsContent>
+          )}
         </Tabs>
       </main>
     </div>

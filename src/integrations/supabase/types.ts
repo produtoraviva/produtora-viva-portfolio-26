@@ -23,6 +23,7 @@ export type Database = {
           last_login_at: string | null
           password_hash: string
           updated_at: string | null
+          user_type: string
         }
         Insert: {
           created_at?: string | null
@@ -32,6 +33,7 @@ export type Database = {
           last_login_at?: string | null
           password_hash: string
           updated_at?: string | null
+          user_type?: string
         }
         Update: {
           created_at?: string | null
@@ -41,6 +43,7 @@ export type Database = {
           last_login_at?: string | null
           password_hash?: string
           updated_at?: string | null
+          user_type?: string
         }
         Relationships: []
       }

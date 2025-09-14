@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { email, password_hash, full_name } = await req.json()
+    const { email, password_hash, full_name, user_type = 'admin' } = await req.json()
 
     if (!email || !password_hash || !full_name) {
       return new Response(
@@ -58,7 +58,8 @@ Deno.serve(async (req) => {
       .insert({
         email,
         password_hash,
-        full_name
+        full_name,
+        user_type
       })
       .select()
       .single()

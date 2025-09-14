@@ -7,6 +7,7 @@ interface AdminUser {
   email: string;
   full_name: string;
   last_login_at?: string;
+  user_type: 'admin' | 'collaborator';
 }
 
 interface AdminContextType {
@@ -50,7 +51,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      console.log('Attempting login for:', email);
+      
       
       // Get admin user from database with simpler query
       const { data: adminUser, error: fetchError } = await supabase
@@ -65,18 +66,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
 
       if (!adminUser) {
-        console.log('No admin user found');
+        
         return { success: false, error: 'Credenciais inválidas' };
       }
 
-      console.log('Found admin user:', adminUser.email);
+      
 
       // For testing, let's temporarily allow direct password comparison
       if (email === 'admin@portfolio.com' && password === 'admin123456') {
-        console.log('Using direct password check for testing');
+        
         
         // Create a simple session and save to localStorage
-        setUser(adminUser);
+        setUser(adminUser as AdminUser);
         localStorage.setItem('admin_user', JSON.stringify(adminUser));
         
         // Update last login
@@ -89,18 +90,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
 
       // Verify password with bcrypt
-      console.log('Comparing password for user:', adminUser.email);
       const isValidPassword = await bcrypt.compare(password, adminUser.password_hash);
-      console.log('Password valid:', isValidPassword);
       
       if (!isValidPassword) {
         return { success: false, error: 'Credenciais inválidas' };
       }
 
-      console.log('Password verified, creating session');
+      
       
       // Create a simple session without Supabase Auth for now
-      setUser(adminUser);
+      setUser(adminUser as AdminUser);
       localStorage.setItem('admin_user', JSON.stringify(adminUser));
 
       // Update last login

@@ -155,19 +155,6 @@ export default function AdminLogin() {
             </Button>
           </form>
           
-          {/* Demo Credentials */}
-          <div className="border-t border-border/50 pt-6">
-            <div className="p-4 bg-muted/50 rounded-lg border border-border/30">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                <p className="text-xs font-medium text-foreground">Credenciais de demonstração</p>
-              </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p><span className="font-medium">Email:</span> admin@portfolio.com</p>
-                <p><span className="font-medium">Senha:</span> admin123456</p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>
