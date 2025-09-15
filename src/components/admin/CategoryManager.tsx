@@ -309,6 +309,9 @@ export function CategoryManager() {
     );
   }
 
+  const photoCategories = categories.filter(cat => cat.type === 'photo' || !cat.type);
+  const videoCategories = categories.filter(cat => cat.type === 'video');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -320,99 +323,46 @@ export function CategoryManager() {
         </div>
       </div>
 
-      {/* Categories Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Folder className="h-5 w-5" />
-              <CardTitle>Categorias</CardTitle>
+      {/* Categories Section - Split by Type */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Photo Categories */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Folder className="h-5 w-5" />
+                <CardTitle>Categorias de Foto</CardTitle>
+              </div>
+              <Button
+                onClick={() => setIsCreatingCategory(true)}
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Categoria
+              </Button>
             </div>
-            <Button
-              onClick={() => setIsCreatingCategory(true)}
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Categoria
-            </Button>
-          </div>
-          <CardDescription>
-            Gerencie as categorias principais (Foto/Vídeo)
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isCreatingCategory && (
-            <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="category-name">Nome</Label>
-                  <Input
-                    id="category-name"
-                    value={newCategoryData.name}
-                    onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
-                    placeholder="Nome da categoria"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="category-type">Tipo</Label>
-                  <Select
-                    value={newCategoryData.type}
-                    onValueChange={(value: 'photo' | 'video' | 'custom') => setNewCategoryData({ ...newCategoryData, type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="photo">Foto</SelectItem>
-                      <SelectItem value="video">Vídeo</SelectItem>
-                      <SelectItem value="custom">Tipo Personalizado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {newCategoryData.type === 'custom' && (
+            <CardDescription>
+              Gerencie as categorias de fotografia
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isCreatingCategory && (
+              <div className="border rounded-lg p-4 mb-4 bg-muted/30">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <Label htmlFor="custom-type">Tipo Personalizado</Label>
+                    <Label htmlFor="category-name">Nome</Label>
                     <Input
-                      id="custom-type"
-                      value={newCategoryData.customType}
-                      onChange={(e) => setNewCategoryData({ ...newCategoryData, customType: e.target.value })}
-                      placeholder="Ex: 3D, Drone, etc."
+                      id="category-name"
+                      value={newCategoryData.name}
+                      onChange={(e) => setNewCategoryData({ ...newCategoryData, name: e.target.value })}
+                      placeholder="Nome da categoria"
                     />
                   </div>
-                )}
-                <div className="flex items-end gap-2">
-                  <Button onClick={handleCreateCategory} size="sm">
-                    <Save className="h-4 w-4 mr-2" />
-                    Salvar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCreatingCategory(false)}
-                    size="sm"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {categories.map((category) => (
-              <div
-                key={category.id}
-                className="border rounded-lg p-4 space-y-2"
-              >
-                {editingCategory?.id === category.id ? (
-                  <div className="space-y-3">
-                    <Input
-                      value={editingCategory.name}
-                      onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
-                    />
+                  <div>
+                    <Label htmlFor="category-type">Tipo</Label>
                     <Select
-                      value={editingCategory.type}
-                      onValueChange={(value: 'photo' | 'video') => setEditingCategory({ ...editingCategory, type: value })}
+                      value={newCategoryData.type}
+                      onValueChange={(value: 'photo' | 'video' | 'custom') => setNewCategoryData({ ...newCategoryData, type: value })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -420,80 +370,241 @@ export function CategoryManager() {
                       <SelectContent>
                         <SelectItem value="photo">Foto</SelectItem>
                         <SelectItem value="video">Vídeo</SelectItem>
+                        <SelectItem value="custom">Tipo Personalizado</SelectItem>
                       </SelectContent>
                     </Select>
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleUpdateCategory(editingCategory)}
-                        size="sm"
-                      >
-                        <Save className="h-4 w-4 mr-2" />
-                        Salvar
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setEditingCategory(null)}
-                        size="sm"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Cancelar
-                      </Button>
-                    </div>
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium">{category.name}</h4>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={category.type === 'photo' ? 'default' : category.type === 'video' ? 'secondary' : 'outline'}>
-                            {category.type === 'photo' ? 'Foto' : category.type === 'video' ? 'Vídeo' : category.custom_type || 'Personalizado'}
-                          </Badge>
-                          <Badge variant={category.is_active ? 'outline' : 'destructive'}>
-                            {category.is_active ? 'Ativo' : 'Inativo'}
-                          </Badge>
-                        </div>
-                      </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setEditingCategory(category)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="destructive" size="sm">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Tem certeza que deseja excluir a categoria "{category.name}"? 
-                              Esta ação não pode ser desfeita e também excluirá todas as subcategorias vinculadas.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteCategory(category.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Excluir
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                  {newCategoryData.type === 'custom' && (
+                    <div>
+                      <Label htmlFor="custom-type">Tipo Personalizado</Label>
+                      <Input
+                        id="custom-type"
+                        value={newCategoryData.customType}
+                        onChange={(e) => setNewCategoryData({ ...newCategoryData, customType: e.target.value })}
+                        placeholder="Ex: 3D, Drone, etc."
+                      />
                     </div>
+                  )}
+                  <div className="flex items-end gap-2">
+                    <Button onClick={handleCreateCategory} size="sm">
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsCreatingCategory(false)}
+                      size="sm"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Cancelar
+                    </Button>
                   </div>
-                )}
+                </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+              {photoCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="border rounded-lg p-4 space-y-2"
+                >
+                  {editingCategory?.id === category.id ? (
+                    <div className="space-y-3">
+                      <Input
+                        value={editingCategory.name}
+                        onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                      />
+                      <Select
+                        value={editingCategory.type}
+                        onValueChange={(value: 'photo' | 'video') => setEditingCategory({ ...editingCategory, type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="photo">Foto</SelectItem>
+                          <SelectItem value="video">Vídeo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateCategory(editingCategory)}
+                          size="sm"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingCategory(null)}
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{category.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default">Foto</Badge>
+                            <Badge variant={category.is_active ? 'outline' : 'destructive'}>
+                              {category.is_active ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </div>
+                        </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingCategory(category)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir a categoria "{category.name}"? 
+                                Esta ação não pode ser desfeita e também excluirá todas as subcategorias vinculadas.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteCategory(category.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Video Categories */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Folder className="h-5 w-5" />
+              <CardTitle>Categorias de Vídeo</CardTitle>
+            </div>
+            <CardDescription>
+              Gerencie as categorias de videografia
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 gap-4">
+              {videoCategories.map((category) => (
+                <div
+                  key={category.id}
+                  className="border rounded-lg p-4 space-y-2"
+                >
+                  {editingCategory?.id === category.id ? (
+                    <div className="space-y-3">
+                      <Input
+                        value={editingCategory.name}
+                        onChange={(e) => setEditingCategory({ ...editingCategory, name: e.target.value })}
+                      />
+                      <Select
+                        value={editingCategory.type}
+                        onValueChange={(value: 'photo' | 'video') => setEditingCategory({ ...editingCategory, type: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="photo">Foto</SelectItem>
+                          <SelectItem value="video">Vídeo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleUpdateCategory(editingCategory)}
+                          size="sm"
+                        >
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingCategory(null)}
+                          size="sm"
+                        >
+                          <X className="h-4 w-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="font-medium">{category.name}</h4>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">Vídeo</Badge>
+                            <Badge variant={category.is_active ? 'outline' : 'destructive'}>
+                              {category.is_active ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                          </div>
+                        </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setEditingCategory(category)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja excluir a categoria "{category.name}"? 
+                                Esta ação não pode ser desfeita e também excluirá todas as subcategorias vinculadas.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteCategory(category.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Excluir
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Subcategories Section */}
       <Card>

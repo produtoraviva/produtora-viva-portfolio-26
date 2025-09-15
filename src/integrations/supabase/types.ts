@@ -339,6 +339,84 @@ export type Database = {
           },
         ]
       }
+      testimonial_backgrounds: {
+        Row: {
+          created_at: string
+          display_order: number
+          file_url: string
+          id: string
+          is_active: boolean
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          file_url: string
+          id?: string
+          is_active?: boolean
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          file_url?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          background_image: string | null
+          background_opacity: number
+          created_at: string
+          display_order: number
+          event: string
+          id: string
+          image: string | null
+          is_active: boolean
+          name: string
+          rating: number
+          text: string
+          updated_at: string
+        }
+        Insert: {
+          background_image?: string | null
+          background_opacity?: number
+          created_at?: string
+          display_order?: number
+          event: string
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name: string
+          rating?: number
+          text: string
+          updated_at?: string
+        }
+        Update: {
+          background_image?: string | null
+          background_opacity?: number
+          created_at?: string
+          display_order?: number
+          event?: string
+          id?: string
+          image?: string | null
+          is_active?: boolean
+          name?: string
+          rating?: number
+          text?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

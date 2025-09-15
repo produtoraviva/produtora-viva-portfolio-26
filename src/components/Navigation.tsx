@@ -59,7 +59,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group cursor-pointer">
-            <Logo size="md" className="scale-[1.55]" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
+            <Logo size="lg" className="scale-[1.55]" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
           </Link>
 
           {/* Desktop Menu */}
@@ -100,7 +100,7 @@ const Navigation = () => {
         <div className="md:hidden fixed inset-0 z-40">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50"
             onClick={() => setIsOpen(false)}
           />
           

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Camera, Award } from "lucide-react";
+import { Logo } from './Logo';
 import { supabase } from "@/integrations/supabase/client";
 
 const Hero = () => {

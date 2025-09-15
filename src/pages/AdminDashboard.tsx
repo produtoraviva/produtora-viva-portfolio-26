@@ -32,6 +32,7 @@ import { HomepageBackgroundManager } from '@/components/admin/HomepageBackground
 import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
 import { AccountManager } from '@/components/admin/AccountManager';
 import { FAQManager } from '@/components/admin/FAQManager';
+import { TestimonialsManager } from '@/components/admin/TestimonialsManager';
 
 interface PortfolioItem {
   id: string;
@@ -206,7 +207,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-8' : 'grid-cols-7'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
+          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-9' : 'grid-cols-8'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
             <TabsTrigger 
               value="portfolio" 
               onClick={loadPortfolioItems}
@@ -236,13 +237,19 @@ export default function AdminDashboard() {
               value="visualizer"
               className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
-              Visualização
+              Métricas
             </TabsTrigger>
             <TabsTrigger 
               value="history"
               className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Histórico
+            </TabsTrigger>
+            <TabsTrigger 
+              value="testimonials"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Depoimentos
             </TabsTrigger>
             <TabsTrigger 
               value="faq"
@@ -366,6 +373,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="history">
             <EditHistory />
+          </TabsContent>
+
+          <TabsContent value="testimonials">
+            <TestimonialsManager />
           </TabsContent>
 
           <TabsContent value="faq">

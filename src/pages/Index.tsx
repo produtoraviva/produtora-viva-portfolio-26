@@ -29,7 +29,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             {/* Logo & Description */}
             <div className="md:col-span-2">
-              <Logo className="mb-4" />
+              <Logo className="mb-4" style={{ filter: 'invert(1) brightness(2)' }} />
               <p className="text-muted-foreground text-sm mb-4 max-w-md">
                 Especializada em fotografia e videografia de alta qualidade para casamentos, 
                 eventos corporativos e momentos especiais. Capturamos suas memórias com arte e emoção.

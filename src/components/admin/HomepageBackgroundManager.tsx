@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { MediaUploader } from './MediaUploader';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,7 @@ interface HomepageBackground {
   opacity: number;
   display_order: number;
   is_active: boolean;
+  slide_duration?: number;
   created_at: string;
   updated_at: string;
 }
@@ -375,6 +377,26 @@ export function HomepageBackgroundManager() {
                                 className="w-full"
                               />
                             </div>
+                          </div>
+
+                          {/* Slide Duration */}
+                          <div>
+                            <Label>Duração do Slide (segundos)</Label>
+                            <Select
+                              value={String(background.slide_duration || 5)}
+                              onValueChange={(value) => handleUpdateSlideDuration(background.id, parseInt(value))}
+                            >
+                              <SelectTrigger className="max-w-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="3">3 segundos</SelectItem>
+                                <SelectItem value="5">5 segundos</SelectItem>
+                                <SelectItem value="7">7 segundos</SelectItem>
+                                <SelectItem value="10">10 segundos</SelectItem>
+                                <SelectItem value="15">15 segundos</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </div>
 
                           {/* Status */}
