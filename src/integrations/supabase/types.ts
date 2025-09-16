@@ -86,6 +86,7 @@ export type Database = {
           is_active: boolean
           name: string
           opacity: number
+          slide_duration: number | null
           thumbnail_url: string | null
           updated_at: string
         }
@@ -97,6 +98,7 @@ export type Database = {
           is_active?: boolean
           name: string
           opacity?: number
+          slide_duration?: number | null
           thumbnail_url?: string | null
           updated_at?: string
         }
@@ -108,6 +110,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           opacity?: number
+          slide_duration?: number | null
           thumbnail_url?: string | null
           updated_at?: string
         }
