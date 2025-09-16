@@ -410,7 +410,7 @@ export function HomepageBackgroundManager() {
                           <div>
                             <Label>Duração do Slide (segundos)</Label>
                             <Select
-                              value={String(background.slide_duration || 5)}
+                              value={(background.slide_duration ?? 5).toString()}
                               onValueChange={(value) => handleUpdateSlideDuration(background.id, parseInt(value))}
                             >
                               <SelectTrigger className="max-w-xs">
