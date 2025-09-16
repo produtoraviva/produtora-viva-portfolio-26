@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Edit, HelpCircle, Eye, EyeOff, RefreshCw, GripVertical } from 'lucide-react';
+import { Plus, Trash2, Edit, HelpCircle, Eye, EyeOff, RefreshCw, GripVertical, Star } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -74,15 +74,26 @@ function SortableRow({ faq, onEdit, onDelete, onToggleActive }: SortableRowProps
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const isFirstEight = faq.display_order <= 8;
+
   return (
-    <TableRow ref={setNodeRef} style={style}>
+    <TableRow 
+      ref={setNodeRef} 
+      style={style}
+      className={isFirstEight ? "bg-primary/5 border-primary/20" : ""}
+    >
       <TableCell className="w-8">
         <div {...attributes} {...listeners} className="cursor-grab hover:cursor-grabbing">
           <GripVertical className="h-4 w-4 text-muted-foreground" />
         </div>
       </TableCell>
       <TableCell className="font-medium max-w-md">
-        <div className="truncate" title={faq.question}>
+        <div className="truncate flex items-center gap-2" title={faq.question}>
+          {isFirstEight && (
+            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+              Destaque
+            </Badge>
+          )}
           {faq.question}
         </div>
       </TableCell>
@@ -380,7 +391,7 @@ export function FAQManager() {
             Gerenciar FAQ
           </h2>
           <p className="text-muted-foreground">
-            Gerencie as perguntas frequentes do site
+            Gerencie as perguntas frequentes do site. As primeiras 8 perguntas aparecem por padrão, as demais apenas mediante busca.
           </p>
         </div>
         <div className="flex gap-2">
@@ -498,7 +509,7 @@ export function FAQManager() {
       </Dialog>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -536,6 +547,20 @@ export function FAQManager() {
               <div>
                 <p className="text-sm text-muted-foreground">Perguntas Inativas</p>
                 <p className="text-2xl font-bold">{faqItems.filter(f => !f.is_active).length}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Star className="h-6 w-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Em Destaque</p>
+                <p className="text-2xl font-bold">{faqItems.filter(f => f.display_order <= 8 && f.is_active).length}</p>
               </div>
             </div>
           </CardContent>

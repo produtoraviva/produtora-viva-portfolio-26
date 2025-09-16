@@ -406,7 +406,7 @@ const PortfolioFull = () => {
                 <div className="portfolio-overlay">
                   <div className="text-center text-white space-y-2">
                     {item.media_type === "video" ? (
-                      <Play className="h-8 w-8 mx-auto mb-2 opacity-80" />
+                      <Video className="h-8 w-8 mx-auto mb-2 opacity-80" />
                     ) : (
                       <Camera className="h-8 w-8 mx-auto mb-2 opacity-80" />
                     )}

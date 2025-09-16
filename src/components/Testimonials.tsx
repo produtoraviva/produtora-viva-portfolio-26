@@ -2,47 +2,100 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Star, Quote } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+interface Testimonial {
+  id: string;
+  name: string;
+  event: string;
+  rating: number;
+  text: string;
+  image?: string;
+  background_image?: string;
+  background_opacity: number;
+  display_order: number;
+  is_active: boolean;
+}
 
 const Testimonials = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const testimonials = [
-    {
-      name: "Ana & João Silva",
-      event: "Casamento - Dezembro 2023",
-      rating: 5,
-      text: "A nossa fotógrafa superou todas nossas expectativas! As fotos ficaram incríveis e o vídeo do nosso casamento parece um filme. Profissionais extremamente atenciosos e talentosos. Recomendamos de olhos fechados!",
-      image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face"
-    },
-    {
-      name: "Maria Santos",
-      event: "15 Anos da Sofia - Outubro 2023",
-      rating: 5,
-      text: "O trabalho foi impecável! Captaram todos os momentos especiais da festa de 15 anos da minha filha. As fotos estão lindas e o vídeo emocionante. Toda a família ficou encantada com o resultado final.",
-      image: "https://images.unsplash.com/photo-1494790108755-2616b612b11c?w=100&h=100&fit=crop&crop=face"
-    },
-    {
-      name: "Carlos Oliveira",
-      event: "Evento Corporativo - Setembro 2023",
-      rating: 5,
-      text: "Contratamos para o lançamento da nossa empresa e foi a melhor escolha! Profissionais pontuais, discretos e com um olhar artístico incrível. O material produzido foi fundamental para nossa estratégia de marketing.",
-      image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face"
-    },
-    {
-      name: "Família Rodrigues",
-      event: "Ensaio Familiar - Novembro 2023",
-      rating: 5,
-      text: "Fazer o ensaio com vocês foi uma experiência maravilhosa! Conseguiram deixar todos à vontade, desde as crianças até os avós. As fotos ficaram naturais e cheias de amor. Já agendamos o próximo ensaio!",
-      image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face"
+  useEffect(() => {
+    loadTestimonials();
+  }, []);
+
+  const loadTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('testimonials')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order');
+
+      if (error) throw error;
+      setTestimonials(data || []);
+    } catch (error) {
+      console.error('Error loading testimonials:', error);
+      // Fallback to default testimonials if database fails
+      setTestimonials([
+        {
+          id: '1',
+          name: "Ana & João Silva",
+          event: "Casamento - Dezembro 2023",
+          rating: 5,
+          text: "A nossa fotógrafa superou todas nossas expectativas! As fotos ficaram incríveis e o vídeo do nosso casamento parece um filme. Profissionais extremamente atenciosos e talentosos. Recomendamos de olhos fechados!",
+          image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face",
+          background_opacity: 0.3,
+          display_order: 0,
+          is_active: true
+        },
+        {
+          id: '2',
+          name: "Maria Santos",
+          event: "15 Anos da Sofia - Outubro 2023",
+          rating: 5,
+          text: "O trabalho foi impecável! Captaram todos os momentos especiais da festa de 15 anos da minha filha. As fotos estão lindas e o vídeo emocionante. Toda a família ficou encantada com o resultado final.",
+          image: "https://images.unsplash.com/photo-1494790108755-2616b612b11c?w=100&h=100&fit=crop&crop=face",
+          background_opacity: 0.3,
+          display_order: 1,
+          is_active: true
+        },
+        {
+          id: '3',
+          name: "Carlos Oliveira",
+          event: "Evento Corporativo - Setembro 2023",
+          rating: 5,
+          text: "Contratamos para o lançamento da nossa empresa e foi a melhor escolha! Profissionais pontuais, discretos e com um olhar artístico incrível. O material produzido foi fundamental para nossa estratégia de marketing.",
+          image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
+          background_opacity: 0.3,
+          display_order: 2,
+          is_active: true
+        },
+        {
+          id: '4',
+          name: "Família Rodrigues",
+          event: "Ensaio Familiar - Novembro 2023",
+          rating: 5,
+          text: "Fazer o ensaio com vocês foi uma experiência maravilhosa! Conseguiram deixar todos à vontade, desde as crianças até os avós. As fotos ficaram naturais e cheias de amor. Já agendamos o próximo ensaio!",
+          image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
+          background_opacity: 0.3,
+          display_order: 3,
+          is_active: true
+        }
+      ]);
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    if (!isDragging) {
+    if (!isDragging && testimonials.length > 0) {
       const interval = setInterval(() => {
         setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
       }, 5000);
@@ -61,15 +114,12 @@ const Testimonials = () => {
     const currentX = e.clientX;
     const diff = startX - currentX;
     
-    // Update drag offset for visual feedback
-    setDragOffset(diff * 0.3); // Damped movement
+    setDragOffset(diff * 0.3);
     
-    if (Math.abs(diff) > 80) { // Minimum drag distance
+    if (Math.abs(diff) > 80) {
       if (diff > 0) {
-        // Drag left - next testimonial
         setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
       } else {
-        // Drag right - previous testimonial
         setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
       }
       setIsDragging(false);
@@ -93,7 +143,6 @@ const Testimonials = () => {
     const currentX = e.touches[0].clientX;
     const diff = startX - currentX;
     
-    // Update drag offset for visual feedback
     setDragOffset(diff * 0.3);
     
     if (Math.abs(diff) > 80) {
@@ -112,11 +161,40 @@ const Testimonials = () => {
     setDragOffset(0);
   };
 
+  if (isLoading || testimonials.length === 0) {
+    return (
+      <section id="depoimentos" className="py-20 lg:py-32 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const currentData = testimonials[currentTestimonial];
 
   return (
-    <section id="depoimentos" className="py-20 lg:py-32 bg-muted/30">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <section 
+      id="depoimentos" 
+      className="py-20 lg:py-32 bg-muted/30 relative overflow-hidden"
+    >
+      {/* Background Image with Opacity */}
+      {currentData.background_image && (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000"
+          style={{
+            backgroundImage: `url(${currentData.background_image})`,
+            opacity: currentData.background_opacity || 0.3
+          }}
+        />
+      )}
+      
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-background/50" />
+      
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
         <div className="text-center mb-16">
           <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
@@ -135,7 +213,7 @@ const Testimonials = () => {
         <div className="max-w-4xl mx-auto">
           <Card 
             ref={cardRef}
-            className="p-8 lg:p-12 bg-card border-border relative overflow-hidden cursor-grab active:cursor-grabbing select-none transition-transform duration-200"
+            className="p-8 lg:p-12 bg-card/80 backdrop-blur-sm border-border relative overflow-hidden cursor-grab active:cursor-grabbing select-none transition-transform duration-200"
             style={{
               transform: `translateX(${-dragOffset}px) ${isDragging ? 'scale(0.98)' : 'scale(1)'}`,
               boxShadow: isDragging ? '0 20px 40px -12px hsl(45 93% 61% / 0.2)' : undefined
@@ -170,13 +248,15 @@ const Testimonials = () => {
 
               {/* Author Info */}
               <div className="flex items-center justify-center space-x-4">
-                <div className="w-16 h-16 rounded-full overflow-hidden">
-                  <img
-                    src={currentData.image}
-                    alt={currentData.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+                {currentData.image && (
+                  <div className="w-16 h-16 rounded-full overflow-hidden">
+                    <img
+                      src={currentData.image}
+                      alt={currentData.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
                 <div className="text-center">
                   <div className="font-semibold text-lg text-foreground">
                     {currentData.name}
