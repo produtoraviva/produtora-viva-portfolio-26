@@ -227,6 +227,33 @@ export function HomepageBackgroundManager() {
     }
   };
 
+  const handleUpdateSlideDuration = async (id: string, duration: number) => {
+    try {
+      const { error } = await supabase
+        .from('homepage_backgrounds')
+        .update({ slide_duration: duration })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setBackgrounds(prev => prev.map(bg => 
+        bg.id === id ? { ...bg, slide_duration: duration } : bg
+      ));
+
+      toast({
+        title: 'Sucesso',
+        description: 'Duração do slide atualizada com sucesso!',
+      });
+    } catch (error) {
+      console.error('Error updating slide duration:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar duração do slide.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleDelete = async (id: string) => {
     try {
       const { error } = await supabase
