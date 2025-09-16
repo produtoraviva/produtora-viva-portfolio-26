@@ -381,14 +381,17 @@ export function TestimonialsManager() {
               <div>
                 <Label htmlFor="background">Imagem de Fundo</Label>
                 <Select
-                  value={newTestimonialData.background_image}
-                  onValueChange={(value) => setNewTestimonialData({ ...newTestimonialData, background_image: value })}
+                  value={newTestimonialData.background_image || 'none'}
+                  onValueChange={(value) => setNewTestimonialData({ 
+                    ...newTestimonialData, 
+                    background_image: value === 'none' ? null : value 
+                  })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecionar fundo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum fundo</SelectItem>
+                    <SelectItem value="none">Nenhum fundo</SelectItem>
                     {backgrounds.map((bg) => (
                       <SelectItem key={bg.id} value={bg.file_url}>
                         {bg.name}
@@ -485,14 +488,17 @@ export function TestimonialsManager() {
                     <div>
                       <Label>Imagem de Fundo</Label>
                       <Select
-                        value={editingTestimonial.background_image || ''}
-                        onValueChange={(value) => setEditingTestimonial({ ...editingTestimonial, background_image: value })}
+                        value={editingTestimonial.background_image || 'none'}
+                        onValueChange={(value) => setEditingTestimonial({ 
+                          ...editingTestimonial, 
+                          background_image: value === 'none' ? null : value 
+                        })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Selecionar fundo" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Nenhum fundo</SelectItem>
+                          <SelectItem value="none">Nenhum fundo</SelectItem>
                           {backgrounds.map((bg) => (
                             <SelectItem key={bg.id} value={bg.file_url}>
                               {bg.name}
