@@ -618,7 +618,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           )}
                           {item.is_featured && (
                             <Badge variant="default" className="text-xs">
-                              ⭐ Destaque
+                              Destaque
                             </Badge>
                           )}
                         </div>
