@@ -102,7 +102,7 @@ const Hero = () => {
           
           {/* Logo under title */}
           <div className="mb-6 animate-fade-in-delayed flex justify-center">
-            <Logo size="md" className="opacity-80" style={{ filter: 'invert(1) brightness(2)' }} />
+            <Logo size="lg" className="opacity-90 brightness-0 invert" />
           </div>
 
           {/* Subtitle */}

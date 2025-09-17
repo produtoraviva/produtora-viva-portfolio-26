@@ -56,6 +56,7 @@ export function TestimonialsManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [showBackgrounds, setShowBackgrounds] = useState(false);
   const [showMediaSelector, setShowMediaSelector] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated } = useAdmin();
 
@@ -230,6 +231,41 @@ export function TestimonialsManager() {
     }
   };
 
+  const handleBackgroundUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `testimonial-bg-${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('portfolio-media')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('portfolio-media')
+        .getPublicUrl(fileName);
+
+      await addBackgroundToLibrary(publicUrl);
+      
+      // Reset file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error uploading background:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao fazer upload da imagem.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -293,6 +329,23 @@ export function TestimonialsManager() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4">
+              <Button
+                onClick={() => document.getElementById('background-upload')?.click()}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Imagem
+              </Button>
+              <input
+                id="background-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleBackgroundUpload}
+              />
+            </div>
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {backgrounds.map((bg) => (
                 <div key={bg.id} className="relative group">
