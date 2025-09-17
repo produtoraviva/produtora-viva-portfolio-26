@@ -51,11 +51,19 @@ export function AccountManager() {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isCollaboratorDialogOpen, setIsCollaboratorDialogOpen] = useState(false);
   const { toast } = useToast();
   const { user: currentUser } = useAdmin();
 
   // Form state for new admin
   const [newAdmin, setNewAdmin] = useState({
+    email: '',
+    password: '',
+    full_name: '',
+  });
+
+  // Form state for new collaborator
+  const [newCollaborator, setNewCollaborator] = useState({
     email: '',
     password: '',
     full_name: '',
@@ -108,6 +116,7 @@ export function AccountManager() {
           email: newAdmin.email,
           password_hash: passwordHash,
           full_name: newAdmin.full_name,
+          user_type: 'admin'
         },
       });
 
@@ -168,6 +177,52 @@ export function AccountManager() {
     }
   };
 
+  const createCollaborator = async () => {
+    if (!newCollaborator.email || !newCollaborator.password || !newCollaborator.full_name) {
+      toast({
+        title: 'Erro',
+        description: 'Todos os campos são obrigatórios.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      // Hash the password
+      const passwordHash = await bcrypt.hash(newCollaborator.password, 10);
+      
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: {
+          email: newCollaborator.email,
+          password_hash: passwordHash,
+          full_name: newCollaborator.full_name,
+          user_type: 'collaborator'
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Sucesso',
+        description: 'Nova conta de colaborador criada com sucesso!',
+      });
+
+      // Reset form and close dialog
+      setNewCollaborator({ email: '', password: '', full_name: '' });
+      setIsCollaboratorDialogOpen(false);
+      loadAdminUsers();
+    } catch (error) {
+      console.error('Error creating collaborator:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao criar conta de colaborador.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'Nunca';
     return new Date(dateString).toLocaleString('pt-BR', {
@@ -193,13 +248,14 @@ export function AccountManager() {
           </p>
         </div>
         
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Conta Admin
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Conta Admin
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -251,6 +307,66 @@ export function AccountManager() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        <Dialog open={isCollaboratorDialogOpen} onOpenChange={setIsCollaboratorDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Conta Colaborador
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Criar Nova Conta de Colaborador
+              </DialogTitle>
+              <DialogDescription>
+                Colaboradores têm os mesmos direitos dos administradores, exceto gerenciar contas.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="collab_full_name">Nome Completo</Label>
+                <Input
+                  id="collab_full_name"
+                  value={newCollaborator.full_name}
+                  onChange={(e) => setNewCollaborator(prev => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="Digite o nome completo"
+                />
+              </div>
+              <div>
+                <Label htmlFor="collab_email">Email</Label>
+                <Input
+                  id="collab_email"
+                  type="email"
+                  value={newCollaborator.email}
+                  onChange={(e) => setNewCollaborator(prev => ({ ...prev, email: e.target.value }))}
+                  placeholder="Digite o email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="collab_password">Senha</Label>
+                <Input
+                  id="collab_password"
+                  type="password"
+                  value={newCollaborator.password}
+                  onChange={(e) => setNewCollaborator(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Digite a senha"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCollaboratorDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={createCollaborator}>
+                Criar Colaborador
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -342,6 +458,7 @@ export function AccountManager() {
                     </div>
                   </TableHead>
                   <TableHead>Último Login</TableHead>
+                  <TableHead>Tipo</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
                 </TableRow>
@@ -353,6 +470,14 @@ export function AccountManager() {
                     <TableCell>{admin.full_name}</TableCell>
                     <TableCell>{formatDate(admin.created_at)}</TableCell>
                     <TableCell>{formatDate(admin.last_login_at)}</TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={admin.user_type === 'admin' ? 'default' : 'secondary'} 
+                        className="capitalize"
+                      >
+                        {admin.user_type === 'admin' ? '👑 Admin' : '🤝 Colaborador'}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="default" className="flex items-center gap-1 w-fit">
                         <Shield className="h-3 w-3" />

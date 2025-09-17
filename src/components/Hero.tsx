@@ -99,6 +99,11 @@ const Hero = () => {
               Memórias
             </span>
           </h1>
+          
+          {/* Logo under title */}
+          <div className="mb-6 animate-fade-in-delayed flex justify-center">
+            <Logo size="md" className="opacity-80" style={{ filter: 'invert(1) brightness(2)' }} />
+          </div>
 
           {/* Subtitle */}
           <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-delayed px-4 sm:px-0">

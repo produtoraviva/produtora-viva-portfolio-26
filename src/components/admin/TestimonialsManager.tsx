@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { MediaSelector } from './MediaSelector';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Plus, Edit, Trash2, Save, X, Star, Quote, Image as ImageIcon, Palette } from 'lucide-react';
 
@@ -54,6 +55,7 @@ export function TestimonialsManager() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showBackgrounds, setShowBackgrounds] = useState(false);
+  const [showMediaSelector, setShowMediaSelector] = useState(false);
   const { toast } = useToast();
   const { isAuthenticated } = useAdmin();
 
@@ -378,28 +380,35 @@ export function TestimonialsManager() {
                   rows={4}
                 />
               </div>
-              <div>
-                <Label htmlFor="background">Imagem de Fundo</Label>
-                <Select
-                  value={newTestimonialData.background_image || 'none'}
-                  onValueChange={(value) => setNewTestimonialData({ 
-                    ...newTestimonialData, 
-                    background_image: value === 'none' ? null : value 
-                  })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecionar fundo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Nenhum fundo</SelectItem>
-                    {backgrounds.map((bg) => (
-                      <SelectItem key={bg.id} value={bg.file_url}>
-                        {bg.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <Label htmlFor="background_image">Imagem de Fundo</Label>
+                <div className="space-y-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowMediaSelector(!showMediaSelector)}
+                    className="w-full"
+                  >
+                    {newTestimonialData.background_image ? 'Alterar Fundo' : 'Selecionar Fundo'}
+                  </Button>
+                  {newTestimonialData.background_image && (
+                    <div className="relative">
+                      <img
+                        src={newTestimonialData.background_image}
+                        alt="Fundo selecionado"
+                        className="w-full h-24 object-cover rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setNewTestimonialData(prev => ({ ...prev, background_image: '' }))}
+                        className="absolute top-1 right-1"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  )}
+                </div>
               <div>
                 <Label>Opacidade do Fundo: {Math.round(newTestimonialData.background_opacity * 100)}%</Label>
                 <Slider
@@ -422,6 +431,18 @@ export function TestimonialsManager() {
                 </Button>
               </div>
             </div>
+            
+            {showMediaSelector && (
+              <div className="mt-4">
+                <MediaSelector
+                  onSelect={(media) => {
+                    setNewTestimonialData(prev => ({ ...prev, background_image: media.file_url }));
+                    setShowMediaSelector(false);
+                  }}
+                  filterByType="photo"
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

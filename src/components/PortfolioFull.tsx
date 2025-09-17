@@ -50,6 +50,7 @@ interface PortfolioItem {
 const PortfolioFull = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
   const [activePortfolioCategory, setActivePortfolioCategory] = useState<string>("all");
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | undefined>(undefined);
   const [viewType, setViewType] = useState<ViewType>("grid");
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -229,6 +230,16 @@ const PortfolioFull = () => {
 
   const availableCategories = getAvailableCategories();
 
+  // Get available subcategories for selected category
+  const getAvailableSubcategories = () => {
+    if (activePortfolioCategory === "all") return [];
+    
+    const categoryId = categories.find(cat => cat.name === activePortfolioCategory)?.id;
+    if (!categoryId) return [];
+    
+    return subcategories.filter(sub => sub.category_id === categoryId);
+  };
+
   const filteredItems = portfolioItems.filter((item) => {
     // Filter by media type
     const mediaTypeMatch = activeCategory === "all" || item.media_type === activeCategory;
@@ -240,7 +251,13 @@ const PortfolioFull = () => {
       categoryMatch = categoryName === activePortfolioCategory;
     }
     
-    return mediaTypeMatch && categoryMatch;
+    // Filter by subcategory
+    let subcategoryMatch = true;
+    if (selectedSubcategory) {
+      subcategoryMatch = item.subcategory === selectedSubcategory;
+    }
+    
+    return mediaTypeMatch && categoryMatch && subcategoryMatch;
   });
 
   // Paginação
@@ -268,6 +285,7 @@ const PortfolioFull = () => {
 
   const handlePortfolioCategoryChange = (category: string) => {
     setActivePortfolioCategory(category);
+    setSelectedSubcategory(undefined); // Reset subcategory when category changes
     setCurrentPage(1);
   };
 
@@ -350,6 +368,39 @@ const PortfolioFull = () => {
               );
             })}
           </div>
+
+          {/* Subcategory Filters - Show when a specific category is selected */}
+          {activePortfolioCategory !== "all" && (
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`transition-all text-xs ${
+                  !selectedSubcategory
+                    ? "bg-secondary/20 text-secondary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                onClick={() => setSelectedSubcategory(undefined)}
+              >
+                Todas as Subcategorias
+              </Button>
+              {getAvailableSubcategories().map((subcategory) => (
+                <Button
+                  key={subcategory.id}
+                  variant="ghost"
+                  size="sm"
+                  className={`${
+                    selectedSubcategory === subcategory.id
+                      ? "bg-secondary/20 text-secondary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  } transition-all text-xs`}
+                  onClick={() => setSelectedSubcategory(subcategory.id)}
+                >
+                  {subcategory.name}
+                </Button>
+              ))}
+            </div>
+          )}
 
           {/* View Controls and Results */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">

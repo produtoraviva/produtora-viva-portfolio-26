@@ -18,7 +18,7 @@ export function Logo({ className = '', size = 'md', style }: LogoProps) {
       src={logo}
       alt="Produtora Viva"
       className={`${sizeClasses[size]} ${className}`}
-      style={style || { filter: 'invert(1) brightness(2)' }} // Make it white for better visibility
+      style={style}
     />
   );
 }
