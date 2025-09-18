@@ -541,7 +541,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             }>
               {filteredItems.map((item) => (
                 <SortableItem key={item.id} id={item.id} isDragEnabled={isDragEnabled}>
-                  <Card className="overflow-hidden">
+                  <Card className={`overflow-hidden ${item.is_featured ? 'border-yellow-400 border-2' : ''}`}>
                     {viewMode === 'grid' && (
                       <div className="aspect-video relative overflow-hidden">
                         {item.media_type === 'video' ? (
@@ -616,11 +616,6 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                             </Badge>
                           )}
                             </>
-                          )}
-                          {item.is_featured && (
-                            <Badge variant="default" className="text-xs">
-                              Destaque
-                            </Badge>
                           )}
                         </div>
                       </div>
