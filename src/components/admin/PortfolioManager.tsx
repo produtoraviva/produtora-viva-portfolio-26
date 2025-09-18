@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X, Camera, Video } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -558,8 +558,12 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           />
                         )}
                         <div className="absolute top-2 right-2 flex gap-1">
-                          <Badge variant="secondary" className="text-xs">
-                            {item.media_type === 'photo' ? '📷' : '🎥'}
+                          <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                            {item.media_type === 'photo' ? (
+                              <Camera className="w-3 h-3" />
+                            ) : (
+                              <Video className="w-3 h-3" />
+                            )}
                           </Badge>
                           <Badge className={`text-xs text-white ${getStatusColor(item.publish_status)}`}>
                             {getStatusText(item.publish_status)}
