@@ -597,9 +597,6 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           </p>
                         )}
                         <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline" className="text-xs">
-                            {getCategoryText(item.category)}
-                          </Badge>
                           {viewMode === 'list' && (
                             <>
                               <Badge variant="secondary" className="text-xs">
