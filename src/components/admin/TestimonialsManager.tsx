@@ -39,11 +39,17 @@ interface TestimonialBackground {
   display_order: number;
 }
 
+interface TestimonialSettings {
+  autoplay_interval: number;
+}
+
 export function TestimonialsManager() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
   const [backgrounds, setBackgrounds] = useState<TestimonialBackground[]>([]);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [settings, setSettings] = useState<TestimonialSettings>({ autoplay_interval: 5 });
+  const [editingBackground, setEditingBackground] = useState<TestimonialBackground | null>(null);
   const [newTestimonialData, setNewTestimonialData] = useState({
     name: '',
     event: '',
@@ -202,6 +208,55 @@ export function TestimonialsManager() {
     }
   };
 
+  const handleDeleteBackground = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('testimonial_backgrounds')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setBackgrounds(prev => prev.filter(b => b.id !== id));
+      toast({
+        title: 'Sucesso',
+        description: 'Fundo excluído com sucesso.',
+      });
+    } catch (error) {
+      console.error('Error deleting background:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir fundo.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleUpdateBackground = async (background: TestimonialBackground) => {
+    try {
+      const { error } = await supabase
+        .from('testimonial_backgrounds')
+        .update({ name: background.name })
+        .eq('id', background.id);
+
+      if (error) throw error;
+
+      setBackgrounds(prev => prev.map(b => b.id === background.id ? background : b));
+      setEditingBackground(null);
+      toast({
+        title: 'Sucesso',
+        description: 'Fundo atualizado com sucesso.',
+      });
+    } catch (error) {
+      console.error('Error updating background:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar fundo.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const addBackgroundToLibrary = async (fileUrl: string, thumbnailUrl?: string) => {
     try {
       const { error } = await supabase
@@ -316,6 +371,32 @@ export function TestimonialsManager() {
         </div>
       </div>
 
+      {/* Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Configurações dos Depoimentos</CardTitle>
+          <CardDescription>Configure como os depoimentos são exibidos na página</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div>
+              <Label>Tempo entre depoimentos (segundos): {settings.autoplay_interval}</Label>
+              <Slider
+                value={[settings.autoplay_interval]}
+                onValueChange={([value]) => setSettings({ ...settings, autoplay_interval: value })}
+                max={30}
+                min={2}
+                step={1}
+                className="w-full mt-2"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Controla a velocidade de rotação automática dos depoimentos
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Backgrounds Library */}
       {showBackgrounds && (
         <Card>
@@ -346,18 +427,69 @@ export function TestimonialsManager() {
                 onChange={handleBackgroundUpload}
               />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {backgrounds.map((bg) => (
-                <div key={bg.id} className="relative group">
-                  <div className="aspect-video overflow-hidden rounded-lg">
-                    <img
-                      src={bg.thumbnail_url || bg.file_url}
-                      alt={bg.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                    <span className="text-white text-xs font-medium">{bg.name}</span>
+                <div key={bg.id} className="border rounded-lg overflow-hidden">
+                  <img
+                    src={bg.thumbnail_url || bg.file_url}
+                    alt={bg.name}
+                    className="w-full h-24 object-cover"
+                  />
+                  <div className="p-2">
+                    {editingBackground?.id === bg.id ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editingBackground.name}
+                          onChange={(e) => setEditingBackground({...editingBackground, name: e.target.value})}
+                          className="text-sm"
+                        />
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => handleUpdateBackground(editingBackground)}>
+                            <Save className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingBackground(null)}>
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium truncate">{bg.name}</p>
+                        <div className="flex gap-1">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditingBackground(bg)}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este fundo? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteBackground(bg.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

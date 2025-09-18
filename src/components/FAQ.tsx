@@ -56,8 +56,8 @@ const FAQ = () => {
   const incrementStep = 5;
   
   if (!searchTerm) {
-    // Sem busca: mostrar as primeiras 8 FAQs do banco
-    displayedFaqs = faqs.slice(0, 8);
+    // Sem busca: mostrar todas as FAQs do banco
+    displayedFaqs = faqs;
   } else {
     // Com busca: mostrar resultados baseado na quantidade visível
     displayedFaqs = filteredFaqs.slice(0, visibleResults);

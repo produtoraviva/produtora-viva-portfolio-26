@@ -369,8 +369,8 @@ const PortfolioFull = () => {
             })}
           </div>
 
-          {/* Subcategory Filters - Show when a specific category is selected */}
-          {activePortfolioCategory !== "all" && (
+          {/* Subcategory Filters - Show when a specific category is selected and has subcategories */}
+          {activePortfolioCategory !== "all" && getAvailableSubcategories().length > 0 && (
             <div className="flex flex-wrap justify-center gap-2">
               <Button
                 variant="ghost"
