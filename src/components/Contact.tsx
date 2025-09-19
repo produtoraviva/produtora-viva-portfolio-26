@@ -5,18 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Instagram, 
-  MessageCircle,
-  Clock,
-  Send,
-  CheckCircle
-} from "lucide-react";
+import { Phone, Mail, MapPin, Instagram, MessageCircle, Clock, Send, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
 const Contact = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -26,8 +16,9 @@ const Contact = () => {
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -43,29 +34,30 @@ const Contact = () => {
 *Mensagem:* ${formData.message}
 
 Aguardo retorno. Obrigado!`;
-
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
-    
     setTimeout(() => {
       toast({
         title: "Redirecionando para WhatsApp!",
-        description: "Você será direcionado para o WhatsApp com sua mensagem.",
+        description: "Você será direcionado para o WhatsApp com sua mensagem."
       });
       window.open(whatsappUrl, '_blank');
-      setFormData({ name: "", email: "", eventType: "", clientType: "", message: "" });
+      setFormData({
+        name: "",
+        email: "",
+        eventType: "",
+        clientType: "",
+        message: ""
+      });
       setIsSubmitting(false);
     }, 1000);
   };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
   };
-
-  return (
-    <section id="contact" className="py-20 lg:py-32 bg-gradient-dark">
+  return <section id="contact" className="py-20 lg:py-32 bg-gradient-dark">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
@@ -116,7 +108,7 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Email</h4>
-                    <p className="text-muted-foreground">contato@produtoraviva.com</p>
+                    <p className="text-muted-foreground">info@produtoraviva.com</p>
                   </div>
                 </div>
               </Card>
@@ -152,31 +144,15 @@ Aguardo retorno. Obrigado!`;
             <div className="pt-8 hidden lg:block">
               <h4 className="font-semibold text-foreground mb-4">Siga-nos nas Redes</h4>
               <div className="flex space-x-4">
-                <a 
-                  href="https://instagram.com/produtoraviva" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="border-primary/30 hover:bg-primary/10 hover-scale"
-                  >
+                <a href="https://instagram.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
                     <Instagram className="h-5 w-5" />
                   </Button>
                 </a>
-                <a 
-                  href="https://facebook.com/produtoraviva" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="border-primary/30 hover:bg-primary/10 hover-scale"
-                  >
+                <a href="https://facebook.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                     </svg>
                   </Button>
                 </a>
@@ -201,28 +177,13 @@ Aguardo retorno. Obrigado!`;
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Nome Completo
                   </label>
-                  <Input
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Seu nome"
-                    required
-                    className="bg-background/50 border-border focus:border-primary"
-                  />
+                  <Input name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome" required className="bg-background/50 border-border focus:border-primary" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Email
                   </label>
-                  <Input
-                    name="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="seu@email.com"
-                    required
-                    className="bg-background/50 border-border focus:border-primary"
-                  />
+                  <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" required className="bg-background/50 border-border focus:border-primary" />
                 </div>
               </div>
 
@@ -231,25 +192,17 @@ Aguardo retorno. Obrigado!`;
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Tipo de Evento
                   </label>
-                  <Input
-                    name="eventType"
-                    value={formData.eventType}
-                    onChange={handleChange}
-                    placeholder="Ex: Casamento, Aniversário..."
-                    className="bg-background/50 border-border focus:border-primary"
-                  />
+                  <Input name="eventType" value={formData.eventType} onChange={handleChange} placeholder="Ex: Casamento, Aniversário..." className="bg-background/50 border-border focus:border-primary" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Tipo de Cliente
                   </label>
                   <div>
-                    <Select
-                      value={formData.clientType}
-                      onValueChange={(value) =>
-                        setFormData((prev) => ({ ...prev, clientType: value }))
-                      }
-                    >
+                    <Select value={formData.clientType} onValueChange={value => setFormData(prev => ({
+                    ...prev,
+                    clientType: value
+                  }))}>
                       <SelectTrigger className="w-full bg-background/50 border-border focus:border-primary">
                         <SelectValue placeholder="Selecione o tipo de cliente" />
                       </SelectTrigger>
@@ -267,33 +220,17 @@ Aguardo retorno. Obrigado!`;
                 <label className="text-sm font-medium text-foreground mb-2 block">
                   Mensagem
                 </label>
-                <Textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  placeholder="Conte-nos mais sobre seu evento, data, local e o que você tem em mente..."
-                  rows={4}
-                  required
-                  className="bg-background/50 border-border focus:border-primary"
-                />
+                <Textarea name="message" value={formData.message} onChange={handleChange} placeholder="Conte-nos mais sobre seu evento, data, local e o que você tem em mente..." rows={4} required className="bg-background/50 border-border focus:border-primary" />
               </div>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-primary hover-scale text-lg py-6"
-              >
-                {isSubmitting ? (
-                  <>
+              <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-primary hover-scale text-lg py-6">
+                {isSubmitting ? <>
                     <div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
                     Enviando...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Send className="mr-2 h-5 w-5" />
                     Enviar Solicitação
-                  </>
-                )}
+                  </>}
               </Button>
 
               <div className="flex items-center justify-center text-sm text-muted-foreground">
@@ -308,39 +245,21 @@ Aguardo retorno. Obrigado!`;
         <div className="lg:hidden mt-12 text-center">
           <h4 className="font-semibold text-foreground mb-6">Siga-nos nas Redes</h4>
           <div className="flex justify-center space-x-6">
-            <a 
-              href="https://instagram.com/produtoraviva" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12"
-              >
+            <a href="https://instagram.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
                 <Instagram className="h-6 w-6" />
               </Button>
             </a>
-            <a 
-              href="https://facebook.com/produtoraviva" 
-              target="_blank" 
-              rel="noopener noreferrer"
-            >
-              <Button
-                variant="outline"
-                size="icon"
-                className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12"
-              >
+            <a href="https://facebook.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                 </svg>
               </Button>
             </a>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Contact;
