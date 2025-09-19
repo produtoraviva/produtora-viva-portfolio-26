@@ -21,7 +21,7 @@ export function Logo({ className = '', size = 'md', style }: LogoProps) {
       className={`${sizeClasses[size]} ${className} object-cover`}
       style={{ 
         ...style,
-        objectPosition: 'center -20%'
+        objectPosition: 'center -35%'
       }}
     />
   );
