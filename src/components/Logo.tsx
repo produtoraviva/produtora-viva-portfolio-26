@@ -18,8 +18,11 @@ export function Logo({ className = '', size = 'md', style }: LogoProps) {
     <img
       src={logo}
       alt="Produtora Viva"
-      className={`${sizeClasses[size]} ${className}`}
-      style={style}
+      className={`${sizeClasses[size]} ${className} object-cover`}
+      style={{ 
+        ...style,
+        objectPosition: 'center -20%'
+      }}
     />
   );
 }
