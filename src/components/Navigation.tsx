@@ -55,15 +55,15 @@ const Navigation = () => {
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-transparent"
     }`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-8">
         <div className="flex justify-between items-center h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group cursor-pointer">
-            <Logo size="lg" className="scale-[1.75] md:scale-[1.55] mt-2 md:mt-0" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
+          <Link to="/" className="flex items-center space-x-2 group cursor-pointer min-w-0 flex-shrink-0 mr-4">
+            <Logo size="lg" className="scale-[1.4] sm:scale-[1.55] md:scale-[1.55] mt-2 md:mt-0" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-8">
             {navItems.map((item) => (
               <button
                 key={item.label}
@@ -82,7 +82,7 @@ const Navigation = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="lg:hidden flex-shrink-0">
             <Button
               variant="ghost"
               size="icon"
@@ -97,7 +97,7 @@ const Navigation = () => {
 
       {/* Mobile Menu - fixed panel without backdrop blur */}
       {isOpen && (
-        <div className="md:hidden fixed inset-0 z-40">
+        <div className="lg:hidden fixed inset-0 z-40">
           {/* Backdrop - sem blur effect */}
           <div 
             className="absolute inset-0 bg-black/80"

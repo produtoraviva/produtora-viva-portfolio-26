@@ -63,11 +63,11 @@ const Footer = () => {
               Serviços
             </h3>
             <ul className="space-y-2 text-muted-foreground">
-              <li><a href="#services" className="hover:text-primary transition-colors">Fotografia de Casamento</a></li>
-              <li><a href="#services" className="hover:text-primary transition-colors">Filmagem de Eventos</a></li>
-              <li><a href="#services" className="hover:text-primary transition-colors">Fotos Corporativas</a></li>
-              <li><a href="#services" className="hover:text-primary transition-colors">Ensaios Familiares</a></li>
-              <li><a href="#services" className="hover:text-primary transition-colors">Aniversários</a></li>
+              <li>Fotografia de Casamento</li>
+              <li>Filmagem de Eventos</li>
+              <li>Fotos Corporativas</li>
+              <li>Ensaios Familiares</li>
+              <li>Aniversários</li>
             </ul>
           </div>
 
