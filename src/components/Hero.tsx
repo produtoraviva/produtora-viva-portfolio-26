@@ -101,7 +101,7 @@ const Hero = () => {
           </h1>
           
           {/* Logo under title */}
-          <div className="mb-6 animate-fade-in-delayed flex justify-center">
+          <div className="mb-2 mt-2 animate-fade-in-delayed flex justify-center">
             <Logo size="xl" className="opacity-90 brightness-0 invert" />
           </div>
 
