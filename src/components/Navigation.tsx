@@ -59,7 +59,7 @@ const Navigation = () => {
         <div className="flex justify-between items-center h-16 md:h-18 lg:h-20 py-2 md:py-3">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group cursor-pointer min-w-0 flex-shrink-0 mr-4">
-            <Logo size="lg" className="scale-[1.4] sm:scale-[1.55] md:scale-[1.55] mt-2 md:mt-0" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
+            <Logo size="lg" className="scale-[1.4] sm:scale-[1.55] md:scale-[1.55] mt-4 md:mt-2" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
           </Link>
 
           {/* Desktop Menu */}
