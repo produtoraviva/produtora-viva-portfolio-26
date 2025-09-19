@@ -56,7 +56,7 @@ const Navigation = () => {
       scrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-transparent"
     }`}>
       <div className="container mx-auto px-6 sm:px-8 lg:px-8">
-        <div className="flex justify-between items-center h-16 lg:h-20">
+        <div className="flex justify-between items-center h-16 md:h-18 lg:h-20 py-2 md:py-3">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group cursor-pointer min-w-0 flex-shrink-0 mr-4">
             <Logo size="lg" className="scale-[1.4] sm:scale-[1.55] md:scale-[1.55] mt-2 md:mt-0" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
