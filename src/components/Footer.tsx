@@ -1,17 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Instagram, 
-  Heart,
-  Camera
-} from "lucide-react";
+import { Phone, Mail, MapPin, Instagram, Heart, Camera } from "lucide-react";
 import { Logo } from "@/components/Logo";
-
 const Footer = () => {
-  return (
-    <footer className="bg-background border-t border-border">
+  return <footer className="bg-background border-t border-border">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Logo and Description */}
@@ -25,31 +16,15 @@ const Footer = () => {
               obras de arte que durarão para sempre.
             </p>
             <div className="flex space-x-4">
-              <a 
-                href="https://instagram.com/produtoraviva" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-primary/30 hover:bg-primary/10 hover-scale"
-                >
+              <a href="https://instagram.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
                   <Instagram className="h-5 w-5" />
                 </Button>
               </a>
-              <a 
-                href="https://facebook.com/produtoraviva" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="border-primary/30 hover:bg-primary/10 hover-scale"
-                >
+              <a href="https://facebook.com/produtoraviva" target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </Button>
               </a>
@@ -81,7 +56,7 @@ const Footer = () => {
               </div>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-primary" />
-                <span>contato@produtoraviva.com</span>
+                <span>info@produtoraviva.com</span>
               </div>
               <div className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-primary mt-0.5" />
@@ -101,8 +76,6 @@ const Footer = () => {
           </p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
