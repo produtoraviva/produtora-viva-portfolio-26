@@ -2,15 +2,16 @@ import logo from '@/assets/logo.svg';
 
 interface LogoProps {
   className?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   style?: React.CSSProperties;
 }
 
 export function Logo({ className = '', size = 'md', style }: LogoProps) {
   const sizeClasses = {
-    sm: 'h-48 w-auto',
-    md: 'h-72 w-auto', 
-    lg: 'h-96 w-auto'
+    sm: 'h-8 w-auto',
+    md: 'h-12 w-auto',
+    lg: 'h-16 w-auto',
+    xl: 'h-96 w-auto'
   };
 
   return (
