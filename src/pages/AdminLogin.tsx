@@ -81,9 +81,8 @@ export default function AdminLogin() {
           <div className="text-center mb-6">
             <Logo 
               size="lg" 
-              className="mx-auto mb-4" 
+              className="mx-auto mb-4 brightness-0 invert" 
               style={{ 
-                filter: 'invert(1) brightness(2)', 
                 transform: 'scale(2)',
                 transformOrigin: 'center'
               }} 
