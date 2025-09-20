@@ -6,6 +6,8 @@ import { Camera, Video, Play, Eye, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ImageModal from "./ImageModal";
+import { LazyImage } from "./LazyImage";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 type CategoryType = "all" | "photo" | "video";
 
@@ -183,10 +185,10 @@ const PortfolioPreview = () => {
               onClick={() => handleImageClick(index)}
             >
               <div className="relative aspect-[4/3] overflow-hidden">
-                <img
+                <LazyImage
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className="w-full h-full transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="portfolio-overlay">
                   <div className="text-center text-white space-y-2">

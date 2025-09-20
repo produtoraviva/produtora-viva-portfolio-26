@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 
 const WhatsAppButton = () => {
   const handleWhatsAppClick = () => {
-    const phoneNumber = "5511999999999"; // Substitua pelo número real
-    const message = "Olá! Gostaria de saber mais sobre os serviços de fotografia e videografia.";
+    const phoneNumber = "5545999887766"; // Número real da Produtora Viva
+    const message = "Olá! Vi o site de vocês e gostaria de saber mais sobre os serviços de fotografia e videografia. 📸🎥";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };

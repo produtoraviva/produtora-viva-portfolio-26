@@ -5,8 +5,15 @@ import PortfolioFull from "@/components/PortfolioFull";
 import { Logo } from '@/components/Logo';
 import Navigation from "@/components/Navigation";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { SEOHead } from "@/components/SEOHead";
 const PortfolioPage = () => {
   return <div className="min-h-screen bg-background text-foreground">
+      <SEOHead 
+        title="Portfolio Completo | Produtora Viva - Fotografia e Videografia"
+        description="Explore nossa galeria completa com mais de 500 projetos realizados em Foz do Iguaçu e Ciudad del Este. Casamentos, aniversários, eventos corporativos e ensaios únicos."
+        keywords="portfolio fotografia foz iguaçu, galeria casamentos, trabalhos realizados, projetos fotografia, videografia profissional, eventos foz iguaçu"
+        canonical={window.location.href}
+      />
       <Navigation />
       
       {/* Breadcrumb */}
@@ -76,7 +83,7 @@ const PortfolioPage = () => {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Contato</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>(11) 99999-9999</li>
+                <li>(45) 99988-7766</li>
                 <li>info@produtoraviva.com</li>
                 <li>Foz do Iguaçu, PR</li>
                 <li>Seg - Sex: 9h às 18h</li>

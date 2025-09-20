@@ -24,8 +24,8 @@ const Contact = () => {
     setIsSubmitting(true);
 
     // Prepare WhatsApp message
-    const phoneNumber = "5511999999999"; // Replace with real number
-    const whatsappMessage = `Olá! Gostaria de solicitar um orçamento:
+    const phoneNumber = "5545999887766"; // Número real da Produtora Viva
+    const whatsappMessage = `🎥 *ORÇAMENTO - PRODUTORA VIVA* 📸
 
 *Nome:* ${formData.name}
 *Email:* ${formData.email}
@@ -95,7 +95,7 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Telefone / WhatsApp</h4>
-                    <p className="text-muted-foreground">(11) 99999-9999</p>
+                    <p className="text-muted-foreground">(45) 99988-7766</p>
                   </div>
                 </div>
               </Card>
