@@ -33,6 +33,7 @@ import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
 import { AccountManager } from '@/components/admin/AccountManager';
 import { FAQManager } from '@/components/admin/FAQManager';
 import { TestimonialsManager } from '@/components/admin/TestimonialsManager';
+import ServicesManager from '@/components/admin/ServicesManager';
 
 interface PortfolioItem {
   id: string;
@@ -207,7 +208,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-9' : 'grid-cols-8'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
+          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-10' : 'grid-cols-9'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
             <TabsTrigger 
               value="portfolio" 
               onClick={loadPortfolioItems}
@@ -250,6 +251,12 @@ export default function AdminDashboard() {
               className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
             >
               Depoimentos
+            </TabsTrigger>
+            <TabsTrigger 
+              value="services"
+              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              Serviços
             </TabsTrigger>
             <TabsTrigger 
               value="faq"
@@ -377,6 +384,10 @@ export default function AdminDashboard() {
 
           <TabsContent value="testimonials">
             <TestimonialsManager />
+          </TabsContent>
+
+          <TabsContent value="services">
+            <ServicesManager />
           </TabsContent>
 
           <TabsContent value="faq">

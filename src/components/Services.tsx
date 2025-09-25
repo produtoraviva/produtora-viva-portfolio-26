@@ -1,52 +1,98 @@
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Camera, Video, Users, Heart, CheckCircle, ArrowRight } from "lucide-react";
-const Services = () => {
-  const services = [{
-    icon: Heart,
-    title: "Casamentos",
-    subtitle: "Seu grande dia merece ser eterno",
-    description: "Cobertura completa do seu casamento com fotografia e filmagem cinematográfica",
-    features: ["Ensaio pré-wedding", "Cerimônia e festa", "Making of da noiva", "Trailer cinematográfico", "Álbum premium incluído"],
-    price: "A partir de R$ 2.500",
-    highlight: true
-  }, {
-    icon: Camera,
-    title: "Fotografia",
-    subtitle: "Momentos congelados no tempo",
-    description: "Sessões fotográficas profissionais para todos os tipos de eventos",
-    features: ["Ensaios familiares", "Book de 15 anos", "Eventos corporativos", "Retratos profissionais", "Fotos editadas incluídas"],
-    price: "A partir de R$ 800",
-    highlight: false
-  }, {
-    icon: Video,
-    title: "Videografia",
-    subtitle: "Histórias em movimento",
-    description: "Produção de vídeos cinematográficos com qualidade profissional",
-    features: ["Filmagem 4K", "Edição cinematográfica", "Trilha sonora original", "Drone (quando permitido)", "Entrega em múltiplos formatos"],
-    price: "A partir de R$ 1.200",
-    highlight: false
-  }, {
-    icon: Users,
-    title: "Corporativo",
-    subtitle: "Sua marca em evidência",
-    description: "Cobertura completa de eventos corporativos e institucionais",
-    features: ["Eventos e congressos", "Fotos corporativas", "Vídeos institucionais", "Livestream", "Relatório fotográfico"],
-    price: "Sob consulta",
-    highlight: false
-  }];
-  const scrollToContact = () => {
-    const element = document.querySelector("#contact");
-    if (element) {
-      element.scrollIntoView({
-        behavior: "smooth"
-      });
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Camera, Users, Heart, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+
+interface Service {
+  id: string;
+  title: string;
+  subtitle?: string;
+  description: string;
+  features: string[];
+  price: string;
+  icon: string;
+  is_highlighted: boolean;
+  is_active: boolean;
+  display_order: number;
+}
+
+const getIconComponent = (iconName: string) => {
+  switch (iconName) {
+    case 'Camera': return Camera;
+    case 'Users': return Users;
+    case 'Heart': return Heart;
+    case 'Briefcase': return Briefcase;
+    case 'Star': return Star;
+    default: return Camera;
+  }
+};
+
+const scrollToContact = () => {
+  const contactElement = document.getElementById('contact');
+  if (contactElement) {
+    contactElement.scrollIntoView({ behavior: 'smooth' });
+  }
+};
+
+export default function Services() {
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('services')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
+      if (error) throw error;
+      setServices(data || []);
+    } catch (error) {
+      console.error('Erro ao carregar serviços:', error);
+    } finally {
+      setLoading(false);
     }
   };
-  return <section id="servicos" className="py-20 lg:py-32 bg-background">
+
+  const nextSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === services.length - 1 ? 0 : prevIndex + 1
+    );
+  };
+
+  const prevSlide = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? services.length - 1 : prevIndex - 1
+    );
+  };
+
+  if (loading) {
+    return (
+      <section id="servicos" className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (services.length === 0) {
+    return null;
+  }
+
+  return (
+    <section id="servicos" className="py-20 lg:py-32 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center mb-16">
           <Badge variant="outline" className="mb-4 border-primary/30 text-primary">
             Serviços
@@ -60,56 +106,172 @@ const Services = () => {
           </p>
         </div>
 
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {services.map((service, index) => {
-          const Icon = service.icon;
-          return <Card key={index} className={`relative p-6 bg-card border-border hover:bg-primary/5 transition-all duration-300 group ${service.highlight ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}>
-                {service.highlight && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+        {/* Desktop: Grid Layout */}
+        <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8 mb-16">
+          {services.map((service) => {
+            const IconComponent = getIconComponent(service.icon);
+            return (
+              <Card key={service.id} className={`relative p-6 bg-card border-border hover:bg-primary/5 transition-all duration-300 group ${service.is_highlighted ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}>
+                {service.is_highlighted && (
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-gradient-primary text-dark">
                       Mais Popular
                     </Badge>
-                  </div>}
+                  </div>
+                )}
                 
                 <div className="space-y-4">
                   <div className="flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-8 w-8 text-primary" />
+                      <IconComponent className="h-8 w-8 text-primary" />
                     </div>
                     <h3 className="font-bold text-xl text-foreground mb-1">
                       {service.title}
                     </h3>
-                    <p className="text-sm text-primary font-medium mb-2">
-                      {service.subtitle}
-                    </p>
+                    {service.subtitle && (
+                      <p className="text-sm text-primary font-medium mb-2">
+                        {service.subtitle}
+                      </p>
+                    )}
                     <p className="text-sm text-muted-foreground text-center leading-relaxed">
                       {service.description}
                     </p>
                   </div>
 
-                  {/* Features */}
                   <div className="space-y-2">
-                    {service.features.map((feature, featureIndex) => <div key={featureIndex} className="flex items-center text-sm">
-                        <CheckCircle className="h-4 w-4 text-primary mr-2 flex-shrink-0" />
+                    {service.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0" />
                         <span className="text-muted-foreground">{feature}</span>
-                      </div>)}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* Price */}
                   <div className="text-center pt-4 border-t border-border">
-                    
-                    <Button onClick={scrollToContact} variant={service.highlight ? "default" : "outline"} className={`w-full ${service.highlight ? "bg-gradient-primary hover:opacity-90" : "border-primary/30 hover:bg-primary/10"} group`}>
+                    <div className="text-lg font-bold text-primary mb-4">
+                      {service.price}
+                    </div>
+                    <Button 
+                      onClick={scrollToContact}
+                      variant={service.is_highlighted ? "default" : "outline"}
+                      className={`w-full ${service.is_highlighted ? "bg-gradient-primary hover:opacity-90" : "border-primary/30 hover:bg-primary/10"}`}
+                    >
                       Solicitar Orçamento
-                      <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Button>
                   </div>
                 </div>
-              </Card>;
-        })}
+              </Card>
+            );
+          })}
         </div>
 
-        {/* CTA */}
-        <div className="text-center mt-16">
+        {/* Mobile: Carousel Layout */}
+        <div className="md:hidden mb-16">
+          <div className="relative">
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              >
+                {services.map((service) => {
+                  const IconComponent = getIconComponent(service.icon);
+                  return (
+                    <div key={service.id} className="w-full flex-shrink-0 px-2">
+                      <Card className={`relative p-6 bg-card border-border hover:bg-primary/5 transition-all duration-300 group ${service.is_highlighted ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}>
+                        {service.is_highlighted && (
+                          <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                            <Badge className="bg-gradient-primary text-dark">
+                              Mais Popular
+                            </Badge>
+                          </div>
+                        )}
+                        
+                        <div className="space-y-4">
+                          <div className="flex flex-col items-center text-center">
+                            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                              <IconComponent className="h-8 w-8 text-primary" />
+                            </div>
+                            <h3 className="font-bold text-xl text-foreground mb-1">
+                              {service.title}
+                            </h3>
+                            {service.subtitle && (
+                              <p className="text-sm text-primary font-medium mb-2">
+                                {service.subtitle}
+                              </p>
+                            )}
+                            <p className="text-sm text-muted-foreground text-center leading-relaxed">
+                              {service.description}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            {service.features.map((feature, featureIndex) => (
+                              <div key={featureIndex} className="flex items-center text-sm">
+                                <div className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0" />
+                                <span className="text-muted-foreground">{feature}</span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="text-center pt-4 border-t border-border">
+                            <div className="text-lg font-bold text-primary mb-4">
+                              {service.price}
+                            </div>
+                            <Button 
+                              onClick={scrollToContact}
+                              variant={service.is_highlighted ? "default" : "outline"}
+                              className={`w-full ${service.is_highlighted ? "bg-gradient-primary hover:opacity-90" : "border-primary/30 hover:bg-primary/10"}`}
+                            >
+                              Solicitar Orçamento
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
+            {services.length > 1 && (
+              <>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm"
+                  onClick={prevSlide}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm"
+                  onClick={nextSlide}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </>
+            )}
+          </div>
+          
+          {services.length > 1 && (
+            <div className="flex justify-center mt-4 gap-2">
+              {services.map((_, index) => (
+                <button
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentIndex ? 'bg-primary' : 'bg-muted'
+                  }`}
+                  onClick={() => setCurrentIndex(index)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="text-center">
           <p className="text-lg text-muted-foreground mb-6">
             Precisa de algo personalizado? Criamos pacotes sob medida para suas necessidades.
           </p>
@@ -118,6 +280,6 @@ const Services = () => {
           </Button>
         </div>
       </div>
-    </section>;
-};
-export default Services;
+    </section>
+  );
+}

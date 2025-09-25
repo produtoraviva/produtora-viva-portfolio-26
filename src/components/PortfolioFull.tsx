@@ -230,14 +230,32 @@ const PortfolioFull = () => {
 
   const availableCategories = getAvailableCategories();
 
-  // Get available subcategories for selected category
+  // Get available subcategories for selected category (only those with items)
   const getAvailableSubcategories = () => {
     if (activePortfolioCategory === "all") return [];
     
     const categoryId = categories.find(cat => cat.name === activePortfolioCategory)?.id;
     if (!categoryId) return [];
     
-    return subcategories.filter(sub => sub.category_id === categoryId);
+    // Get all subcategories for this category
+    const categorySubcategories = subcategories.filter(sub => sub.category_id === categoryId);
+    
+    // Filter to only show subcategories that have items
+    const subcategoriesWithItems = categorySubcategories.filter(sub => {
+      return portfolioItems.some(item => {
+        // Check if item matches current media type filter
+        const mediaTypeMatch = activeCategory === "all" || item.media_type === activeCategory;
+        
+        // Check if item belongs to the selected category and this subcategory
+        const categoryName = item.category ? categoryMap.get(item.category) : '';
+        const categoryMatch = categoryName === activePortfolioCategory;
+        const subcategoryMatch = item.subcategory === sub.id;
+        
+        return mediaTypeMatch && categoryMatch && subcategoryMatch;
+      });
+    });
+    
+    return subcategoriesWithItems;
   };
 
   const filteredItems = portfolioItems.filter((item) => {
