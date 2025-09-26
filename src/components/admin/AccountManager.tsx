@@ -225,7 +225,7 @@ export function AccountManager() {
   };
 
   const formatDate = (dateString?: string) => {
-    if (!dateString) return 'Nunca';
+    if (!dateString) return 'Primeiro acesso';
     return new Date(dateString).toLocaleString('pt-BR', {
       day: '2-digit',
       month: '2-digit',

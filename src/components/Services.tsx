@@ -149,7 +149,7 @@ export default function Services() {
 
                   <div className="text-center pt-4 border-t border-border">
                     <div className="text-lg font-bold text-primary mb-4">
-                      {service.price}
+                      {service.price || "Realizar orçamento"}
                     </div>
                     <Button 
                       onClick={scrollToContact}

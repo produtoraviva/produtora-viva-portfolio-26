@@ -325,14 +325,16 @@ export default function ServicesManager() {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="price">Preço *</Label>
+                  <Label htmlFor="price">Preço (opcional)</Label>
                   <Input
                     id="price"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="Ex: A partir de R$ 500"
-                    required
+                    placeholder="Ex: R$ 2.500 (deixe vazio para 'Realizar orçamento')"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Se deixar vazio, aparecerá "Realizar orçamento"
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
