@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const WhatsAppButton = () => {
+  const { settings } = useSiteSettings();
   const handleWhatsAppClick = () => {
-    const phoneNumber = "5545999887766"; // Número real da Produtora Viva
+    const phoneNumber = settings.whatsapp_number;
     const message = "Olá! Vi o site de vocês e gostaria de saber mais sobre os serviços de fotografia e videografia. 📸🎥";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Phone, Mail, MapPin, Instagram, MessageCircle, Clock, Send, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 const Contact = () => {
+  const { settings } = useSiteSettings();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -16,15 +18,13 @@ const Contact = () => {
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     // Prepare WhatsApp message
-    const phoneNumber = "5545999887766"; // Número real da Produtora Viva
+    const phoneNumber = settings.whatsapp_number;
     const whatsappMessage = `🎥 *ORÇAMENTO - PRODUTORA VIVA* 📸
 
 *Nome:* ${formData.name}
@@ -95,7 +95,7 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Telefone / WhatsApp</h4>
-                    <p className="text-muted-foreground">(45) 99988-7766</p>
+                    <p className="text-muted-foreground">{settings.contact_phone}</p>
                   </div>
                 </div>
               </Card>
@@ -108,7 +108,7 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Email</h4>
-                    <p className="text-muted-foreground">info@produtoraviva.com</p>
+                    <p className="text-muted-foreground">{settings.contact_email}</p>
                   </div>
                 </div>
               </Card>
@@ -144,18 +144,22 @@ Aguardo retorno. Obrigado!`;
             <div className="pt-8 hidden lg:block">
               <h4 className="font-semibold text-foreground mb-4">Siga-nos nas Redes</h4>
               <div className="flex space-x-4">
-                <a href="https://instagram.com/produtoraviva" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
-                    <Instagram className="h-5 w-5" />
-                  </Button>
-                </a>
-                <a href="https://facebook.com/produtoraviva" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                    </svg>
-                  </Button>
-                </a>
+                {settings.instagram_url && (
+                  <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
+                      <Instagram className="h-5 w-5" />
+                    </Button>
+                  </a>
+                )}
+                {settings.facebook_url && (
+                  <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale">
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                      </svg>
+                    </Button>
+                  </a>
+                )}
               </div>
             </div>
           </div>

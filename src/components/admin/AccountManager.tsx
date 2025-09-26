@@ -36,6 +36,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
 import { Plus, Trash2, Users, Shield, Mail, Calendar, Key } from 'lucide-react';
+import SiteSettingsManager from './SiteSettingsManager';
 import bcrypt from 'bcryptjs';
 
 interface AdminUser {
@@ -531,6 +532,9 @@ export function AccountManager() {
           )}
         </CardContent>
       </Card>
+      
+      {/* Site Settings Section */}
+      <SiteSettingsManager />
     </div>
   );
 }
