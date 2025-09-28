@@ -19,6 +19,7 @@ interface Testimonial {
 
 const Testimonials = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
@@ -95,13 +96,23 @@ const Testimonials = () => {
   };
 
   useEffect(() => {
-    if (!isDragging && testimonials.length > 0) {
+    if (!isDragging && testimonials.length > 0 && !isTransitioning) {
       const interval = setInterval(() => {
-        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
-      }, 5000);
+        handleTestimonialChange((prev) => (prev + 1) % testimonials.length);
+      }, 6000); // Increased to 6 seconds for better reading time
       return () => clearInterval(interval);
     }
-  }, [testimonials.length, isDragging]);
+  }, [testimonials.length, isDragging, isTransitioning]);
+
+  const handleTestimonialChange = (newIndex: number | ((prev: number) => number)) => {
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentTestimonial(newIndex);
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50); // Short delay to ensure smooth transition
+    }, 200); // Fade out duration
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -118,9 +129,9 @@ const Testimonials = () => {
     
     if (Math.abs(diff) > 80) {
       if (diff > 0) {
-        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+        handleTestimonialChange((prev) => (prev + 1) % testimonials.length);
       } else {
-        setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+        handleTestimonialChange((prev) => (prev - 1 + testimonials.length) % testimonials.length);
       }
       setIsDragging(false);
       setDragOffset(0);
@@ -147,9 +158,9 @@ const Testimonials = () => {
     
     if (Math.abs(diff) > 80) {
       if (diff > 0) {
-        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+        handleTestimonialChange((prev) => (prev + 1) % testimonials.length);
       } else {
-        setCurrentTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length);
+        handleTestimonialChange((prev) => (prev - 1 + testimonials.length) % testimonials.length);
       }
       setIsDragging(false);
       setDragOffset(0);
@@ -183,16 +194,17 @@ const Testimonials = () => {
       {/* Background Image with Opacity */}
       {currentData.background_image && (
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-700 ease-in-out"
           style={{
             backgroundImage: `url(${currentData.background_image})`,
-            opacity: currentData.background_opacity || 0.3
+            opacity: isTransitioning ? 0 : (currentData.background_opacity || 0.3),
+            transform: isTransitioning ? 'scale(1.05)' : 'scale(1)'
           }}
         />
       )}
       
       {/* Overlay */}
-      <div className="absolute inset-0 bg-background/50" />
+      <div className="absolute inset-0 bg-background/50 transition-opacity duration-700" />
       
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header */}
@@ -213,10 +225,12 @@ const Testimonials = () => {
         <div className="max-w-4xl mx-auto">
           <Card 
             ref={cardRef}
-            className="p-8 lg:p-12 bg-card/80 backdrop-blur-sm border-border relative overflow-hidden cursor-grab active:cursor-grabbing select-none transition-transform duration-200"
+            className={`p-8 lg:p-12 bg-card/80 backdrop-blur-sm border-border relative overflow-hidden cursor-grab active:cursor-grabbing select-none transition-all duration-500 ease-out ${
+              isTransitioning ? 'opacity-0 translate-y-4 scale-95' : 'opacity-100 translate-y-0 scale-100'
+            }`}
             style={{
-              transform: `translateX(${-dragOffset}px) ${isDragging ? 'scale(0.98)' : 'scale(1)'}`,
-              boxShadow: isDragging ? '0 20px 40px -12px hsl(45 93% 61% / 0.2)' : undefined
+              transform: `translateX(${-dragOffset}px) ${isDragging ? 'scale(0.98)' : ''}`,
+              boxShadow: isDragging ? '0 20px 40px -12px hsl(45 93% 61% / 0.2)' : '0 10px 30px -10px hsl(45 93% 61% / 0.1)'
             }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -226,30 +240,43 @@ const Testimonials = () => {
             onTouchEnd={handleTouchEnd}
           >
             {/* Quote Icon */}
-            <div className="absolute top-6 right-6 opacity-10">
+            <div className={`absolute top-6 right-6 transition-all duration-500 ${
+              isTransitioning ? 'opacity-0 rotate-12' : 'opacity-10 rotate-0'
+            }`}>
               <Quote className="h-16 w-16 text-primary" />
             </div>
 
-            <div className="relative z-10">
+            <div className={`relative z-10 transition-all duration-500 ${
+              isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+            }`}>
               {/* Stars */}
               <div className="flex justify-center mb-6">
                 {[...Array(currentData.rating)].map((_, i) => (
                   <Star
                     key={i}
-                    className="h-6 w-6 text-primary fill-current"
+                    className={`h-6 w-6 text-primary fill-current transition-all duration-300 ${
+                      isTransitioning ? 'scale-75 opacity-50' : 'scale-100 opacity-100'
+                    }`}
+                    style={{ transitionDelay: `${i * 100}ms` }}
                   />
                 ))}
               </div>
 
               {/* Testimonial Text */}
-              <blockquote className="text-xl lg:text-2xl text-center text-foreground leading-relaxed mb-8 font-medium">
+              <blockquote className={`text-xl lg:text-2xl text-center text-foreground leading-relaxed mb-8 font-medium transition-all duration-500 ${
+                isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+              }`} style={{ transitionDelay: '100ms' }}>
                 "{currentData.text}"
               </blockquote>
 
               {/* Author Info */}
-              <div className="flex items-center justify-center space-x-4">
+              <div className={`flex items-center justify-center space-x-4 transition-all duration-500 ${
+                isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+              }`} style={{ transitionDelay: '200ms' }}>
                 {currentData.image && (
-                  <div className="w-16 h-16 rounded-full overflow-hidden">
+                  <div className={`w-16 h-16 rounded-full overflow-hidden transition-all duration-500 ${
+                    isTransitioning ? 'scale-75 opacity-50' : 'scale-100 opacity-100'
+                  }`} style={{ transitionDelay: '250ms' }}>
                     <img
                       src={currentData.image}
                       alt={currentData.name}
@@ -274,11 +301,11 @@ const Testimonials = () => {
             {testimonials.map((_, index) => (
               <button
                 key={index}
-                onClick={() => setCurrentTestimonial(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                onClick={() => handleTestimonialChange(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-500 ease-out hover:scale-110 ${
                   index === currentTestimonial
-                    ? "bg-primary scale-125"
-                    : "bg-primary/30 hover:bg-primary/50"
+                    ? "bg-primary scale-125 shadow-lg shadow-primary/30"
+                    : "bg-primary/30 hover:bg-primary/60 scale-100"
                 }`}
               />
             ))}
@@ -287,15 +314,21 @@ const Testimonials = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 max-w-2xl mx-auto">
-          <div className="text-center">
+          <div className={`text-center transition-all duration-700 ${
+            isTransitioning ? 'opacity-50 translate-y-2' : 'opacity-100 translate-y-0'
+          }`} style={{ transitionDelay: '300ms' }}>
             <div className="text-4xl font-bold text-primary mb-2">98%</div>
             <div className="text-sm text-muted-foreground">Satisfação dos Clientes</div>
           </div>
-          <div className="text-center">
+          <div className={`text-center transition-all duration-700 ${
+            isTransitioning ? 'opacity-50 translate-y-2' : 'opacity-100 translate-y-0'
+          }`} style={{ transitionDelay: '400ms' }}>
             <div className="text-4xl font-bold text-primary mb-2">500+</div>
             <div className="text-sm text-muted-foreground">Eventos Realizados</div>
           </div>
-          <div className="text-center">
+          <div className={`text-center transition-all duration-700 ${
+            isTransitioning ? 'opacity-50 translate-y-2' : 'opacity-100 translate-y-0'
+          }`} style={{ transitionDelay: '500ms' }}>
             <div className="text-4xl font-bold text-primary mb-2">24h</div>
             <div className="text-sm text-muted-foreground">Tempo de Resposta</div>
           </div>
