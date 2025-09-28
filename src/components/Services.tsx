@@ -111,7 +111,7 @@ export default function Services() {
           {services.map((service) => {
             const IconComponent = getIconComponent(service.icon);
             return (
-              <Card key={service.id} className={`relative p-6 bg-card border-border hover:bg-primary/5 transition-all duration-300 group ${service.is_highlighted ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}>
+              <Card key={service.id} className={`relative p-6 bg-card border-border hover:bg-primary/5 transition-all duration-300 group h-full flex flex-col ${service.is_highlighted ? 'ring-2 ring-primary/20 bg-primary/5' : ''}`}>
                 {service.is_highlighted && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <Badge className="bg-gradient-primary text-dark">
@@ -120,7 +120,7 @@ export default function Services() {
                   </div>
                 )}
                 
-                <div className="space-y-4">
+                <div className="space-y-4 flex-grow flex flex-col">
                   <div className="flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                       <IconComponent className="h-8 w-8 text-primary" />
@@ -138,7 +138,7 @@ export default function Services() {
                     </p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 flex-grow">
                     {service.features.map((feature, featureIndex) => (
                       <div key={featureIndex} className="flex items-center text-sm">
                         <div className="w-2 h-2 bg-primary rounded-full mr-3 flex-shrink-0" />
@@ -147,7 +147,7 @@ export default function Services() {
                     ))}
                   </div>
 
-                  <div className="text-center pt-4 border-t border-border">
+                  <div className="text-center pt-4 border-t border-border mt-auto">
                     {service.price && (
                       <div className="text-lg font-bold text-primary mb-4">
                         {service.price}
