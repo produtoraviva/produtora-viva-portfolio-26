@@ -148,9 +148,11 @@ export default function Services() {
                   </div>
 
                   <div className="text-center pt-4 border-t border-border">
-                    <div className="text-lg font-bold text-primary mb-4">
-                      {service.price || "Realizar orçamento"}
-                    </div>
+                    {service.price && (
+                      <div className="text-lg font-bold text-primary mb-4">
+                        {service.price}
+                      </div>
+                    )}
                     <Button 
                       onClick={scrollToContact}
                       variant={service.is_highlighted ? "default" : "outline"}
@@ -214,9 +216,11 @@ export default function Services() {
                           </div>
 
                           <div className="text-center pt-4 border-t border-border">
-                            <div className="text-lg font-bold text-primary mb-4">
-                              {service.price}
-                            </div>
+                            {service.price && (
+                              <div className="text-lg font-bold text-primary mb-4">
+                                {service.price}
+                              </div>
+                            )}
                             <Button 
                               onClick={scrollToContact}
                               variant={service.is_highlighted ? "default" : "outline"}

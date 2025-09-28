@@ -264,6 +264,11 @@ const PortfolioFull = () => {
     return subcategoriesWithItems;
   };
 
+  // Check if there are any items with subcategories in the filtered results
+  const hasItemsWithSubcategories = () => {
+    return filteredItems.some(item => item.subcategory);
+  };
+
   const filteredItems = portfolioItems.filter((item) => {
     // Filter by media type
     const mediaTypeMatch = activeCategory === "all" || item.media_type === activeCategory;
@@ -393,8 +398,8 @@ const PortfolioFull = () => {
             })}
           </div>
 
-          {/* Subcategory Filters - Show when a specific category is selected and has subcategories */}
-          {activePortfolioCategory !== "all" && getAvailableSubcategories().length > 0 && (
+          {/* Subcategory Filters - Show when there are items with subcategories */}
+          {hasItemsWithSubcategories() && (
             <div className="flex flex-wrap justify-center gap-2">
               <Button
                 variant="ghost"
@@ -408,7 +413,16 @@ const PortfolioFull = () => {
               >
                 Todas as Subcategorias
               </Button>
-              {getAvailableSubcategories().map((subcategory) => (
+              {/* Show all subcategories that have items, regardless of selected category */}
+              {subcategories.filter(sub => {
+                return portfolioItems.some(item => {
+                  const mediaTypeMatch = activeCategory === "all" || item.media_type === activeCategory;
+                  const categoryMatch = activePortfolioCategory === "all" || 
+                    (item.category && categoryMap.get(item.category) === activePortfolioCategory);
+                  const subcategoryMatch = item.subcategory === sub.id;
+                  return mediaTypeMatch && categoryMatch && subcategoryMatch;
+                });
+              }).map((subcategory) => (
                 <Button
                   key={subcategory.id}
                   variant="ghost"
