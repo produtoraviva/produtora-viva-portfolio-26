@@ -180,19 +180,25 @@ const PortfolioFull = () => {
   // Get unique category names and filter by media type
   const getAvailableCategories = () => {
     if (activeCategory === "all") {
-      // Show all categories
-      const uniqueNames = new Set<string>();
-      const uniqueCategories: Array<{ id: string, label: string, icon: any }> = [];
+      // Show only categories that have items
+      const categoriesWithItems = new Set<string>();
       
-      categories.forEach(cat => {
-        if (!uniqueNames.has(cat.name)) {
-          uniqueNames.add(cat.name);
-          uniqueCategories.push({
-            id: cat.name,
-            label: cat.name,
-            icon: getCategoryIcon(cat.name)
-          });
+      portfolioItems.forEach(item => {
+        if (item.category) {
+          const categoryName = categoryMap.get(item.category);
+          if (categoryName) {
+            categoriesWithItems.add(categoryName);
+          }
         }
+      });
+      
+      const uniqueCategories: Array<{ id: string, label: string, icon: any }> = [];
+      categoriesWithItems.forEach(categoryName => {
+        uniqueCategories.push({
+          id: categoryName,
+          label: categoryName,
+          icon: getCategoryIcon(categoryName)
+        });
       });
       
       return [
