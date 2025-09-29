@@ -80,7 +80,7 @@ const Hero = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 sm:pt-32 md:pt-0 safe-top">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8 mt-4 sm:mt-0 animate-fade-in-up">
+          <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8 mt-12 sm:mt-0 animate-fade-in-up">
             <Award className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-primary">
               Fotografia & Videografia Profissional
