@@ -10,6 +10,7 @@ import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
 import { SEOHead } from "@/components/SEOHead";
 import { AccessibilityFeatures, useKeyboardAccessibility } from "@/components/AccessibilityFeatures";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const Index = () => {
   useKeyboardAccessibility();
@@ -84,6 +85,7 @@ const Index = () => {
       </main>
       <Footer />
       <WhatsAppButton />
+      <ScrollToTop />
     </div>
   );
 };

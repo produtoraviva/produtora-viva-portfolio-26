@@ -105,8 +105,8 @@ const Navigation = () => {
           />
           
           {/* Menu Panel */}
-          <div className="absolute left-0 right-0 top-16 max-h-[calc(100vh-4rem)] bg-card border-t border-border rounded-t-2xl shadow-2xl animate-enter overflow-hidden">
-            <div className="max-h-[calc(100vh-6rem)] overflow-y-auto p-6">
+          <div className="absolute left-0 right-0 top-16 max-h-[calc(100vh-4rem)] bg-card border-t border-border rounded-t-2xl shadow-2xl animate-enter overflow-hidden mobile-safe-area">
+            <div className="max-h-[calc(100vh-6rem)] overflow-y-auto p-6 safe-top">
               <div className="flex flex-col space-y-1">
                 {navItems.map((item, index) => (
                   <button

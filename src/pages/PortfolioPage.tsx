@@ -5,6 +5,7 @@ import PortfolioFull from "@/components/PortfolioFull";
 import { Logo } from '@/components/Logo';
 import Navigation from "@/components/Navigation";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import ScrollToTop from "@/components/ScrollToTop";
 import { SEOHead } from "@/components/SEOHead";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 const PortfolioPage = () => {
@@ -106,6 +107,7 @@ const PortfolioPage = () => {
       </footer>
 
       <WhatsAppButton />
+      <ScrollToTop />
     </div>;
 };
 export default PortfolioPage;

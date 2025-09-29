@@ -181,13 +181,13 @@ Aguardo retorno. Obrigado!`;
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Nome Completo
                   </label>
-                  <Input name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome" required className="bg-background/50 border-border focus:border-primary" />
+                  <Input name="name" value={formData.name} onChange={handleChange} placeholder="Seu nome" required className="bg-background/50 border-border focus:border-primary text-base" autoComplete="name" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Email
                   </label>
-                  <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" required className="bg-background/50 border-border focus:border-primary" />
+                  <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="seu@email.com" required className="bg-background/50 border-border focus:border-primary text-base" autoComplete="email" />
                 </div>
               </div>
 
@@ -196,7 +196,7 @@ Aguardo retorno. Obrigado!`;
                   <label className="text-sm font-medium text-foreground mb-2 block">
                     Tipo de Evento
                   </label>
-                  <Input name="eventType" value={formData.eventType} onChange={handleChange} placeholder="Ex: Casamento, Aniversário..." className="bg-background/50 border-border focus:border-primary" />
+                  <Input name="eventType" value={formData.eventType} onChange={handleChange} placeholder="Ex: Casamento, Aniversário..." className="bg-background/50 border-border focus:border-primary text-base" />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">
@@ -224,7 +224,7 @@ Aguardo retorno. Obrigado!`;
                 <label className="text-sm font-medium text-foreground mb-2 block">
                   Mensagem
                 </label>
-                <Textarea name="message" value={formData.message} onChange={handleChange} placeholder="Conte-nos mais sobre seu evento, data, local e o que você tem em mente..." rows={4} required className="bg-background/50 border-border focus:border-primary" />
+                <Textarea name="message" value={formData.message} onChange={handleChange} placeholder="Conte-nos mais sobre seu evento, data, local e o que você tem em mente..." rows={4} required className="bg-background/50 border-border focus:border-primary text-base" />
               </div>
 
               <Button type="submit" disabled={isSubmitting} className="w-full bg-gradient-primary hover-scale text-lg py-6">
@@ -246,21 +246,25 @@ Aguardo retorno. Obrigado!`;
         </div>
 
         {/* Social Links - Mobile only, positioned after form */}
-        <div className="lg:hidden mt-12 text-center">
+        <div className="lg:hidden mt-12 text-center mobile-safe-area">
           <h4 className="font-semibold text-foreground mb-6">Siga-nos nas Redes</h4>
           <div className="flex justify-center space-x-6">
-            <a href="https://instagram.com/produtoraviva" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
-                <Instagram className="h-6 w-6" />
-              </Button>
-            </a>
-            <a href="https://facebook.com/produtoraviva" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                </svg>
-              </Button>
-            </a>
+            {settings.instagram_url && (
+              <a href={settings.instagram_url} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
+                  <Instagram className="h-6 w-6" />
+                </Button>
+              </a>
+            )}
+            {settings.facebook_url && (
+              <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" size="icon" className="border-primary/30 hover:bg-primary/10 hover-scale h-12 w-12">
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                </Button>
+              </a>
+            )}
           </div>
         </div>
       </div>

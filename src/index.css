@@ -301,11 +301,15 @@ All colors MUST be HSL.
 /* Prevent horizontal scroll on mobile */
 html {
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
   overflow-x: hidden;
   position: relative;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Better mobile touch targets */
@@ -315,9 +319,26 @@ body {
   [role="button"] {
     min-height: 44px;
     min-width: 44px;
+    touch-action: manipulation;
   }
   
   .mobile-safe-area {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Prevent zoom on input focus */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Fix viewport on iOS Safari */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  /* Better mobile spacing */
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 }

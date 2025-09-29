@@ -77,7 +77,7 @@ const Hero = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-32 sm:pt-36 md:pt-0">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 sm:pt-32 md:pt-0 safe-top">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8 animate-fade-in-up">
@@ -88,12 +88,12 @@ const Hero = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-3xl sm:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
             <span className="text-foreground">Capturamos </span>
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               Momentos
             </span>
-            <br />
+            <br className="hidden sm:block" />
             <span className="text-foreground">Criamos </span>
             <span className="bg-gradient-primary bg-clip-text text-transparent">
               Memórias
