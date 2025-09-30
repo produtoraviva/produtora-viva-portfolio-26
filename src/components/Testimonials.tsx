@@ -37,6 +37,8 @@ const Testimonials = () => {
         .from('testimonials')
         .select('*')
         .eq('is_active', true)
+        .eq('status', 'approved')
+        .eq('show_on_homepage', true)
         .order('display_order');
 
       if (error) throw error;

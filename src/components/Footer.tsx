@@ -76,6 +76,11 @@ const Footer = () => {
               <li>Fotos Corporativas</li>
               <li>Ensaios Familiares</li>
               <li>Aniversários</li>
+              <li>
+                <a href="/depoimento" className="text-primary hover:underline">
+                  Deixe seu depoimento
+                </a>
+              </li>
             </ul>
           </div>
 

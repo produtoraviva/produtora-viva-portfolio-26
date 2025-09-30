@@ -26,6 +26,9 @@ interface Testimonial {
   background_opacity: number;
   is_active: boolean;
   display_order: number;
+  status: 'pending' | 'approved' | 'rejected';
+  submitted_by: 'admin' | 'client';
+  show_on_homepage: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -45,6 +48,7 @@ interface TestimonialSettings {
 
 export function TestimonialsManager() {
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [pendingTestimonials, setPendingTestimonials] = useState<Testimonial[]>([]);
   const [backgrounds, setBackgrounds] = useState<TestimonialBackground[]>([]);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -74,11 +78,17 @@ export function TestimonialsManager() {
     try {
       setIsLoading(true);
       
-      const [testimonialsResponse, backgroundsResponse] = await Promise.all([
+      const [testimonialsResponse, pendingResponse, backgroundsResponse] = await Promise.all([
         supabase
           .from('testimonials')
           .select('*')
+          .neq('status', 'pending')
           .order('display_order'),
+        supabase
+          .from('testimonials')
+          .select('*')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false }),
         supabase
           .from('testimonial_backgrounds')
           .select('*')
@@ -86,9 +96,11 @@ export function TestimonialsManager() {
       ]);
 
       if (testimonialsResponse.error) throw testimonialsResponse.error;
+      if (pendingResponse.error) throw pendingResponse.error;
       if (backgroundsResponse.error) throw backgroundsResponse.error;
 
-      setTestimonials(testimonialsResponse.data || []);
+      setTestimonials(testimonialsResponse.data as Testimonial[] || []);
+      setPendingTestimonials(pendingResponse.data as Testimonial[] || []);
       setBackgrounds(backgroundsResponse.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
@@ -118,6 +130,9 @@ export function TestimonialsManager() {
         .insert({
           ...newTestimonialData,
           display_order: testimonials.length,
+          status: 'approved',
+          submitted_by: 'admin',
+          show_on_homepage: true,
         });
 
       if (error) throw error;
@@ -161,6 +176,7 @@ export function TestimonialsManager() {
           background_image: testimonial.background_image,
           background_opacity: testimonial.background_opacity,
           is_active: testimonial.is_active,
+          show_on_homepage: testimonial.show_on_homepage,
         })
         .eq('id', testimonial.id);
 
@@ -203,6 +219,59 @@ export function TestimonialsManager() {
       toast({
         title: 'Erro',
         description: 'Erro ao excluir depoimento.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleApprove = async (testimonialId: string) => {
+    try {
+      const { error } = await supabase
+        .from('testimonials')
+        .update({ 
+          status: 'approved',
+          show_on_homepage: true 
+        })
+        .eq('id', testimonialId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Depoimento aprovado!',
+      });
+      
+      loadData();
+    } catch (error) {
+      console.error('Error approving testimonial:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao aprovar depoimento.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleReject = async (testimonialId: string) => {
+    try {
+      const { error } = await supabase
+        .from('testimonials')
+        .update({ status: 'rejected' })
+        .eq('id', testimonialId);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: 'Depoimento rejeitado.',
+      });
+      
+      loadData();
+    } catch (error) {
+      console.error('Error rejecting testimonial:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao rejeitar depoimento.',
         variant: 'destructive',
       });
     }
@@ -632,8 +701,113 @@ export function TestimonialsManager() {
         </Card>
       )}
 
-      {/* Testimonials List */}
-      <div className="grid grid-cols-1 gap-6">
+      {/* Testimonials Lists - Approved and Pending */}
+      <div className="space-y-6">
+        {/* Pending Testimonials */}
+        {pendingTestimonials.length > 0 && (
+          <div>
+            <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <Badge variant="secondary">{pendingTestimonials.length}</Badge>
+              Depoimentos Pendentes
+            </h3>
+            <div className="grid grid-cols-1 gap-6">
+              {pendingTestimonials.map((testimonial) => (
+                <Card key={testimonial.id} className="border-yellow-500/30 bg-yellow-50/10">
+                  <CardContent className="p-6">
+                    <div className="flex gap-4">
+                      {/* Preview */}
+                      <div className="flex-shrink-0">
+                        {testimonial.image && (
+                          <div className="w-16 h-16 rounded-full overflow-hidden">
+                            <img
+                              src={testimonial.image}
+                              alt={testimonial.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-4">
+                          <div>
+                            <h4 className="font-semibold text-lg">{testimonial.name}</h4>
+                            <p className="text-muted-foreground">{testimonial.event}</p>
+                            <div className="flex items-center gap-2 mt-2">
+                              <div className="flex items-center gap-1">
+                                {[...Array(testimonial.rating)].map((_, i) => (
+                                  <Star key={i} className="h-4 w-4 fill-current text-primary" />
+                                ))}
+                              </div>
+                              <Badge variant="outline">Aguardando aprovação</Badge>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="default" size="sm">
+                                  Aprovar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar aprovação</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja aprovar o depoimento de "{testimonial.name}"?
+                                    Ele será exibido na página inicial.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleApprove(testimonial.id)}>
+                                    Aprovar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm">
+                                  Negar
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Confirmar negação</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Tem certeza que deseja negar o depoimento de "{testimonial.name}"?
+                                    Ele não será exibido no site.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleReject(testimonial.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Negar
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{testimonial.text}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Approved Testimonials */}
+        <div>
+          <h3 className="text-xl font-semibold mb-4">Depoimentos Aprovados</h3>
+          <div className="grid grid-cols-1 gap-6">
         {testimonials.map((testimonial) => (
           <Card key={testimonial.id}>
             <CardContent className="p-6">
@@ -732,6 +906,13 @@ export function TestimonialsManager() {
                         />
                         <Label>Ativo</Label>
                       </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={editingTestimonial.show_on_homepage}
+                          onCheckedChange={(checked) => setEditingTestimonial({ ...editingTestimonial, show_on_homepage: checked })}
+                        />
+                        <Label>Mostrar na Página Inicial</Label>
+                      </div>
                     </div>
                     <div className="md:col-span-2 flex gap-2">
                       <Button onClick={() => handleUpdate(editingTestimonial)}>
@@ -804,6 +985,11 @@ export function TestimonialsManager() {
                           <Badge variant={testimonial.is_active ? "default" : "secondary"}>
                             {testimonial.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
+                          {testimonial.show_on_homepage && (
+                            <Badge variant="outline" className="bg-primary/10">
+                              Na página inicial
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -844,19 +1030,21 @@ export function TestimonialsManager() {
             </CardContent>
           </Card>
         ))}
-      </div>
+          </div>
+        </div>
 
-      {testimonials.length === 0 && (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Quote className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhum depoimento</h3>
-            <p className="text-muted-foreground text-center">
-              Comece criando o primeiro depoimento de cliente.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+        {testimonials.length === 0 && (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <Quote className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Nenhum depoimento</h3>
+              <p className="text-muted-foreground text-center">
+                Comece criando o primeiro depoimento de cliente.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }

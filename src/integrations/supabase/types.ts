@@ -459,6 +459,9 @@ export type Database = {
           is_active: boolean
           name: string
           rating: number
+          show_on_homepage: boolean | null
+          status: string | null
+          submitted_by: string | null
           text: string
           updated_at: string
         }
@@ -473,6 +476,9 @@ export type Database = {
           is_active?: boolean
           name: string
           rating?: number
+          show_on_homepage?: boolean | null
+          status?: string | null
+          submitted_by?: string | null
           text: string
           updated_at?: string
         }
@@ -487,6 +493,9 @@ export type Database = {
           is_active?: boolean
           name?: string
           rating?: number
+          show_on_homepage?: boolean | null
+          status?: string | null
+          submitted_by?: string | null
           text?: string
           updated_at?: string
         }
