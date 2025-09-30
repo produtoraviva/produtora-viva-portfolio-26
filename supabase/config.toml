@@ -1,1 +1,10 @@
 project_id = "ihthnipyfppatlmaajvm"
+
+[functions.create-admin-user]
+verify_jwt = false
+
+[functions.delete-admin-user]
+verify_jwt = false
+
+[functions.update-last-login]
+verify_jwt = false

@@ -80,11 +80,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         setUser(adminUser as AdminUser);
         localStorage.setItem('admin_user', JSON.stringify(adminUser));
         
-        // Update last login
-        await supabase
-          .from('admin_users')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', adminUser.id);
+        // Update last login via edge function
+        await supabase.functions.invoke('update-last-login', {
+          body: { admin_id: adminUser.id }
+        });
 
         return { success: true };
       }
@@ -102,11 +101,10 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       setUser(adminUser as AdminUser);
       localStorage.setItem('admin_user', JSON.stringify(adminUser));
 
-      // Update last login
-      await supabase
-        .from('admin_users')
-        .update({ last_login_at: new Date().toISOString() })
-        .eq('id', adminUser.id);
+      // Update last login via edge function
+      await supabase.functions.invoke('update-last-login', {
+        body: { admin_id: adminUser.id }
+      });
 
       return { success: true };
     } catch (error) {
