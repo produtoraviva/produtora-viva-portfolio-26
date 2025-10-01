@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff, Home } from 'lucide-react';
+import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff, Home, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -220,6 +220,23 @@ export function MediaSelector({
     }
   };
 
+  const handleCopyLink = async (fileUrl: string) => {
+    try {
+      await navigator.clipboard.writeText(fileUrl);
+      toast({
+        title: 'Sucesso',
+        description: 'Link copiado para a área de transferência!',
+      });
+    } catch (error) {
+      console.error('Error copying link:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao copiar link.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   const handleDelete = async (itemId: string) => {
     try {
       // Primeiro, buscar o item para obter a URL do arquivo
@@ -398,6 +415,18 @@ export function MediaSelector({
                         className="h-8 w-8 p-0"
                       >
                         <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleCopyLink(item.file_url);
+                        }}
+                        title="Copiar link"
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="h-3 w-3" />
                       </Button>
                       {item.media_type === 'photo' && (
                         <Button
