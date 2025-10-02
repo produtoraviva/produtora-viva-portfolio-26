@@ -132,7 +132,7 @@ export default function SubmitTestimonial() {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
             <div className="flex justify-center mb-6">
-              <Logo size="lg" className="brightness-0 invert" />
+              <Logo size="xl" className="brightness-0 invert" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Compartilhe sua Experiência
