@@ -291,6 +291,19 @@ All colors MUST be HSL.
   animation: enter 0.2s ease-out;
 }
 
+@keyframes infiniteScroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-33.333%);
+  }
+}
+
+.animate-infinite-scroll {
+  animation: infiniteScroll 60s linear infinite;
+}
+
 /* Mobile viewport fixes */
 @supports (-webkit-touch-callout: none) {
   .mobile-menu {

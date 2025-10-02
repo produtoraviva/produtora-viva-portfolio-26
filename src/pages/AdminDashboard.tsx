@@ -33,6 +33,7 @@ import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
 import { AccountManager } from '@/components/admin/AccountManager';
 import { FAQManager } from '@/components/admin/FAQManager';
 import { TestimonialsManager } from '@/components/admin/TestimonialsManager';
+import { TestimonialsMetrics } from '@/components/admin/TestimonialsMetrics';
 import ServicesManager from '@/components/admin/ServicesManager';
 
 interface PortfolioItem {
@@ -382,7 +383,8 @@ export default function AdminDashboard() {
             <EditHistory />
           </TabsContent>
 
-          <TabsContent value="testimonials">
+          <TabsContent value="testimonials" className="space-y-6">
+            <TestimonialsMetrics />
             <TestimonialsManager />
           </TabsContent>
 
