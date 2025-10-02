@@ -131,7 +131,7 @@ export default function SubmitTestimonial() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 py-20 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-2">
               <Logo size="xl" className="brightness-0 invert scale-[0.7]" />
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
