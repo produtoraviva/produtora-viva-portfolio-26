@@ -410,8 +410,8 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             <Plus className="h-4 w-4 mr-2" />
             Novo Item
           </Button>
-          <Button onClick={() => setIsBatchEditing(true)} variant="secondary">
-            <Camera className="h-4 w-4 mr-2" />
+          <Button onClick={() => setIsBatchEditing(true)}>
+            <Plus className="h-4 w-4 mr-2" />
             Adicionar Ensaio
           </Button>
         </div>
