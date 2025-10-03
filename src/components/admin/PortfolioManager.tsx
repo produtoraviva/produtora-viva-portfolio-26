@@ -4,6 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { SortableItem } from './SortableItem';
 import { ItemEditor } from './ItemEditor';
 import { NewItemCreator } from './NewItemCreator';
+import { BatchEditor } from './BatchEditor';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,6 +55,7 @@ interface PortfolioManagerProps {
 export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioManagerProps) {
   const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [isBatchEditing, setIsBatchEditing] = useState(false);
   const [isDragEnabled, setIsDragEnabled] = useState(false);
   const [filteredItems, setFilteredItems] = useState<PortfolioItem[]>(items);
   const [categories, setCategories] = useState<any[]>([]);
@@ -361,6 +363,20 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     );
   }
 
+  if (isBatchEditing) {
+    return (
+      <BatchEditor
+        onSave={() => {
+          setIsBatchEditing(false);
+          onItemsChange();
+        }}
+        onCancel={() => {
+          setIsBatchEditing(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -393,6 +409,10 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           <Button onClick={() => setIsCreating(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Item
+          </Button>
+          <Button onClick={() => setIsBatchEditing(true)} variant="secondary">
+            <Camera className="h-4 w-4 mr-2" />
+            Adicionar Ensaio
           </Button>
         </div>
       </div>
