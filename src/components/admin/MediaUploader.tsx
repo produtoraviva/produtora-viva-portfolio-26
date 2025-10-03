@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image, Video, CheckCircle, AlertCircle } from 'lucide-react';
@@ -30,14 +31,49 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'uploading' | 'success' | 'error' }>({});
   const [isUploading, setIsUploading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subcategories, setSubcategories] = useState<any[]>([]);
   const { toast } = useToast();
 
   const [defaultSettings, setDefaultSettings] = useState({
-    media_type: 'photo' as 'photo' | 'video',
-    subcategory: '',
+    title: '',
+    description: '',
+    location: '',
+    date_taken: '',
+    photo_category: '',
+    video_category: '',
+    photo_subcategory: '',
+    video_subcategory: '',
     publish_status: 'draft' as const,
     is_featured: false,
+    homepage_featured: false,
   });
+
+  // Carregar categorias e subcategorias
+  useEffect(() => {
+    const loadCategoriesAndSubcategories = async () => {
+      try {
+        const { data: categoriesData } = await supabase
+          .from('portfolio_categories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order');
+        
+        const { data: subcategoriesData } = await supabase
+          .from('portfolio_subcategories')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order');
+        
+        setCategories(categoriesData || []);
+        setSubcategories(subcategoriesData || []);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    
+    loadCategoriesAndSubcategories();
+  }, []);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const newFiles = acceptedFiles.map(file => {
@@ -175,15 +211,29 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           ? maxOrderData[0].display_order + 1 
           : 0;
 
+        // Determinar tipo de mídia
+        const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
+        
+        // Determinar categoria e subcategoria baseado no tipo de mídia
+        const category = mediaType === 'photo' ? defaultSettings.photo_category : defaultSettings.video_category;
+        const subcategory = mediaType === 'photo' ? defaultSettings.photo_subcategory : defaultSettings.video_subcategory;
+
         // Insert into portfolio_items as uploaded media
         const { error: dbError } = await supabase
           .from('portfolio_items')
           .insert({
-            title: file.name.replace(/\.[^/.]+$/, ''), // Remove extension
-            media_type: file.type.startsWith('image/') ? 'photo' : 'video',
+            title: defaultSettings.title || file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+            description: defaultSettings.description || null,
+            location: defaultSettings.location || null,
+            date_taken: defaultSettings.date_taken || null,
+            media_type: mediaType,
             file_url: publicUrl,
+            category: category || null,
+            subcategory: subcategory || null,
             item_status: 'uploaded', // Mark as uploaded media
-            publish_status: 'draft',
+            publish_status: defaultSettings.publish_status,
+            is_featured: defaultSettings.is_featured,
+            homepage_featured: defaultSettings.homepage_featured,
             display_order: nextOrder,
             file_size: file.size,
             dimensions: dimensions,
@@ -286,54 +336,223 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                 Essas configurações serão aplicadas a todos os arquivos enviados
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="default-subcategory">Subcategoria Padrão (Opcional)</Label>
-                  <Select
-                    value={defaultSettings.subcategory || "none"}
-                    onValueChange={(value) => 
-                      setDefaultSettings(prev => ({ 
-                        ...prev, 
-                        subcategory: value === "none" ? "" : value 
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma subcategoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhuma</SelectItem>
-                    </SelectContent>
-                  </Select>
+            <CardContent className="space-y-6">
+              {/* Informações Gerais */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Informações Gerais
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="default-title">Título (Opcional)</Label>
+                    <Input
+                      id="default-title"
+                      placeholder="Título para todas as mídias"
+                      value={defaultSettings.title}
+                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, title: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="default-location">Localização (Opcional)</Label>
+                    <Input
+                      id="default-location"
+                      placeholder="Ex: São Paulo, SP"
+                      value={defaultSettings.location}
+                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, location: e.target.value }))}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="default-description">Descrição (Opcional)</Label>
+                    <Textarea
+                      id="default-description"
+                      placeholder="Descrição para todas as mídias"
+                      value={defaultSettings.description}
+                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, description: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="default-date">Data (Opcional)</Label>
+                    <Input
+                      id="default-date"
+                      type="date"
+                      value={defaultSettings.date_taken}
+                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, date_taken: e.target.value }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="default-status">Status Padrão</Label>
-                  <Select
-                    value={defaultSettings.publish_status}
-                    onValueChange={(value: any) => 
-                      setDefaultSettings(prev => ({ ...prev, publish_status: value }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="draft">Rascunho</SelectItem>
-                      <SelectItem value="published">Publicado</SelectItem>
-                      <SelectItem value="hidden">Oculto</SelectItem>
-                    </SelectContent>
-                  </Select>
+              </div>
+
+              <Separator />
+
+              {/* Categorias para Fotos */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Categorias para Fotos
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="photo-category">Categoria</Label>
+                    <Select
+                      value={defaultSettings.photo_category || "none"}
+                      onValueChange={(value) => 
+                        setDefaultSettings(prev => ({ 
+                          ...prev, 
+                          photo_category: value === "none" ? "" : value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="photo-subcategory">Subcategoria</Label>
+                    <Select
+                      value={defaultSettings.photo_subcategory || "none"}
+                      onValueChange={(value) => 
+                        setDefaultSettings(prev => ({ 
+                          ...prev, 
+                          photo_subcategory: value === "none" ? "" : value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma subcategoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {subcategories
+                          .filter(sub => !defaultSettings.photo_category || sub.category_id === defaultSettings.photo_category)
+                          .map((subcategory) => (
+                            <SelectItem key={subcategory.id} value={subcategory.id}>
+                              {subcategory.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2 pt-6">
-                  <Switch
-                    id="default-featured"
-                    checked={defaultSettings.is_featured}
-                    onCheckedChange={(checked) => 
-                      setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
-                    }
-                  />
-                  <Label htmlFor="default-featured">Destaque por padrão</Label>
+              </div>
+
+              <Separator />
+
+              {/* Categorias para Vídeos */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide flex items-center gap-2">
+                  <Video className="h-4 w-4" />
+                  Categorias para Vídeos
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="video-category">Categoria</Label>
+                    <Select
+                      value={defaultSettings.video_category || "none"}
+                      onValueChange={(value) => 
+                        setDefaultSettings(prev => ({ 
+                          ...prev, 
+                          video_category: value === "none" ? "" : value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="video-subcategory">Subcategoria</Label>
+                    <Select
+                      value={defaultSettings.video_subcategory || "none"}
+                      onValueChange={(value) => 
+                        setDefaultSettings(prev => ({ 
+                          ...prev, 
+                          video_subcategory: value === "none" ? "" : value 
+                        }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma subcategoria" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Nenhuma</SelectItem>
+                        {subcategories
+                          .filter(sub => !defaultSettings.video_category || sub.category_id === defaultSettings.video_category)
+                          .map((subcategory) => (
+                            <SelectItem key={subcategory.id} value={subcategory.id}>
+                              {subcategory.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              {/* Status e Destaques */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Status e Destaques
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="default-status">Status de Publicação</Label>
+                    <Select
+                      value={defaultSettings.publish_status}
+                      onValueChange={(value: any) => 
+                        setDefaultSettings(prev => ({ ...prev, publish_status: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="draft">Rascunho</SelectItem>
+                        <SelectItem value="published">Publicado</SelectItem>
+                        <SelectItem value="hidden">Oculto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Switch
+                      id="default-featured"
+                      checked={defaultSettings.is_featured}
+                      onCheckedChange={(checked) => 
+                        setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
+                      }
+                    />
+                    <Label htmlFor="default-featured">Item em Destaque</Label>
+                  </div>
+                  <div className="flex items-center space-x-2 pt-6">
+                    <Switch
+                      id="default-homepage"
+                      checked={defaultSettings.homepage_featured}
+                      onCheckedChange={(checked) => 
+                        setDefaultSettings(prev => ({ ...prev, homepage_featured: checked }))
+                      }
+                    />
+                    <Label htmlFor="default-homepage">Destaque na Homepage</Label>
+                  </div>
                 </div>
               </div>
             </CardContent>
