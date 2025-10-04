@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4'
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,9 +23,9 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { email, password, full_name, user_type = 'admin' } = await req.json()
+    const { email, password, admin_user_id } = await req.json()
 
-    if (!email || !password || !full_name) {
+    if (!email || !password || !admin_user_id) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { 
@@ -36,24 +35,25 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if email already exists
-    const { data: existingUser } = await supabaseClient
-      .from('admin_users')
-      .select('id')
-      .eq('email', email)
-      .single()
+    // Check if auth user already exists
+    const { data: existingAuthUser } = await supabaseClient.auth.admin.listUsers()
+    const authUserExists = existingAuthUser.users.find(u => u.email === email)
 
-    if (existingUser) {
+    if (authUserExists) {
       return new Response(
-        JSON.stringify({ error: 'Email already exists' }),
+        JSON.stringify({ 
+          success: true,
+          message: 'Auth user already exists',
+          user_id: authUserExists.id
+        }),
         { 
-          status: 409, 
+          status: 200, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
 
-    // Create user in Supabase Auth first
+    // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
@@ -71,28 +71,18 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Hash the password for storage
-    const password_hash = await bcrypt.hash(password);
-
-    // Create admin user record with the same ID as auth user
-    const { data, error } = await supabaseClient
+    // Update admin_users table with the new auth user ID
+    const { error: updateError } = await supabaseClient
       .from('admin_users')
-      .insert({
-        id: authData.user.id,
-        email,
-        password_hash,
-        full_name,
-        user_type
-      })
-      .select()
-      .single()
+      .update({ id: authData.user.id })
+      .eq('id', admin_user_id)
 
-    if (error) {
-      console.error('Error creating admin user:', error)
-      // Clean up auth user if admin_users insert fails
+    if (updateError) {
+      console.error('Error updating admin_users:', updateError)
+      // Clean up auth user if update fails
       await supabaseClient.auth.admin.deleteUser(authData.user.id)
       return new Response(
-        JSON.stringify({ error: 'Failed to create admin user' }),
+        JSON.stringify({ error: 'Failed to sync user ID' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -101,15 +91,18 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ data }),
+      JSON.stringify({ 
+        success: true,
+        user_id: authData.user.id 
+      }),
       { 
-        status: 201, 
+        status: 200, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
 
   } catch (error) {
-    console.error('Error in create-admin-user function:', error)
+    console.error('Error in sync-admin-auth function:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { 

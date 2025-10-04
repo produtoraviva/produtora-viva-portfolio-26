@@ -30,15 +30,19 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const checkSession = async () => {
     try {
-      // For simplified admin system, we'll check localStorage for session
-      const savedUser = localStorage.getItem('admin_user');
-      if (savedUser) {
-        try {
-          const user = JSON.parse(savedUser);
-          setUser(user);
-        } catch (error) {
-          console.error('Error parsing saved user:', error);
-          localStorage.removeItem('admin_user');
+      // Check Supabase Auth session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Verify user is an admin
+        const { data: adminUser, error } = await supabase
+          .from('admin_users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (!error && adminUser) {
+          setUser(adminUser as AdminUser);
         }
       }
     } catch (error) {
@@ -52,40 +56,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     try {
       setIsLoading(true);
       
-      
-      // Get admin user from database with simpler query
+      // First, verify user exists in admin_users table
       const { data: adminUser, error: fetchError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('email', email)
         .single();
 
-      if (fetchError) {
-        console.error('Fetch error:', fetchError);
+      if (fetchError || !adminUser) {
+        console.error('Admin user not found:', fetchError);
         return { success: false, error: 'Credenciais inválidas' };
-      }
-
-      if (!adminUser) {
-        
-        return { success: false, error: 'Credenciais inválidas' };
-      }
-
-      
-
-      // For testing, let's temporarily allow direct password comparison
-      if (email === 'admin@portfolio.com' && password === 'admin123456') {
-        
-        
-        // Create a simple session and save to localStorage
-        setUser(adminUser as AdminUser);
-        localStorage.setItem('admin_user', JSON.stringify(adminUser));
-        
-        // Update last login via edge function
-        await supabase.functions.invoke('update-last-login', {
-          body: { admin_id: adminUser.id }
-        });
-
-        return { success: true };
       }
 
       // Verify password with bcrypt
@@ -95,11 +75,51 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return { success: false, error: 'Credenciais inválidas' };
       }
 
-      
-      
-      // Create a simple session without Supabase Auth for now
+      // Try to sign in with Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      // If auth user doesn't exist, create it via edge function
+      if (authError && authError.message.includes('Invalid login credentials')) {
+        console.log('Auth user not found, syncing with Supabase Auth...');
+        
+        // Call edge function to create auth user and sync IDs
+        const { data: syncResult, error: syncError } = await supabase.functions.invoke('sync-admin-auth', {
+          body: { 
+            email: adminUser.email,
+            password: password,
+            admin_user_id: adminUser.id
+          }
+        });
+
+        if (syncError) {
+          console.error('Error syncing auth user:', syncError);
+          return { success: false, error: 'Erro ao sincronizar autenticação' };
+        }
+
+        // Now try to sign in again
+        const { error: retryAuthError } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (retryAuthError) {
+          console.error('Retry auth error:', retryAuthError);
+          return { success: false, error: 'Erro ao autenticar' };
+        }
+
+        // Update local admin user with new ID if changed
+        if (syncResult.user_id !== adminUser.id) {
+          adminUser.id = syncResult.user_id;
+        }
+      } else if (authError) {
+        console.error('Auth error:', authError);
+        return { success: false, error: 'Erro ao autenticar' };
+      }
+
       setUser(adminUser as AdminUser);
-      localStorage.setItem('admin_user', JSON.stringify(adminUser));
 
       // Update last login via edge function
       await supabase.functions.invoke('update-last-login', {
@@ -116,7 +136,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    localStorage.removeItem('admin_user');
+    await supabase.auth.signOut();
     setUser(null);
   };
 
