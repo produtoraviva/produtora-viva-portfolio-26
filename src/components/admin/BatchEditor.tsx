@@ -62,9 +62,10 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
     description: '',
     location: '',
     date_taken: '',
-    media_type: '' as 'photo' | 'video' | '',
-    category: '',
-    subcategory: '',
+    photo_category: '',
+    video_category: '',
+    photo_subcategory: '',
+    video_subcategory: '',
     publish_status: 'draft' as 'draft' | 'published' | 'hidden',
     is_featured: false,
     homepage_featured: false,
@@ -123,31 +124,10 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
     // Se já está selecionado, remove
     if (selectedItems.some(selected => selected.id === item.id)) {
       setSelectedItems(selectedItems.filter(selected => selected.id !== item.id));
-      
-      // Se não tem mais itens selecionados, limpa o media_type
-      if (selectedItems.length === 1) {
-        setFormData(prev => ({ ...prev, media_type: '' }));
-      }
       return;
     }
 
-    // Se não tem itens selecionados, define o tipo de mídia
-    if (selectedItems.length === 0) {
-      setFormData(prev => ({ ...prev, media_type: item.media_type }));
-      setSelectedItems([item]);
-      return;
-    }
-
-    // Verifica se o tipo de mídia é o mesmo
-    if (formData.media_type !== item.media_type) {
-      toast({
-        title: 'Tipo de mídia diferente',
-        description: 'Não é possível selecionar fotos e vídeos ao mesmo tempo.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    // Adiciona o item à seleção (agora permite fotos e vídeos juntos)
     setSelectedItems([...selectedItems, item]);
   };
 
@@ -161,10 +141,31 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
       return;
     }
 
-    if (!formData.title || !formData.category) {
+    const hasPhotos = selectedItems.some(item => item.media_type === 'photo');
+    const hasVideos = selectedItems.some(item => item.media_type === 'video');
+
+    if (!formData.title) {
       toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha pelo menos o título e a categoria.',
+        title: 'Título obrigatório',
+        description: 'Preencha o título.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (hasPhotos && !formData.photo_category) {
+      toast({
+        title: 'Categoria para fotos obrigatória',
+        description: 'Você selecionou fotos. Escolha uma categoria para fotos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (hasVideos && !formData.video_category) {
+      toast({
+        title: 'Categoria para vídeos obrigatória',
+        description: 'Você selecionou vídeos. Escolha uma categoria para vídeos.',
         variant: 'destructive',
       });
       return;
@@ -178,23 +179,26 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
       setIsLoading(true);
       setShowConfirmDialog(false);
 
-      // Atualizar todas as mídias selecionadas
-      const updatePromises = selectedItems.map(item =>
-        supabase
+      // Atualizar todas as mídias selecionadas com categoria baseada no tipo
+      const updatePromises = selectedItems.map(item => {
+        const category = item.media_type === 'photo' ? formData.photo_category : formData.video_category;
+        const subcategory = item.media_type === 'photo' ? formData.photo_subcategory : formData.video_subcategory;
+        
+        return supabase
           .from('portfolio_items')
           .update({
             title: formData.title,
             description: formData.description || null,
             location: formData.location || null,
             date_taken: formData.date_taken || null,
-            category: formData.category,
-            subcategory: formData.subcategory || null,
+            category: category || null,
+            subcategory: subcategory || null,
             publish_status: formData.publish_status,
             is_featured: formData.is_featured,
             homepage_featured: formData.homepage_featured,
           })
-          .eq('id', item.id)
-      );
+          .eq('id', item.id);
+      });
 
       await Promise.all(updatePromises);
 
@@ -216,9 +220,16 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
     }
   };
 
-  const filteredSubcategories = subcategories.filter(
-    sub => sub.category_id === formData.category
+  const photoSubcategories = subcategories.filter(
+    sub => sub.category_id === formData.photo_category
   );
+  
+  const videoSubcategories = subcategories.filter(
+    sub => sub.category_id === formData.video_category
+  );
+
+  const hasPhotos = selectedItems.some(item => item.media_type === 'photo');
+  const hasVideos = selectedItems.some(item => item.media_type === 'video');
 
   return (
     <>
@@ -251,16 +262,20 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
               )}
             </div>
 
-            {formData.media_type && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {formData.media_type === 'photo' ? (
-                  <Camera className="h-4 w-4" />
-                ) : (
-                  <Video className="h-4 w-4" />
+            {selectedItems.length > 0 && (
+              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                {hasPhotos && (
+                  <div className="flex items-center gap-2">
+                    <Camera className="h-4 w-4 text-blue-500" />
+                    <span>{selectedItems.filter(i => i.media_type === 'photo').length} fotos</span>
+                  </div>
                 )}
-                <span>
-                  Selecionando apenas {formData.media_type === 'photo' ? 'fotos' : 'vídeos'}
-                </span>
+                {hasVideos && (
+                  <div className="flex items-center gap-2">
+                    <Video className="h-4 w-4 text-purple-500" />
+                    <span>{selectedItems.filter(i => i.media_type === 'video').length} vídeos</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -311,11 +326,7 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
                 ) : (
                   <ScrollArea className="h-[300px] w-full">
                     <div className="grid grid-cols-4 gap-2 pr-4">
-                      {mediaItems
-                        .filter(item => 
-                          !formData.media_type || item.media_type === formData.media_type
-                        )
-                        .map((item) => {
+                      {mediaItems.map((item) => {
                           const isSelected = selectedItems.some(selected => selected.id === item.id);
                           return (
                             <div
@@ -386,46 +397,6 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Categoria *</Label>
-                <Select 
-                  value={formData.category} 
-                  onValueChange={(value) => setFormData({ ...formData, category: value, subcategory: '' })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {formData.category && filteredSubcategories.length > 0 && (
-                <div className="space-y-2">
-                  <Label htmlFor="subcategory">Subcategoria</Label>
-                  <Select 
-                    value={formData.subcategory} 
-                    onValueChange={(value) => setFormData({ ...formData, subcategory: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma subcategoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filteredSubcategories.map((subcategory) => (
-                        <SelectItem key={subcategory.id} value={subcategory.id}>
-                          {subcategory.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
-
-              <div className="space-y-2">
                 <Label htmlFor="status">Status de Publicação</Label>
                 <Select 
                   value={formData.publish_status} 
@@ -445,15 +416,127 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Descrição</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Descrição do ensaio..."
-                rows={4}
-              />
+            {/* Categorias para Fotos */}
+            {hasPhotos && (
+              <>
+                <div className="pt-4">
+                  <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2 mb-4">
+                    <Camera className="h-4 w-4" />
+                    Categorias para Fotos
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="photo-category">Categoria *</Label>
+                      <Select 
+                        value={formData.photo_category} 
+                        onValueChange={(value) => setFormData({ ...formData, photo_category: value, photo_subcategory: '' })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories
+                            .filter(cat => cat.type === 'photo')
+                            .map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {formData.photo_category && photoSubcategories.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="photo-subcategory">Subcategoria</Label>
+                        <Select 
+                          value={formData.photo_subcategory} 
+                          onValueChange={(value) => setFormData({ ...formData, photo_subcategory: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma subcategoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {photoSubcategories.map((subcategory) => (
+                              <SelectItem key={subcategory.id} value={subcategory.id}>
+                                {subcategory.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Categorias para Vídeos */}
+            {hasVideos && (
+              <>
+                <div className="pt-4">
+                  <h3 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide flex items-center gap-2 mb-4">
+                    <Video className="h-4 w-4" />
+                    Categorias para Vídeos
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="video-category">Categoria *</Label>
+                      <Select 
+                        value={formData.video_category} 
+                        onValueChange={(value) => setFormData({ ...formData, video_category: value, video_subcategory: '' })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories
+                            .filter(cat => cat.type === 'video')
+                            .map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {formData.video_category && videoSubcategories.length > 0 && (
+                      <div className="space-y-2">
+                        <Label htmlFor="video-subcategory">Subcategoria</Label>
+                        <Select 
+                          value={formData.video_subcategory} 
+                          onValueChange={(value) => setFormData({ ...formData, video_subcategory: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma subcategoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {videoSubcategories.map((subcategory) => (
+                              <SelectItem key={subcategory.id} value={subcategory.id}>
+                                {subcategory.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description">Descrição</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="Descrição do ensaio..."
+                  rows={4}
+                />
+              </div>
             </div>
 
             <div className="flex gap-6">
@@ -483,8 +566,14 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={isLoading || selectedItems.length === 0}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar {selectedItems.length > 0 && `(${selectedItems.length} itens)`}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Alterações'
+              )}
             </Button>
           </div>
         </CardContent>
@@ -492,44 +581,61 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
 
       {/* Dialog de Confirmação */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-yellow-500" />
               Confirmar Edição em Lote
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-3">
+            <AlertDialogDescription className="space-y-4">
               <p>
-                Você está prestes a atualizar <strong>{selectedItems.length}</strong>{' '}
-                {selectedItems.length === 1 ? 'item' : 'itens'} com as mesmas informações:
+                Você está prestes a atualizar <strong>{selectedItems.length}</strong> {selectedItems.length === 1 ? 'item' : 'itens'} 
+                {hasPhotos && hasVideos ? ' (fotos e vídeos)' : hasPhotos ? ' (fotos)' : ' (vídeos)'} com as mesmas informações.
               </p>
-              <div className="bg-muted p-3 rounded-md text-sm space-y-1">
-                <p><strong>Título:</strong> {formData.title}</p>
-                {formData.description && <p><strong>Descrição:</strong> {formData.description}</p>}
-                {formData.location && <p><strong>Local:</strong> {formData.location}</p>}
-                {formData.date_taken && <p><strong>Data:</strong> {formData.date_taken}</p>}
+              <div className="bg-muted p-4 rounded-lg space-y-2">
+                <p className="font-semibold">Informações que serão aplicadas:</p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li>Título: {formData.title}</li>
+                  {formData.description && <li>Descrição: {formData.description}</li>}
+                  {formData.location && <li>Localização: {formData.location}</li>}
+                  {formData.date_taken && <li>Data: {new Date(formData.date_taken).toLocaleDateString('pt-BR')}</li>}
+                  {hasPhotos && formData.photo_category && (
+                    <li className="text-blue-600 dark:text-blue-400">
+                      Categoria para fotos: {categories.find(c => c.id === formData.photo_category)?.name}
+                    </li>
+                  )}
+                  {hasVideos && formData.video_category && (
+                    <li className="text-purple-600 dark:text-purple-400">
+                      Categoria para vídeos: {categories.find(c => c.id === formData.video_category)?.name}
+                    </li>
+                  )}
+                  <li>Status: {formData.publish_status === 'draft' ? 'Rascunho' : formData.publish_status === 'published' ? 'Publicado' : 'Oculto'}</li>
+                </ul>
               </div>
-              <ScrollArea className="h-[150px] w-full border rounded-md p-2">
+              <ScrollArea className="h-[200px] w-full border rounded-lg p-4">
                 <div className="grid grid-cols-6 gap-2">
                   {selectedItems.map((item) => (
-                    <img
-                      key={item.id}
-                      src={item.thumbnail_url || item.file_url}
-                      alt={item.title}
-                      className="w-full h-16 object-cover rounded"
-                    />
+                    <div key={item.id} className="relative">
+                      <img
+                        src={item.thumbnail_url || item.file_url}
+                        alt={item.title}
+                        className="w-full h-16 object-cover rounded"
+                      />
+                      {item.media_type === 'video' && (
+                        <div className="absolute top-1 right-1 bg-black/70 rounded px-1">
+                          <Video className="h-3 w-3 text-white" />
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </ScrollArea>
-              <p className="text-destructive text-xs">
-                Esta ação não pode ser desfeita. Deseja continuar?
-              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmSubmit}>
-              Confirmar Edição
+              Confirmar e Salvar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
