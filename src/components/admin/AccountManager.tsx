@@ -38,6 +38,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Plus, Trash2, Users, Shield, Mail, Calendar, Key } from 'lucide-react';
 import SiteSettingsManager from './SiteSettingsManager';
 import bcrypt from 'bcryptjs';
+import { CreateAdminButton } from './CreateAdminButton';
 
 interface AdminUser {
   id: string;
@@ -250,6 +251,8 @@ export function AccountManager() {
         </div>
         
         <div className="flex gap-2">
+          <CreateAdminButton />
+          
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button className="flex items-center gap-2">
