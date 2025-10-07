@@ -71,18 +71,61 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Update admin_users table with the new auth user ID
-    const { error: updateError } = await supabaseClient
+    // Get the old admin user data before deleting
+    const { data: oldAdmin, error: fetchError } = await supabaseClient
       .from('admin_users')
-      .update({ id: authData.user.id })
+      .select('*')
       .eq('id', admin_user_id)
+      .single()
 
-    if (updateError) {
-      console.error('Error updating admin_users:', updateError)
-      // Clean up auth user if update fails
+    if (fetchError || !oldAdmin) {
+      console.error('Error fetching admin user:', fetchError)
       await supabaseClient.auth.admin.deleteUser(authData.user.id)
       return new Response(
-        JSON.stringify({ error: 'Failed to sync user ID' }),
+        JSON.stringify({ error: 'Admin user not found' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Delete the old admin_users record
+    const { error: deleteError } = await supabaseClient
+      .from('admin_users')
+      .delete()
+      .eq('id', admin_user_id)
+
+    if (deleteError) {
+      console.error('Error deleting old admin user:', deleteError)
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      return new Response(
+        JSON.stringify({ error: 'Failed to delete old admin user' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Create new admin_users record with the Supabase Auth user ID
+    const { error: insertError } = await supabaseClient
+      .from('admin_users')
+      .insert({
+        id: authData.user.id,
+        email: oldAdmin.email,
+        password_hash: oldAdmin.password_hash,
+        full_name: oldAdmin.full_name,
+        user_type: oldAdmin.user_type,
+        last_login_at: oldAdmin.last_login_at
+      })
+
+    if (insertError) {
+      console.error('Error creating new admin user:', insertError)
+      // Clean up: delete the auth user if admin_users insert fails
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      return new Response(
+        JSON.stringify({ error: 'Failed to create new admin user' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
