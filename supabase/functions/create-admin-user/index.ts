@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if email already exists
+    // Check if email already exists in admin_users
     const { data: existingUser } = await supabaseClient
       .from('admin_users')
       .select('id')
@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       return new Response(
-        JSON.stringify({ error: 'Email already exists' }),
+        JSON.stringify({ error: 'Email already exists in admin_users' }),
         { 
           status: 409, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -53,15 +53,47 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Create user in Supabase Auth first
-    const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
+    // Try to create user in Supabase Auth
+    let authData = await supabaseClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     })
 
-    if (authError) {
-      console.error('Error creating auth user:', authError)
+    // If user already exists in Auth, try to get the existing user
+    if (authData.error && authData.error.message.includes('already been registered')) {
+      console.log('User already exists in Auth, fetching existing user...')
+      
+      // List users with this email
+      const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
+      
+      if (listError) {
+        console.error('Error listing users:', listError)
+        return new Response(
+          JSON.stringify({ error: 'Failed to verify existing user' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      
+      const existingAuthUser = users.users.find(u => u.email === email)
+      
+      if (!existingAuthUser) {
+        return new Response(
+          JSON.stringify({ error: 'Email exists but user not found' }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        )
+      }
+      
+      // Use the existing auth user
+      authData = { data: { user: existingAuthUser }, error: null }
+    } else if (authData.error) {
+      console.error('Error creating auth user:', authData.error)
       return new Response(
         JSON.stringify({ error: 'Failed to create auth user' }),
         { 
@@ -74,11 +106,24 @@ Deno.serve(async (req) => {
     // Hash the password for storage
     const password_hash = await bcrypt.hash(password);
 
+    // Get the user ID from the auth data
+    const userId = authData.data?.user?.id
+    
+    if (!userId) {
+      return new Response(
+        JSON.stringify({ error: 'Failed to get user ID' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     // Create admin user record with the same ID as auth user
     const { data, error } = await supabaseClient
       .from('admin_users')
       .insert({
-        id: authData.user.id,
+        id: userId,
         email,
         password_hash,
         full_name,
@@ -89,8 +134,6 @@ Deno.serve(async (req) => {
 
     if (error) {
       console.error('Error creating admin user:', error)
-      // Clean up auth user if admin_users insert fails
-      await supabaseClient.auth.admin.deleteUser(authData.user.id)
       return new Response(
         JSON.stringify({ error: 'Failed to create admin user' }),
         { 
