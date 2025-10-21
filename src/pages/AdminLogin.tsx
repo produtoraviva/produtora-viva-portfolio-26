@@ -8,12 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAdmin } from '@/hooks/useAdmin';
 import { Eye, EyeOff, LogIn, Camera, Video, Lock, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
   const { login, isAuthenticated } = useAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,6 +54,49 @@ export default function AdminLogin() {
       });
     }
     setIsLoading(false);
+  };
+
+  const handleCreateAdmin = async () => {
+    setIsCreatingAdmin(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-admin-user', {
+        body: {
+          email: 'rubensvieira.email@gmail.com',
+          password: '121212',
+          full_name: 'Rubens Vieira',
+          user_type: 'admin'
+        }
+      });
+
+      if (error) {
+        console.error('Erro ao criar admin:', error);
+        toast({
+          title: 'Erro',
+          description: `Erro ao criar administrador: ${error.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      console.log('Admin criado com sucesso:', data);
+      toast({
+        title: 'Sucesso',
+        description: 'Administrador criado! Faça login com: rubensvieira.email@gmail.com / 121212',
+      });
+      
+      // Preencher campos automaticamente
+      setEmail('rubensvieira.email@gmail.com');
+      setPassword('121212');
+    } catch (error) {
+      console.error('Erro inesperado:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro inesperado ao criar administrador',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsCreatingAdmin(false);
+    }
   };
 
   return (
@@ -162,6 +207,20 @@ export default function AdminLogin() {
             </Button>
           </form>
           
+          <div className="pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleCreateAdmin}
+              disabled={isCreatingAdmin}
+            >
+              {isCreatingAdmin ? 'Criando Admin...' : 'Criar Admin de Teste'}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center mt-2">
+              Criar conta: rubensvieira.email@gmail.com / 121212
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
