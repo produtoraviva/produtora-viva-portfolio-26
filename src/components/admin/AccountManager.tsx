@@ -79,9 +79,7 @@ export function AccountManager() {
     try {
       setIsLoading(true);
       const { data, error } = await supabase
-        .from('admin_users')
-        .select('id, email, full_name, created_at, last_login_at, user_type')
-        .order('created_at', { ascending: false });
+        .rpc('get_admin_users_list');
 
       if (error) throw error;
       setAdminUsers((data || []) as AdminUser[]);
