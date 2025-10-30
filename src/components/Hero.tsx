@@ -1,43 +1,7 @@
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Camera, Award } from "lucide-react";
-import { Logo } from './Logo';
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 const Hero = () => {
-  const [currentBackground, setCurrentBackground] = useState<string | null>(null);
-  const [backgroundOpacity, setBackgroundOpacity] = useState(0.6);
-
-  useEffect(() => {
-    loadHomepageBackground();
-  }, []);
-
-  const loadHomepageBackground = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('homepage_backgrounds')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .limit(1);
-
-      if (error) {
-        console.error('Error loading homepage background:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setCurrentBackground(data[0].file_url);
-        setBackgroundOpacity(data[0].opacity || 0.6);
-      } else {
-        // Use a default gradient background if no images are set
-        setCurrentBackground(null);
-      }
-    } catch (error) {
-      console.error('Error loading homepage background:', error);
-    }
-  };
-
   const scrollToPortfolio = () => {
     const element = document.querySelector("#portfolio");
     if (element) {
@@ -53,107 +17,86 @@ const Hero = () => {
   };
 
   return (
-    <section id="hero" className="min-h-screen relative flex items-center justify-center overflow-hidden">
-      {/* Background Image or Gradient */}
-      <div className="absolute inset-0">
-        {currentBackground ? (
-          <img
-            src={currentBackground}
-            alt="Fotografia profissional de eventos"
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-background via-secondary/30 to-primary/20" />
-        )}
-        <div className="absolute inset-0" style={{ backgroundColor: `rgba(0, 0, 0, ${backgroundOpacity})` }}></div>
-      </div>
-      
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-10">
+    <section id="hero" className="relative min-h-[90vh] flex items-center justify-center bg-white overflow-hidden">
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 opacity-[0.015]">
         <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--gold)) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
+          backgroundImage: `radial-gradient(circle at 2px 2px, hsl(var(--dark)) 1px, transparent 1px)`,
+          backgroundSize: '40px 40px'
         }} />
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-24 sm:pt-32 md:pt-0 safe-top">
-        <div className="text-center max-w-4xl mx-auto">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-16 relative z-10 py-32 md:py-40">
+        <div className="max-w-5xl mx-auto text-center space-y-12">
           {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8 mt-12 sm:mt-0 animate-fade-in-up">
-            <Award className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-primary">
+          <div className="inline-flex items-center space-x-2 bg-secondary rounded-full px-5 py-2.5 animate-fade-in-up">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium text-foreground tracking-wide">
               Fotografia & Videografia Profissional
             </span>
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 animate-fade-in-up leading-tight">
-            <span className="text-foreground">Capturamos </span>
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Momentos
-            </span>
-            <br className="hidden sm:block" />
-            <span className="text-foreground">Criamos </span>
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
-              Memórias
-            </span>
-          </h1>
-          
-
-          {/* Subtitle */}
-          <p className="text-lg sm:text-xl lg:text-2xl text-muted-foreground mb-10 sm:mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in-delayed px-4 sm:px-0">
-            Especializados em casamentos, aniversários e eventos únicos em Foz do Iguaçu e Ciudad del Este. 
-            Transformamos seus momentos especiais em obras de arte cinematográficas.
-          </p>
+          <div className="space-y-6 animate-fade-in-up">
+            <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold tracking-tighter">
+              <span className="text-foreground">Capturamos</span>
+              <br />
+              <span className="text-primary">Momentos Únicos</span>
+            </h1>
+            
+            <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
+              Transformamos seus eventos especiais em memórias cinematográficas 
+              que duram para sempre
+            </p>
+          </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16 animate-slide-in-right">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-slide-in-right">
             <Button 
               onClick={scrollToPortfolio}
               size="lg"
-              className="bg-gradient-primary text-lg px-8 py-6 hover-scale group"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground text-base px-10 py-7 rounded-full hover-lift group transition-all"
             >
-              <Camera className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
               Ver Portfolio
+              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button 
               onClick={scrollToContact}
               variant="outline"
               size="lg"
-              className="text-lg px-8 py-6 border-primary/30 hover:bg-primary/10 hover-scale group"
+              className="text-base px-10 py-7 rounded-full border-2 hover:bg-accent transition-all"
             >
-              <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
               Solicitar Orçamento
             </Button>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8 max-w-2xl mx-auto animate-fade-in-delayed">
-            <div className="text-center p-3">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">500+</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Eventos</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-12 max-w-3xl mx-auto pt-8 animate-fade-in-delayed">
+            <div className="text-center space-y-2">
+              <div className="text-4xl sm:text-5xl font-bold text-primary tracking-tight">500+</div>
+              <div className="text-sm text-muted-foreground font-medium">Eventos</div>
             </div>
-            <div className="text-center p-3">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">5</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Anos</div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl sm:text-5xl font-bold text-primary tracking-tight">5</div>
+              <div className="text-sm text-muted-foreground font-medium">Anos</div>
             </div>
-            <div className="text-center p-3">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">98%</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Satisfação</div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl sm:text-5xl font-bold text-primary tracking-tight">98%</div>
+              <div className="text-sm text-muted-foreground font-medium">Satisfação</div>
             </div>
-            <div className="text-center p-3">
-              <div className="text-2xl sm:text-3xl font-bold text-primary mb-1">24h</div>
-              <div className="text-xs sm:text-sm text-muted-foreground">Resposta</div>
+            <div className="text-center space-y-2">
+              <div className="text-4xl sm:text-5xl font-bold text-primary tracking-tight">24h</div>
+              <div className="text-sm text-muted-foreground font-medium">Resposta</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-primary/30 rounded-full flex justify-center">
-          <div className="w-1 h-3 bg-primary rounded-full mt-2 animate-pulse"></div>
+      {/* Subtle scroll indicator */}
+      <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 border border-border rounded-full flex justify-center p-1">
+          <div className="w-1 h-2 bg-primary rounded-full animate-pulse"></div>
         </div>
       </div>
     </section>

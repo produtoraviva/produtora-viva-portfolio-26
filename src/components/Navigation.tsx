@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, Camera, Video } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Logo } from "./Logo";
@@ -13,7 +13,7 @@ const Navigation = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
+      setScrolled(window.scrollY > 20);
     };
     
     window.addEventListener("scroll", handleScroll);
@@ -26,7 +26,6 @@ const Navigation = () => {
     { label: "Sobre", href: "#sobre", route: "/" },
     { label: "Serviços", href: "#servicos", route: "/" },
     { label: "Depoimentos", href: "#depoimentos", route: "/" },
-    { label: "FAQ", href: "#faq", route: "/" },
     { label: "Contato", href: "#contact", route: "/" },
   ];
 
@@ -52,42 +51,42 @@ const Navigation = () => {
   };
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      scrolled ? "bg-background/95 backdrop-blur-md border-b border-border" : "bg-transparent"
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      scrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"
     }`}>
-      <div className="container mx-auto px-6 sm:px-8 lg:px-8">
-        <div className="flex justify-between items-center h-16 md:h-18 lg:h-20 py-2 md:py-3">
+      <div className="container mx-auto px-6 sm:px-8 lg:px-16">
+        <div className="flex justify-between items-center h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2 group cursor-pointer min-w-0 flex-shrink-0 mr-4">
-            <Logo size="lg" className="scale-[1.4] sm:scale-[1.55] md:scale-[1.55] mt-4 md:mt-2" style={{ filter: 'sepia(1) saturate(3) hue-rotate(30deg) brightness(1.2)' }} />
+          <Link to="/" className="flex items-center group cursor-pointer">
+            <Logo size="lg" className="scale-[1.4] sm:scale-[1.5]" />
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden lg:flex items-center space-x-8">
+          <div className="hidden lg:flex items-center space-x-10">
             {navItems.map((item) => (
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item)}
-                className="text-foreground/80 hover:text-primary transition-colors font-medium"
+                className="text-foreground/70 hover:text-foreground transition-colors text-[15px] font-medium tracking-tight"
               >
                 {item.label}
               </button>
             ))}
             <Button 
               onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
-              className="bg-gradient-primary hover:scale-105 transition-transform"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 hover-scale"
             >
               Orçamento
             </Button>
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="lg:hidden flex-shrink-0">
+          <div className="lg:hidden">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground hover:text-primary"
+              className="text-foreground"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -95,37 +94,32 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* Mobile Menu - fixed panel without backdrop blur */}
+      {/* Mobile Menu */}
       {isOpen && (
-        <div className="lg:hidden fixed inset-0 z-40">
-          {/* Backdrop - sem blur effect */}
+        <div className="lg:hidden fixed inset-0 z-40 top-20">
           <div 
-            className="absolute inset-0 bg-black/80"
+            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
           
-          {/* Menu Panel */}
-          <div className="absolute left-0 right-0 top-16 max-h-[calc(100vh-4rem)] bg-card border-t border-border rounded-t-2xl shadow-2xl animate-enter overflow-hidden mobile-safe-area">
-            <div className="max-h-[calc(100vh-6rem)] overflow-y-auto p-6 safe-top">
-              <div className="flex flex-col space-y-1">
-                {navItems.map((item, index) => (
-                  <button
-                    key={item.label}
-                    onClick={() => handleNavClick(item)}
-                    className="text-left text-foreground/80 hover:text-primary hover:bg-primary/5 transition-all duration-150 font-medium py-4 px-4 rounded-lg transform hover:translate-x-1 border-b border-border/30 last:border-b-0"
-                    style={{ animationDelay: `${index * 40}ms` }}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-                <div className="pt-6 mt-4 border-t border-border/50">
-                  <Button 
-                    onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
-                    className="bg-gradient-primary w-full py-4 hover:scale-[1.02] transition-transform font-medium"
-                  >
-                    Solicitar Orçamento
-                  </Button>
-                </div>
+          <div className="absolute left-0 right-0 top-0 bg-white border-t border-border shadow-xl animate-slide-in-down">
+            <div className="p-6 space-y-1">
+              {navItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleNavClick(item)}
+                  className="w-full text-left text-foreground/70 hover:text-foreground hover:bg-accent transition-all py-4 px-4 rounded-xl text-base font-medium"
+                >
+                  {item.label}
+                </button>
+              ))}
+              <div className="pt-4">
+                <Button 
+                  onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-4"
+                >
+                  Solicitar Orçamento
+                </Button>
               </div>
             </div>
           </div>
