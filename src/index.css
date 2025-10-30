@@ -220,13 +220,13 @@ All colors MUST be HSL.
 
   /* Portfolio item with fade in */
   .portfolio-item {
-    @apply relative rounded-2xl overflow-hidden bg-white elegant-shadow animate-fade-in opacity-0;
+    @apply relative rounded-2xl overflow-hidden animate-fade-in opacity-0;
     animation-fill-mode: forwards;
   }
 
-  /* Minimal overlay with backdrop blur */
+  /* Dark overlay with backdrop blur - only on hover */
   .portfolio-overlay {
-    @apply absolute inset-0 bg-white/95 opacity-0 transition-all duration-700 flex items-center justify-center p-8 backdrop-blur-sm;
+    @apply absolute inset-0 bg-black/70 opacity-0 transition-all duration-700 flex items-center justify-center p-8 backdrop-blur-sm;
   }
 
   .portfolio-item:hover .portfolio-overlay {

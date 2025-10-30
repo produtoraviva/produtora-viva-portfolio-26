@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Camera, Video, Heart, Gift, Users, Play, Eye, Grid, List } from "lucide-react";
 import ImageModal from "./ImageModal";
 import { supabase } from "@/integrations/supabase/client";
@@ -473,71 +471,58 @@ const PortfolioFull = () => {
             : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         }`}>
           {currentItems.map((item, index) => (
-            <Card 
+            <div 
               key={item.id} 
-              className="portfolio-item bg-card border-border overflow-hidden group cursor-pointer animate-fade-in-up"
+              className="portfolio-item group cursor-pointer animate-fade-in-up"
               onClick={() => handleImageClick(index)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
                 {item.media_type === 'video' ? (
                   <video
                     src={item.file_url}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     poster={item.thumbnail_url}
                   />
                 ) : (
                   <img
                     src={item.thumbnail_url || item.file_url}
                     alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                 )}
-                <div className="portfolio-overlay">
-                  <div className="text-center text-white space-y-2">
+                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-center justify-center p-8 backdrop-blur-sm">
+                  <div className="text-center text-white space-y-3">
                     {item.media_type === "video" ? (
-                      <Video className="h-8 w-8 mx-auto mb-2 opacity-80" />
+                      <Video className="h-10 w-10 mx-auto mb-3" />
                     ) : (
-                      <Camera className="h-8 w-8 mx-auto mb-2 opacity-80" />
+                      <Camera className="h-10 w-10 mx-auto mb-3" />
                     )}
-                    <h3 className="font-semibold text-lg">{item.title}</h3>
-                    <p className="text-sm opacity-80">{item.description}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="p-4">
-                <div className="mb-2">
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors mb-2">
-                    {item.title}
-                  </h3>
-                  <div className="flex flex-wrap gap-1">
-                    {item.category && (
-                      <Badge 
-                        variant="secondary" 
-                        className="capitalize bg-primary/10 text-primary border-0 text-xs"
-                      >
-                        {getCategoryLabel(item.category)}
-                      </Badge>
+                    <h3 className="font-semibold text-xl">{item.title}</h3>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {item.category && (
+                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">
+                          {getCategoryLabel(item.category)}
+                        </span>
+                      )}
+                      {item.subcategory && (
+                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">
+                          {getSubcategoryLabel(item.subcategory)}
+                        </span>
+                      )}
+                    </div>
+                    {item.description && (
+                      <p className="text-sm opacity-90 max-w-xs mx-auto">{item.description}</p>
                     )}
-                    {item.subcategory && (
-                      <Badge 
-                        variant="outline" 
-                        className="capitalize text-xs"
-                      >
-                        {getSubcategoryLabel(item.subcategory)}
-                      </Badge>
+                    {(item.date_taken || item.location) && (
+                      <div className="text-xs opacity-80 space-y-1">
+                        {item.date_taken && <div>{new Date(item.date_taken).toLocaleDateString('pt-BR')}</div>}
+                        {item.location && <div>{item.location}</div>}
+                      </div>
                     )}
                   </div>
                 </div>
-                {item.description && (
-                  <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                )}
-                <div className="text-xs text-muted-foreground space-y-1">
-                  {item.date_taken && <div>{new Date(item.date_taken).toLocaleDateString('pt-BR')}</div>}
-                  {item.location && <div>{item.location}</div>}
-                </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
 

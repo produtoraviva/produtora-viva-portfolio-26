@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Camera, Video, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -151,41 +150,36 @@ const PortfolioPreview = () => {
         {/* Portfolio Grid - 3 columns with complete images */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
           {filteredItems.map((item, index) => (
-            <Card 
+            <div 
               key={item.id} 
-              className="portfolio-item group cursor-pointer border-0"
+              className="portfolio-item group cursor-pointer"
               style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => handleImageClick(index)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl image-hover">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
                 <LazyImage
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="portfolio-overlay">
-                  <div className="text-center text-foreground space-y-3">
+                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center p-8 backdrop-blur-sm">
+                  <div className="text-center text-white space-y-3">
                     {item.media_type === "video" ? (
-                      <Video className="h-10 w-10 mx-auto mb-3 text-primary" />
+                      <Video className="h-10 w-10 mx-auto mb-3" />
                     ) : (
-                      <Camera className="h-10 w-10 mx-auto mb-3 text-primary" />
+                      <Camera className="h-10 w-10 mx-auto mb-3" />
                     )}
                     <h3 className="font-semibold text-xl">{item.title}</h3>
+                    <p className="text-sm font-medium opacity-90">
+                      {item.subcategory || item.category}
+                    </p>
                     {item.description && (
-                      <p className="text-sm text-muted-foreground max-w-xs mx-auto">{item.description}</p>
+                      <p className="text-sm opacity-80 max-w-xs mx-auto">{item.description}</p>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="p-6 space-y-2">
-                <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
-                  {item.title}
-                </h3>
-                <p className="text-sm text-muted-foreground font-medium">
-                  {item.subcategory || item.category}
-                </p>
-              </div>
-            </Card>
+            </div>
           ))}
         </div>
 
