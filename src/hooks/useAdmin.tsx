@@ -1,13 +1,13 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import bcrypt from 'bcryptjs';
+import { User } from '@supabase/supabase-js';
 
 interface AdminUser {
   id: string;
   email: string;
   full_name: string;
+  role: 'admin' | 'collaborator';
   last_login_at?: string;
-  user_type: 'admin' | 'collaborator';
 }
 
 interface AdminContextType {
@@ -26,24 +26,72 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await loadUserData(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const loadUserData = async (authUser: User) => {
+    try {
+      // Get user role
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (roleError || !roleData) {
+        console.error('User has no admin role');
+        await supabase.auth.signOut();
+        setUser(null);
+        return;
+      }
+
+      // Get profile data
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name, last_login_at')
+        .eq('id', authUser.id)
+        .single();
+
+      if (profileError || !profileData) {
+        console.error('Profile not found');
+        await supabase.auth.signOut();
+        setUser(null);
+        return;
+      }
+
+      setUser({
+        id: authUser.id,
+        email: authUser.email || '',
+        full_name: profileData.full_name,
+        role: roleData.role as 'admin' | 'collaborator',
+        last_login_at: profileData.last_login_at || undefined
+      });
+
+      // Update last login
+      await supabase.functions.invoke('update-last-login', {
+        body: { admin_id: authUser.id }
+      });
+    } catch (error) {
+      console.error('Error loading user data:', error);
+      setUser(null);
+    }
+  };
 
   const checkSession = async () => {
     try {
-      // Check Supabase Auth session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Verify user is an admin
-        const { data: adminUser, error } = await supabase
-          .from('admin_users')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (!error && adminUser) {
-          setUser(adminUser as AdminUser);
-        }
+        await loadUserData(session.user);
       }
     } catch (error) {
       console.error('Error checking session:', error);
@@ -55,77 +103,22 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      
-      // First, verify user exists in admin_users table
-      const { data: adminUser, error: fetchError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email)
-        .single();
 
-      if (fetchError || !adminUser) {
-        console.error('Admin user not found:', fetchError);
-        return { success: false, error: 'Credenciais inválidas' };
-      }
-
-      // Verify password with bcrypt
-      const isValidPassword = await bcrypt.compare(password, adminUser.password_hash);
-      
-      if (!isValidPassword) {
-        return { success: false, error: 'Credenciais inválidas' };
-      }
-
-      // Try to sign in with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: email,
-        password: password,
+        email,
+        password,
       });
 
-      // If auth user doesn't exist, create it via edge function
-      if (authError && authError.message.includes('Invalid login credentials')) {
-        console.log('Auth user not found, syncing with Supabase Auth...');
-        
-        // Call edge function to create auth user and sync IDs
-        const { data: syncResult, error: syncError } = await supabase.functions.invoke('sync-admin-auth', {
-          body: { 
-            email: adminUser.email,
-            password: password,
-            admin_user_id: adminUser.id
-          }
-        });
-
-        if (syncError) {
-          console.error('Error syncing auth user:', syncError);
-          return { success: false, error: 'Erro ao sincronizar autenticação' };
-        }
-
-        // Now try to sign in again
-        const { error: retryAuthError } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
-
-        if (retryAuthError) {
-          console.error('Retry auth error:', retryAuthError);
-          return { success: false, error: 'Erro ao autenticar' };
-        }
-
-        // Update local admin user with new ID if changed
-        if (syncResult.user_id !== adminUser.id) {
-          adminUser.id = syncResult.user_id;
-        }
-      } else if (authError) {
+      if (authError) {
         console.error('Auth error:', authError);
+        return { success: false, error: 'Email ou senha inválidos' };
+      }
+
+      if (!authData.user) {
         return { success: false, error: 'Erro ao autenticar' };
       }
 
-      setUser(adminUser as AdminUser);
-
-      // Update last login via edge function
-      await supabase.functions.invoke('update-last-login', {
-        body: { admin_id: adminUser.id }
-      });
-
+      // loadUserData will be called by the auth state change listener
       return { success: true };
     } catch (error) {
       console.error('Login error:', error);

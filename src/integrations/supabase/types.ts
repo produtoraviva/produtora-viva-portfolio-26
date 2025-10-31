@@ -14,39 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      admin_users: {
-        Row: {
-          created_at: string | null
-          email: string
-          full_name: string
-          id: string
-          last_login_at: string | null
-          password_hash: string
-          updated_at: string | null
-          user_type: string
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          full_name: string
-          id?: string
-          last_login_at?: string | null
-          password_hash: string
-          updated_at?: string | null
-          user_type?: string
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          full_name?: string
-          id?: string
-          last_login_at?: string | null
-          password_hash?: string
-          updated_at?: string | null
-          user_type?: string
-        }
-        Relationships: []
-      }
       faq_items: {
         Row: {
           answer: string
@@ -189,7 +156,7 @@ export type Database = {
         Row: {
           action: string
           admin_user_id: string | null
-          created_at: string | null
+          created_at: string
           id: string
           new_data: Json | null
           portfolio_item_id: string | null
@@ -198,7 +165,7 @@ export type Database = {
         Insert: {
           action: string
           admin_user_id?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           new_data?: Json | null
           portfolio_item_id?: string | null
@@ -207,20 +174,13 @@ export type Database = {
         Update: {
           action?: string
           admin_user_id?: string | null
-          created_at?: string | null
+          created_at?: string
           id?: string
           new_data?: Json | null
           portfolio_item_id?: string | null
           previous_data?: Json | null
         }
         Relationships: [
-          {
-            foreignKeyName: "portfolio_edit_history_admin_user_id_fkey"
-            columns: ["admin_user_id"]
-            isOneToOne: false
-            referencedRelation: "admin_users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "portfolio_edit_history_portfolio_item_id_fkey"
             columns: ["portfolio_item_id"]
@@ -341,6 +301,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          last_login_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id: string
+          last_login_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          last_login_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       services: {
         Row: {
@@ -501,6 +485,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -517,10 +522,17 @@ export type Database = {
           user_type: string
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_admin_session: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "collaborator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -647,6 +659,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "collaborator"],
+    },
   },
 } as const

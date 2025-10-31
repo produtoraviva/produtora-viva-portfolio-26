@@ -8,6 +8,3 @@ verify_jwt = false
 
 [functions.update-last-login]
 verify_jwt = false
-
-[functions.sync-admin-auth]
-verify_jwt = false

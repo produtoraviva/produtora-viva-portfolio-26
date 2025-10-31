@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4'
-import { hash } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,7 +6,6 @@ const corsHeaders = {
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -24,11 +22,11 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { email, password, full_name, user_type = 'admin' } = await req.json()
+    const { email, password, full_name, role = 'admin' } = await req.json()
 
     if (!email || !password || !full_name) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: email, password, and full_name are required' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -36,66 +34,30 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Check if email already exists in admin_users
-    const { data: existingUser } = await supabaseClient
-      .from('admin_users')
-      .select('id')
-      .eq('email', email)
-      .single()
-
-    if (existingUser) {
-      return new Response(
-        JSON.stringify({ error: 'Email already exists in admin_users' }),
-        { 
-          status: 409, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Try to create user in Supabase Auth
-    let authData = await supabaseClient.auth.admin.createUser({
+    // Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
+      user_metadata: {
+        full_name
+      }
     })
 
-    // If user already exists in Auth, try to get the existing user
-    if (authData.error && authData.error.message.includes('already been registered')) {
-      console.log('User already exists in Auth, fetching existing user...')
-      
-      // List users with this email
-      const { data: users, error: listError } = await supabaseClient.auth.admin.listUsers()
-      
-      if (listError) {
-        console.error('Error listing users:', listError)
-        return new Response(
-          JSON.stringify({ error: 'Failed to verify existing user' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-      
-      const existingAuthUser = users.users.find(u => u.email === email)
-      
-      if (!existingAuthUser) {
-        return new Response(
-          JSON.stringify({ error: 'Email exists but user not found' }),
-          { 
-            status: 500, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-          }
-        )
-      }
-      
-      // Use the existing auth user
-      authData = { data: { user: existingAuthUser }, error: null }
-    } else if (authData.error) {
-      console.error('Error creating auth user:', authData.error)
+    if (authError) {
+      console.error('Error creating auth user:', authError)
       return new Response(
-        JSON.stringify({ error: 'Failed to create auth user' }),
+        JSON.stringify({ error: `Failed to create user: ${authError.message}` }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    if (!authData.user) {
+      return new Response(
+        JSON.stringify({ error: 'User creation failed - no user data returned' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -103,48 +65,61 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Hash the password for storage
-    const password_hash = await hash(password);
-
-    // Get the user ID from the auth data
-    const userId = authData.data?.user?.id
-    
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: 'Failed to get user ID' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
-    }
-
-    // Create admin user record with the same ID as auth user
-    const { data, error } = await supabaseClient
-      .from('admin_users')
+    // Create profile
+    const { error: profileError } = await supabaseClient
+      .from('profiles')
       .insert({
-        id: userId,
-        email,
-        password_hash,
+        id: authData.user.id,
         full_name,
-        user_type
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
-      .select()
-      .single()
 
-    if (error) {
-      console.error('Error creating admin user:', error)
+    if (profileError) {
+      console.error('Error creating profile:', profileError)
+      // Clean up auth user if profile creation fails
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
       return new Response(
-        JSON.stringify({ error: 'Failed to create admin user' }),
+        JSON.stringify({ error: `Failed to create profile: ${profileError.message}` }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       )
     }
+
+    // Assign role
+    const { error: roleError } = await supabaseClient
+      .from('user_roles')
+      .insert({
+        user_id: authData.user.id,
+        role: role
+      })
+
+    if (roleError) {
+      console.error('Error assigning role:', roleError)
+      // Clean up auth user and profile if role assignment fails
+      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      return new Response(
+        JSON.stringify({ error: `Failed to assign role: ${roleError.message}` }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    console.log(`Successfully created ${role} user:`, email)
 
     return new Response(
-      JSON.stringify({ data }),
+      JSON.stringify({ 
+        success: true,
+        user: {
+          id: authData.user.id,
+          email: authData.user.email,
+          full_name
+        }
+      }),
       { 
         status: 201, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

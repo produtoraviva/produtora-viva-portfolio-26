@@ -1,24 +1,22 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Logo } from '@/components/Logo';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAdmin } from '@/hooks/useAdmin';
-import { Eye, EyeOff, LogIn, Camera, Video, Lock, Shield } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAdmin } from "@/hooks/useAdmin";
+import { toast } from "sonner";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function AdminLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false);
+  const [isCreatingTestUser, setIsCreatingTestUser] = useState(false);
   const { login, isAuthenticated } = useAdmin();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -28,199 +26,167 @@ export default function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (!email || !password) {
-      toast({
-        title: 'Erro',
-        description: 'Por favor, preencha todos os campos.',
-        variant: 'destructive',
-      });
+      toast.error("Por favor, preencha todos os campos");
       return;
     }
 
     setIsLoading(true);
     const result = await login(email, password);
-    
+    setIsLoading(false);
+
     if (result.success) {
-      toast({
-        title: 'Sucesso',
-        description: 'Login realizado com sucesso!',
-      });
+      toast.success("Login realizado com sucesso!");
       navigate('/admin');
     } else {
-      toast({
-        title: 'Erro de Login',
-        description: result.error || 'Credenciais inválidas.',
-        variant: 'destructive',
-      });
+      toast.error(result.error || "Erro ao fazer login");
     }
-    setIsLoading(false);
   };
 
-  const handleCreateAdmin = async () => {
-    setIsCreatingAdmin(true);
+  const handleCreateTestAdmin = async () => {
+    setIsCreatingTestUser(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
-          email: 'rubensvieira.email@gmail.com',
-          password: '121212',
-          full_name: 'Rubens Vieira',
-          user_type: 'admin'
+          email: 'admin@exemplo.com',
+          password: 'admin123',
+          full_name: 'Administrador',
+          role: 'admin'
         }
       });
 
       if (error) {
         console.error('Erro ao criar admin:', error);
-        toast({
-          title: 'Erro',
-          description: `Erro ao criar administrador: ${error.message}`,
-          variant: 'destructive',
-        });
+        toast.error(`Erro: ${error.message}`);
         return;
       }
 
-      console.log('Admin criado com sucesso:', data);
-      toast({
-        title: 'Sucesso',
-        description: 'Administrador criado! Faça login com: rubensvieira.email@gmail.com / 121212',
-      });
-      
-      // Preencher campos automaticamente
-      setEmail('rubensvieira.email@gmail.com');
-      setPassword('121212');
-    } catch (error) {
+      toast.success("Admin criado! Use: admin@exemplo.com / admin123");
+      setEmail('admin@exemplo.com');
+      setPassword('admin123');
+    } catch (error: any) {
       console.error('Erro inesperado:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro inesperado ao criar administrador',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Erro ao criar usuário de teste');
     } finally {
-      setIsCreatingAdmin(false);
+      setIsCreatingTestUser(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, hsl(var(--primary)) 1px, transparent 1px)`,
-          backgroundSize: '50px 50px'
-        }} />
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute top-20 left-20 w-32 h-32 bg-primary/5 rounded-full blur-xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 w-24 h-24 bg-primary/10 rounded-full blur-lg animate-pulse delay-500"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/5 to-background p-4">
+      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:50px_50px]" />
       
-      <Card className="w-full max-w-md shadow-2xl border-border/50 bg-card/80 backdrop-blur-sm relative z-10">
-        {/* Header with Brand */}
-        <CardHeader className="text-center space-y-6 pb-8">
-          <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="flex items-center space-x-1 p-3 bg-primary/10 rounded-full">
-              <Camera className="h-6 w-6 text-primary" />
-              <Video className="h-6 w-6 text-primary" />
-            </div>
+      <Card className="w-full max-w-md relative backdrop-blur-sm bg-card/95 border-border/50 shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 rounded-lg" />
+        
+        <CardHeader className="relative space-y-3 text-center pb-8">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20">
+            <Lock className="w-10 h-10 text-white" />
           </div>
-          
-          <div className="text-center mb-6">
-            <Logo 
-              size="lg" 
-              className="mx-auto mb-4 brightness-0 invert" 
-              style={{ 
-                transform: 'scale(2)',
-                transformOrigin: 'center'
-              }} 
-            />
-            <CardTitle className="text-xl font-semibold text-foreground flex items-center justify-center gap-2">
-              <Shield className="h-5 w-5 text-primary" />
-              Painel Administrativo
-            </CardTitle>
-            <CardDescription className="text-muted-foreground mt-2">
-              Faça login para gerenciar seu portfólio e conteúdo
-            </CardDescription>
-          </div>
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Área Administrativa
+          </CardTitle>
+          <CardDescription className="text-base text-muted-foreground">
+            Entre com suas credenciais de administrador
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+
+        <CardContent className="relative space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+              <Label htmlFor="email" className="text-sm font-medium">
                 Email
               </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="seu@email.com"
-                required
-                className="h-12 bg-background/50 border-border focus:border-primary transition-all"
-              />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="seu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10 h-11 border-border/50 focus:border-primary bg-background/50"
+                  disabled={isLoading}
+                  required
+                />
+              </div>
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-foreground">
+              <Label htmlFor="password" className="text-sm font-medium">
                 Senha
               </Label>
               <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Digite sua senha"
+                  className="pl-10 pr-10 h-11 border-border/50 focus:border-primary bg-background/50"
+                  disabled={isLoading}
                   required
-                  className="h-12 bg-background/50 border-border focus:border-primary transition-all pr-12"
                 />
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-primary/10"
                   onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    <EyeOff className="w-5 h-5" />
                   ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
+                    <Eye className="w-5 h-5" />
                   )}
-                </Button>
+                </button>
               </div>
             </div>
-            
+
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-primary hover:scale-[1.02] transition-all duration-200 font-medium"
+              className="w-full h-11 text-base font-medium shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all"
               disabled={isLoading}
             >
               {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Entrando...
-                </div>
+                </>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
-                  Acessar Painel
-                </div>
+                "Entrar"
               )}
             </Button>
           </form>
-          
-          <div className="pt-4 border-t border-border">
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full"
-              onClick={handleCreateAdmin}
-              disabled={isCreatingAdmin}
-            >
-              {isCreatingAdmin ? 'Criando Admin...' : 'Criar Admin de Teste'}
-            </Button>
-            <p className="text-xs text-muted-foreground text-center mt-2">
-              Criar conta: rubensvieira.email@gmail.com / 121212
-            </p>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border/50" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">
+                Ambiente de teste
+              </span>
+            </div>
           </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-11"
+            onClick={handleCreateTestAdmin}
+            disabled={isCreatingTestUser || isLoading}
+          >
+            {isCreatingTestUser ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Criando usuário...
+              </>
+            ) : (
+              "Criar usuário de teste"
+            )}
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -35,9 +35,8 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Plus, Trash2, Users, Shield, Mail, Calendar, Key } from 'lucide-react';
+import { Plus, Trash2, Users, Shield, Mail, Calendar } from 'lucide-react';
 import SiteSettingsManager from './SiteSettingsManager';
-import bcrypt from 'bcryptjs';
 import { CreateAdminButton } from './CreateAdminButton';
 
 interface AdminUser {
@@ -46,7 +45,7 @@ interface AdminUser {
   full_name: string;
   created_at: string;
   last_login_at?: string;
-  user_type: 'admin' | 'collaborator';
+  role: 'admin' | 'collaborator';
 }
 
 export function AccountManager() {
@@ -78,11 +77,43 @@ export function AccountManager() {
   const loadAdminUsers = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .rpc('get_admin_users_list');
-
-      if (error) throw error;
-      setAdminUsers((data || []) as AdminUser[]);
+      
+      // Get all users with roles
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+      
+      if (rolesError) throw rolesError;
+      
+      // Get profiles for these users
+      const userIds = rolesData?.map(r => r.user_id) || [];
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('*')
+        .in('id', userIds);
+      
+      if (profilesError) throw profilesError;
+      
+      // Get auth users data
+      const { data: authData } = await supabase.auth.admin.listUsers();
+      const authUsers = authData?.users || [];
+      
+      // Combine data
+      const combinedUsers = profilesData?.map(profile => {
+        const roleData = rolesData?.find(r => r.user_id === profile.id);
+        const authUser = authUsers.find(u => u.id === profile.id);
+        
+        return {
+          id: profile.id,
+          email: authUser?.email || '',
+          full_name: profile.full_name,
+          created_at: profile.created_at,
+          last_login_at: profile.last_login_at,
+          role: roleData?.role || 'collaborator'
+        } as AdminUser;
+      }) || [];
+      
+      setAdminUsers(combinedUsers);
     } catch (error) {
       console.error('Error loading admin users:', error);
       toast({
@@ -106,17 +137,12 @@ export function AccountManager() {
     }
 
     try {
-      // Hash the password
-      const passwordHash = await bcrypt.hash(newAdmin.password, 10);
-      
-      // For admin creation, we need to use the service role
-      // Since RLS is blocking insertions, we'll call an Edge Function
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
           email: newAdmin.email,
-          password_hash: passwordHash,
+          password: newAdmin.password,
           full_name: newAdmin.full_name,
-          user_type: 'admin'
+          role: 'admin'
         },
       });
 
@@ -129,7 +155,6 @@ export function AccountManager() {
         description: 'Nova conta de administrador criada com sucesso!',
       });
 
-      // Reset form and close dialog
       setNewAdmin({ email: '', password: '', full_name: '' });
       setIsDialogOpen(false);
       loadAdminUsers();
@@ -188,15 +213,12 @@ export function AccountManager() {
     }
 
     try {
-      // Hash the password
-      const passwordHash = await bcrypt.hash(newCollaborator.password, 10);
-      
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
           email: newCollaborator.email,
-          password_hash: passwordHash,
+          password: newCollaborator.password,
           full_name: newCollaborator.full_name,
-          user_type: 'collaborator'
+          role: 'collaborator'
         },
       });
 
@@ -209,7 +231,6 @@ export function AccountManager() {
         description: 'Nova conta de colaborador criada com sucesso!',
       });
 
-      // Reset form and close dialog
       setNewCollaborator({ email: '', password: '', full_name: '' });
       setIsCollaboratorDialogOpen(false);
       loadAdminUsers();
@@ -474,10 +495,10 @@ export function AccountManager() {
                     <TableCell>{formatDate(admin.last_login_at)}</TableCell>
                     <TableCell>
                       <Badge 
-                        variant={admin.user_type === 'admin' ? 'default' : 'secondary'} 
+                        variant={admin.role === 'admin' ? 'default' : 'secondary'} 
                         className="capitalize"
                       >
-                        {admin.user_type === 'admin' ? '👑 Admin' : '🤝 Colaborador'}
+                        {admin.role === 'admin' ? '👑 Admin' : '🤝 Colaborador'}
                       </Badge>
                     </TableCell>
                     <TableCell>

@@ -209,7 +209,7 @@ export default function AdminDashboard() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className={`grid w-full ${user?.user_type === 'admin' ? 'grid-cols-10' : 'grid-cols-9'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
+          <TabsList className={`grid w-full ${user?.role === 'admin' ? 'grid-cols-10' : 'grid-cols-9'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
             <TabsTrigger 
               value="portfolio" 
               onClick={loadPortfolioItems}
@@ -265,7 +265,7 @@ export default function AdminDashboard() {
             >
               FAQ
             </TabsTrigger>
-            {user?.user_type === 'admin' && (
+            {user?.role === 'admin' && (
               <TabsTrigger 
                 value="accounts"
                 className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -396,7 +396,7 @@ export default function AdminDashboard() {
             <FAQManager />
           </TabsContent>
 
-          {user?.user_type === 'admin' && (
+          {user?.role === 'admin' && (
             <TabsContent value="accounts">
               <AccountManager />
             </TabsContent>
