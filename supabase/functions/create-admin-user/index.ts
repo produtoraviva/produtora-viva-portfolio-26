@@ -1,5 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4'
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { hash } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
     }
 
     // Hash the password for storage
-    const password_hash = await bcrypt.hash(password);
+    const password_hash = await hash(password);
 
     // Get the user ID from the auth data
     const userId = authData.data?.user?.id
