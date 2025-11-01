@@ -72,8 +72,8 @@ export default {
         'gradient-overlay': 'var(--gradient-overlay)',
       },
       fontFamily: {
-        'display': ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
-        'body': ['-apple-system', 'BlinkMacSystemFont', 'Inter', 'Segoe UI', 'Roboto', 'sans-serif'],
+        'display': ['Playfair Display', 'Georgia', 'serif'],
+        'body': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       spacing: {
         '18': '4.5rem',

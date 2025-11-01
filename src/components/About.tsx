@@ -26,21 +26,21 @@ const About = () => {
   ];
 
   return (
-    <section id="sobre" className="py-24 lg:py-32 bg-secondary/30">
+    <section id="sobre" className="py-32 lg:py-40 bg-gradient-to-br from-secondary/40 to-accent/30">
       <div className="container mx-auto px-6 sm:px-8 lg:px-16">
-        <div className="grid lg:grid-cols-2 gap-20 items-center">
+        <div className="grid lg:grid-cols-2 gap-20 lg:gap-24 items-center">
           {/* Content */}
-          <div className="space-y-10">
+          <div className="space-y-12">
             <div>
-              <div className="inline-flex items-center space-x-2 bg-white rounded-full px-5 py-2.5 mb-8">
-                <span className="text-sm font-medium text-foreground tracking-wide">
+              <div className="inline-flex items-center space-x-2 bg-white rounded-full px-6 py-3 mb-10 elegant-shadow">
+                <span className="text-sm font-semibold text-foreground tracking-wide uppercase">
                   Sobre Nós
                 </span>
               </div>
-              <h2 className="text-5xl lg:text-7xl font-bold mb-8 tracking-tighter">
-                Nossa <span className="text-primary">História</span>
+              <h2 className="text-6xl lg:text-8xl font-display font-bold mb-10 tracking-tighter leading-none">
+                Nossa <span className="gradient-text">História</span>
               </h2>
-              <div className="space-y-6 text-lg text-muted-foreground leading-relaxed font-light">
+              <div className="space-y-6 text-lg lg:text-xl text-muted-foreground leading-relaxed font-light">
                 <p>
                   Nossa empresa nasceu da paixão por capturar 
                   momentos únicos e transformá-los em memórias eternas. Há mais de 5 anos no mercado, 
@@ -60,14 +60,14 @@ const About = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-8 pt-4">
-              <div className="text-center p-6 bg-white rounded-2xl elegant-shadow">
-                <div className="text-5xl font-bold text-primary mb-2 tracking-tight">500+</div>
-                <div className="text-sm text-muted-foreground font-medium">Eventos Realizados</div>
+            <div className="grid grid-cols-2 gap-6 pt-6">
+              <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-3xl elegant-shadow">
+                <div className="text-6xl font-display font-bold text-primary mb-3 tracking-tighter">500+</div>
+                <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Eventos Realizados</div>
               </div>
-              <div className="text-center p-6 bg-white rounded-2xl elegant-shadow">
-                <div className="text-5xl font-bold text-primary mb-2 tracking-tight">5</div>
-                <div className="text-sm text-muted-foreground font-medium">Anos de Experiência</div>
+              <div className="text-center p-8 bg-white/80 backdrop-blur-sm rounded-3xl elegant-shadow">
+                <div className="text-6xl font-display font-bold text-primary mb-3 tracking-tighter">5</div>
+                <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Anos de Experiência</div>
               </div>
             </div>
           </div>
@@ -79,14 +79,14 @@ const About = () => {
               return (
                 <Card 
                   key={index}
-                  className="p-8 bg-white border-0 elegant-shadow hover-lift group"
+                  className="p-10 bg-white/90 backdrop-blur-sm border-0 elegant-shadow hover-lift group rounded-3xl"
                 >
-                  <div className="flex flex-col items-center text-center space-y-4">
-                    <div className="w-16 h-16 bg-secondary rounded-2xl flex items-center justify-center group-hover:bg-primary/10 transition-all duration-500">
-                      <Icon className="h-8 w-8 text-primary" />
+                  <div className="flex flex-col items-center text-center space-y-5">
+                    <div className="w-20 h-20 bg-gradient-to-br from-secondary to-accent rounded-2xl flex items-center justify-center group-hover:from-primary/10 group-hover:to-primary/5 transition-all duration-500 shadow-sm">
+                      <Icon className="h-10 w-10 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-xl text-foreground mb-3 tracking-tight">
+                      <h3 className="font-display font-semibold text-2xl text-foreground mb-3 tracking-tight">
                         {value.title}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">

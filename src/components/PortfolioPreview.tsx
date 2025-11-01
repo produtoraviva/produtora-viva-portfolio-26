@@ -112,34 +112,34 @@ const PortfolioPreview = () => {
   };
 
   return (
-    <section id="portfolio" className="py-24 lg:py-32 bg-white">
+    <section id="portfolio" className="py-32 lg:py-40 bg-gradient-to-b from-white to-secondary/20">
       <div className="container mx-auto px-6 sm:px-8 lg:px-16">
         {/* Header */}
-        <div className="text-center mb-20 max-w-3xl mx-auto">
-          <div className="inline-flex items-center space-x-2 bg-secondary rounded-full px-5 py-2.5 mb-6">
-            <span className="text-sm font-medium text-foreground tracking-wide">
+        <div className="text-center mb-24 max-w-3xl mx-auto">
+          <div className="inline-flex items-center space-x-2 bg-white rounded-full px-6 py-3 mb-8 elegant-shadow">
+            <span className="text-sm font-semibold text-foreground tracking-wide uppercase">
               Portfolio
             </span>
           </div>
-          <h2 className="text-5xl lg:text-7xl font-bold mb-6 tracking-tighter">
-            Nossos <span className="text-primary">Trabalhos</span>
+          <h2 className="text-6xl lg:text-8xl font-display font-bold mb-8 tracking-tighter leading-none">
+            Nossos <span className="gradient-text">Trabalhos</span>
           </h2>
-          <p className="text-xl text-muted-foreground leading-relaxed font-light">
+          <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed font-light">
             Uma seleção dos nossos melhores projetos. Cada momento capturado com dedicação e arte.
           </p>
         </div>
 
         {/* Category Filters */}
-        <div className="flex justify-center gap-3 mb-16">
+        <div className="flex justify-center gap-4 mb-20">
           {categories.map((category) => (
             <Button
               key={category.id}
               variant={activeCategory === category.id ? "default" : "outline"}
               className={`${
                 activeCategory === category.id
-                  ? "bg-primary text-primary-foreground"
-                  : "border-2 hover:bg-accent"
-              } rounded-full px-8 py-6 text-base transition-all`}
+                  ? "bg-primary text-primary-foreground shadow-lg"
+                  : "border-2 hover:bg-accent hover:border-primary/40"
+              } rounded-full px-8 py-6 text-base font-semibold transition-all`}
               onClick={() => setActiveCategory(category.id)}
             >
               {category.label}
@@ -148,7 +148,7 @@ const PortfolioPreview = () => {
         </div>
 
         {/* Portfolio Grid - 3 columns with complete images */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {filteredItems.map((item, index) => (
             <div 
               key={item.id} 
@@ -156,25 +156,25 @@ const PortfolioPreview = () => {
               style={{ animationDelay: `${index * 0.1}s` }}
               onClick={() => handleImageClick(index)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
                 <LazyImage
                   src={item.image}
                   alt={item.title}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-center justify-center p-8 backdrop-blur-sm">
-                  <div className="text-center text-white space-y-3">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex items-end justify-center p-10 backdrop-blur-sm">
+                  <div className="text-center text-white space-y-3 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
                     {item.media_type === "video" ? (
                       <Video className="h-10 w-10 mx-auto mb-3" />
                     ) : (
                       <Camera className="h-10 w-10 mx-auto mb-3" />
                     )}
-                    <h3 className="font-semibold text-xl">{item.title}</h3>
+                    <h3 className="font-display font-semibold text-2xl">{item.title}</h3>
                     <p className="text-sm font-medium opacity-90">
                       {item.subcategory || item.category}
                     </p>
                     {item.description && (
-                      <p className="text-sm opacity-80 max-w-xs mx-auto">{item.description}</p>
+                      <p className="text-sm opacity-80 max-w-xs mx-auto line-clamp-2">{item.description}</p>
                     )}
                   </div>
                 </div>
@@ -184,18 +184,18 @@ const PortfolioPreview = () => {
         </div>
 
         {/* CTA to Full Portfolio */}
-        <div className="text-center mt-24">
-          <div className="bg-secondary/50 rounded-3xl p-12 max-w-2xl mx-auto">
-            <h3 className="text-3xl font-bold text-foreground mb-4">
+        <div className="text-center mt-28">
+          <div className="bg-gradient-to-br from-secondary/80 to-accent/60 backdrop-blur-sm rounded-3xl p-16 max-w-3xl mx-auto elegant-shadow">
+            <h3 className="text-4xl font-display font-bold text-foreground mb-6">
               Explore Mais
             </h3>
-            <p className="text-muted-foreground mb-8 text-lg">
+            <p className="text-muted-foreground mb-10 text-xl font-light leading-relaxed">
               Descubra nossa galeria completa com mais de 500 projetos realizados.
             </p>
             <Link to="/portfolio">
               <Button 
                 size="lg"
-                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-10 py-7 hover-lift group"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-12 py-8 hover-lift group shadow-lg text-base"
               >
                 Ver Portfolio Completo
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

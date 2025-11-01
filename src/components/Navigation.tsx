@@ -52,13 +52,13 @@ const Navigation = () => {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      scrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"
+      scrolled ? "bg-white/95 backdrop-blur-lg shadow-elegant" : "bg-white/80 backdrop-blur-sm"
     }`}>
       <div className="container mx-auto px-6 sm:px-8 lg:px-16">
         <div className="flex justify-between items-center h-20 lg:h-24">
           {/* Logo */}
           <Link to="/" className="flex items-center group cursor-pointer">
-            <Logo size="lg" className="scale-[1.4] sm:scale-[1.5]" />
+            <Logo size="lg" className="scale-[1.4] sm:scale-[1.5] hover:scale-[1.55] transition-transform duration-300" />
           </Link>
 
           {/* Desktop Menu */}
@@ -67,14 +67,14 @@ const Navigation = () => {
               <button
                 key={item.label}
                 onClick={() => handleNavClick(item)}
-                className="text-foreground/70 hover:text-foreground transition-colors text-[15px] font-medium tracking-tight"
+                className="text-foreground/70 hover:text-primary transition-colors text-[15px] font-semibold tracking-wide"
               >
                 {item.label}
               </button>
             ))}
             <Button 
               onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 hover-scale"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full px-8 py-6 hover-scale shadow-md hover:shadow-lg"
             >
               Orçamento
             </Button>
@@ -86,7 +86,7 @@ const Navigation = () => {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-foreground"
+              className="text-foreground hover:bg-accent"
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -98,17 +98,17 @@ const Navigation = () => {
       {isOpen && (
         <div className="lg:hidden fixed inset-0 z-40 top-20">
           <div 
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
           />
           
           <div className="absolute left-0 right-0 top-0 bg-white border-t border-border shadow-xl animate-slide-in-down">
-            <div className="p-6 space-y-1">
+            <div className="p-6 space-y-2">
               {navItems.map((item) => (
                 <button
                   key={item.label}
                   onClick={() => handleNavClick(item)}
-                  className="w-full text-left text-foreground/70 hover:text-foreground hover:bg-accent transition-all py-4 px-4 rounded-xl text-base font-medium"
+                  className="w-full text-left text-foreground/80 hover:text-primary hover:bg-accent transition-all py-4 px-5 rounded-xl text-base font-semibold tracking-wide"
                 >
                   {item.label}
                 </button>
@@ -116,7 +116,7 @@ const Navigation = () => {
               <div className="pt-4">
                 <Button 
                   onClick={() => handleNavClick({ label: "Orçamento", href: "#contact", route: "/" })}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-4"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-full py-5 shadow-md"
                 >
                   Solicitar Orçamento
                 </Button>
