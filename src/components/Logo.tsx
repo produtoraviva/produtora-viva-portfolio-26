@@ -17,7 +17,7 @@ export function Logo({ className = '', size = 'md', style }: LogoProps) {
   return (
     <img
       src={logo}
-      alt="Produtora Viva"
+      alt="Rubens Photofilm"
       className={`${sizeClasses[size]} ${className} object-cover`}
       style={{ 
         ...style,

@@ -15,26 +15,43 @@ const Contact = () => {
     email: "",
     eventType: "",
     clientType: "",
+    country: "",
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.country) {
+      toast({
+        title: "Campo obrigatório",
+        description: "Por favor, selecione seu país antes de enviar.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
-    // Prepare WhatsApp message
-    const phoneNumber = settings.whatsapp_number;
-    const whatsappMessage = `🎥 *ORÇAMENTO - PRODUTORA VIVA* 📸
+    // Determine which phone number to use based on country selection
+    const phoneNumber = (formData.country === "Brasil") 
+      ? settings.whatsapp_number 
+      : settings.whatsapp_international || settings.whatsapp_number;
+    
+    const whatsappMessage = `🎥 *ORÇAMENTO - RUBENS PHOTOFILM* 📸
 
 *Nome:* ${formData.name}
 *Email:* ${formData.email}
+*País:* ${formData.country}
 *Tipo de Cliente:* ${formData.clientType || 'Não informado'}
 *Tipo de Evento:* ${formData.eventType || 'Não especificado'}
 *Mensagem:* ${formData.message}
 
 Aguardo retorno. Obrigado!`;
+    
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    
     setTimeout(() => {
       toast({
         title: "Redirecionando para WhatsApp!",
@@ -46,6 +63,7 @@ Aguardo retorno. Obrigado!`;
         email: "",
         eventType: "",
         clientType: "",
+        country: "",
         message: ""
       });
       setIsSubmitting(false);
@@ -218,6 +236,25 @@ Aguardo retorno. Obrigado!`;
                     </Select>
                   </div>
                 </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-foreground mb-2 block">
+                  País <span className="text-destructive">*</span>
+                </label>
+                <Select value={formData.country} onValueChange={value => setFormData(prev => ({
+                  ...prev,
+                  country: value
+                }))} required>
+                  <SelectTrigger className="w-full bg-background/50 border-border focus:border-primary">
+                    <SelectValue placeholder="Selecione seu país" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover text-foreground border border-border z-50">
+                    <SelectItem value="Brasil">Brasil</SelectItem>
+                    <SelectItem value="Paraguay">Paraguay</SelectItem>
+                    <SelectItem value="Outro país">Outro país</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>

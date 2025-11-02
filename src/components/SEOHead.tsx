@@ -10,7 +10,7 @@ interface SEOHeadProps {
 }
 
 export const SEOHead = ({
-  title = "Produtora Viva | Fotografia e Videografia Profissional em Foz do Iguaçu",
+  title = "Rubens Photofilm | Fotografia e Videografia Profissional em Foz do Iguaçu",
   description = "Especializados em casamentos, aniversários e eventos únicos em Foz do Iguaçu e Ciudad del Este. Transformamos seus momentos especiais em obras de arte cinematográficas.",
   keywords = "fotografia casamento foz iguaçu, videografia profissional, fotógrafo casamento ciudad del este, filmagem eventos, ensaio pré-wedding, produtora audiovisual",
   canonical,
@@ -28,7 +28,7 @@ export const SEOHead = ({
       { name: 'keywords', content: keywords },
       { name: 'robots', content: 'index, follow' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
-      { name: 'author', content: 'Produtora Viva' },
+      { name: 'author', content: 'Rubens Photofilm' },
       
       // Open Graph / Facebook
       { property: 'og:type', content: 'website' },

@@ -17,12 +17,12 @@ const Index = () => {
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
-    "name": "Produtora Viva",
+    "name": "Rubens Photofilm",
     "description": "Fotografia e videografia profissional para casamentos, aniversários e eventos",
     "image": "/hero-wedding.jpg",
     "url": window.location.origin,
     "telephone": "+5545999887766",
-    "email": "info@produtoraviva.com",
+    "email": "contato@rubensphotofilm.com",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Foz do Iguaçu",

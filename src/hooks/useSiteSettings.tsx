@@ -5,6 +5,7 @@ interface SiteSettings {
   contact_phone: string;
   contact_email: string;
   whatsapp_number: string;
+  whatsapp_international: string;
   instagram_url: string;
   facebook_url: string;
   youtube_url: string;
@@ -14,10 +15,11 @@ interface SiteSettings {
 
 const defaultSettings: SiteSettings = {
   contact_phone: '(45) 99988-7766',
-  contact_email: 'info@produtoraviva.com',
+  contact_email: 'contato@rubensphotofilm.com',
   whatsapp_number: '5545999887766',
-  instagram_url: 'https://instagram.com/produtoraviva',
-  facebook_url: 'https://facebook.com/produtoraviva',
+  whatsapp_international: '',
+  instagram_url: 'https://instagram.com/rubensphotofilm',
+  facebook_url: 'https://facebook.com/rubensphotofilm',
   youtube_url: '',
   tiktok_url: '',
   linkedin_url: '',

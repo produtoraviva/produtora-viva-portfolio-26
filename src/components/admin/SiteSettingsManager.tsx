@@ -90,6 +90,7 @@ export default function SiteSettingsManager() {
       { key: 'contact_phone', value: formData.get('contact_phone') as string },
       { key: 'contact_email', value: formData.get('contact_email') as string },
       { key: 'whatsapp_number', value: formData.get('whatsapp_number') as string },
+      { key: 'whatsapp_international', value: formData.get('whatsapp_international') as string },
       { key: 'instagram_url', value: formData.get('instagram_url') as string },
       { key: 'facebook_url', value: formData.get('facebook_url') as string },
       { key: 'youtube_url', value: formData.get('youtube_url') as string },
@@ -181,18 +182,34 @@ export default function SiteSettingsManager() {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="whatsapp_number">Número do WhatsApp</Label>
-                <Input
-                  id="whatsapp_number"
-                  name="whatsapp_number"
-                  type="tel"
-                  placeholder="5545999999999"
-                  defaultValue={settings.get('whatsapp_number') || ''}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Formato internacional (código do país + DDD + número). Ex: 5545999999999
-                </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp_number">Número do WhatsApp (Brasil)</Label>
+                  <Input
+                    id="whatsapp_number"
+                    name="whatsapp_number"
+                    type="tel"
+                    placeholder="5545999999999"
+                    defaultValue={settings.get('whatsapp_number') || ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Para clientes do Brasil. Formato: código do país + DDD + número
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="whatsapp_international">Número do WhatsApp Internacional</Label>
+                  <Input
+                    id="whatsapp_international"
+                    name="whatsapp_international"
+                    type="tel"
+                    placeholder="595981123456"
+                    defaultValue={settings.get('whatsapp_international') || ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Para Paraguay e outros países. Formato: código do país + DDD + número
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -311,7 +328,11 @@ export default function SiteSettingsManager() {
                 </div>
                 <div className="flex items-center gap-2">
                   <MessageCircle className="h-3 w-3" />
-                  WhatsApp: {settings.get('whatsapp_number') || 'Não configurado'}
+                  WhatsApp (Brasil): {settings.get('whatsapp_number') || 'Não configurado'}
+                </div>
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="h-3 w-3" />
+                  WhatsApp (Internacional): {settings.get('whatsapp_international') || 'Não configurado'}
                 </div>
               </div>
             </div>

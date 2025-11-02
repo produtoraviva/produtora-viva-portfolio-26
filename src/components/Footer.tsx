@@ -129,7 +129,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="border-t border-border mt-16 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-muted-foreground text-sm font-light">
-            © 2024 Produtora Viva. Todos os direitos reservados.
+            © 2024 Rubens Photofilm. Todos os direitos reservados.
           </p>
           <p className="text-muted-foreground text-sm flex items-center gap-1 font-light">
             Feito com <Heart className="h-4 w-4 text-red-500 fill-current" /> para capturar seus momentos especiais
