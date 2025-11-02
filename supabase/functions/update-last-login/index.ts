@@ -28,11 +28,11 @@ serve(async (req) => {
       );
     }
 
-    console.log('Updating last login for admin:', admin_id);
+    console.log('Updating last login for user:', admin_id);
 
-    // Update last_login_at using service role to bypass RLS
+    // Update last_login_at in profiles table using service role to bypass RLS
     const { error: updateError } = await supabase
-      .from('admin_users')
+      .from('profiles')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', admin_id);
 

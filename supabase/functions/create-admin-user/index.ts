@@ -34,6 +34,21 @@ Deno.serve(async (req) => {
       )
     }
 
+    // Check if user already exists
+    const { data: existingUsers } = await supabaseClient.auth.admin.listUsers()
+    const userExists = existingUsers?.users.some(u => u.email === email)
+    
+    if (userExists) {
+      console.log('User already exists:', email)
+      return new Response(
+        JSON.stringify({ error: 'Um usuário com este email já está registrado' }),
+        { 
+          status: 409, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     // Create user in Supabase Auth
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
@@ -47,7 +62,7 @@ Deno.serve(async (req) => {
     if (authError) {
       console.error('Error creating auth user:', authError)
       return new Response(
-        JSON.stringify({ error: `Failed to create user: ${authError.message}` }),
+        JSON.stringify({ error: `Falha ao criar usuário: ${authError.message}` }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
