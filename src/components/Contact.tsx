@@ -52,12 +52,22 @@ Aguardo retorno. Obrigado!`;
     
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
     
+    // Open WhatsApp immediately to avoid popup blockers
+    const whatsappWindow = window.open(whatsappUrl, '_blank');
+    
+    // Show toast message
+    toast({
+      title: "Abrindo WhatsApp!",
+      description: "Você será direcionado para o WhatsApp com sua mensagem."
+    });
+    
+    // Fallback if popup was blocked
+    if (!whatsappWindow || whatsappWindow.closed || typeof whatsappWindow.closed == 'undefined') {
+      window.location.href = whatsappUrl;
+    }
+    
+    // Reset form after a short delay
     setTimeout(() => {
-      toast({
-        title: "Redirecionando para WhatsApp!",
-        description: "Você será direcionado para o WhatsApp com sua mensagem."
-      });
-      window.open(whatsappUrl, '_blank');
       setFormData({
         name: "",
         email: "",
@@ -67,7 +77,7 @@ Aguardo retorno. Obrigado!`;
         message: ""
       });
       setIsSubmitting(false);
-    }, 1000);
+    }, 500);
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({

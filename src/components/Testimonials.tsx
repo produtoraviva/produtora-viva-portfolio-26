@@ -4,8 +4,6 @@ import { Star, Quote } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { Badge } from '@/components/ui/badge';
-import { Logo } from '@/components/Logo';
-import { TestimonialsInfiniteCarousel } from '@/components/TestimonialsInfiniteCarousel';
 
 interface Testimonial {
   id: string;
@@ -170,35 +168,7 @@ const Testimonials = () => {
   const currentData = testimonials[currentTestimonial];
 
   return (
-    <>
-      {/* Hero Section with Logo */}
-      <section className="relative py-20 overflow-hidden bg-gradient-to-br from-background via-primary/5 to-background">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background" />
-        
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center mb-8 animate-fade-in">
-            <Logo size="xl" className="drop-shadow-2xl" />
-          </div>
-          
-          <Badge variant="outline" className="mb-6 animate-fade-in-delayed border-primary/30">
-            Depoimentos
-          </Badge>
-          
-          <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary to-primary/70 bg-clip-text text-transparent animate-fade-in-delayed">
-            Histórias de Sucesso
-          </h1>
-          
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-delayed">
-            Veja o que nossos clientes têm a dizer sobre suas experiências conosco
-          </p>
-        </div>
-      </section>
-
-      {/* Infinite Carousel */}
-      <TestimonialsInfiniteCarousel />
-
-      {/* Featured Testimonials Section */}
-      <section 
+    <section
         id="depoimentos" 
         className="relative py-24 bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
@@ -342,7 +312,6 @@ const Testimonials = () => {
           </div>
         </div>
       </section>
-    </>
   );
 };
 
