@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface SiteSettings {
   contact_phone: string;
+  contact_phone_secondary: string;
   contact_email: string;
   whatsapp_number: string;
   whatsapp_international: string;
@@ -15,6 +16,7 @@ interface SiteSettings {
 
 const defaultSettings: SiteSettings = {
   contact_phone: '(45) 99988-7766',
+  contact_phone_secondary: '',
   contact_email: 'contato@rubensphotofilm.com',
   whatsapp_number: '5545999887766',
   whatsapp_international: '',

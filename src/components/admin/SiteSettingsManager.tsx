@@ -88,6 +88,7 @@ export default function SiteSettingsManager() {
     const formData = new FormData(e.currentTarget);
     const updates = [
       { key: 'contact_phone', value: formData.get('contact_phone') as string },
+      { key: 'contact_phone_secondary', value: formData.get('contact_phone_secondary') as string },
       { key: 'contact_email', value: formData.get('contact_email') as string },
       { key: 'whatsapp_number', value: formData.get('whatsapp_number') as string },
       { key: 'whatsapp_international', value: formData.get('whatsapp_international') as string },
@@ -154,7 +155,7 @@ export default function SiteSettingsManager() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="contact_phone">Telefone de Contato</Label>
+                  <Label htmlFor="contact_phone">Telefone de Contato Principal</Label>
                   <Input
                     id="contact_phone"
                     name="contact_phone"
@@ -164,6 +165,20 @@ export default function SiteSettingsManager() {
                   />
                   <p className="text-xs text-muted-foreground">
                     Aparece no rodapé e na seção de contato
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="contact_phone_secondary">Telefone de Contato Secundário</Label>
+                  <Input
+                    id="contact_phone_secondary"
+                    name="contact_phone_secondary"
+                    type="tel"
+                    placeholder="(45) 98888-8888"
+                    defaultValue={settings.get('contact_phone_secondary') || ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Aparece no rodapé e na seção de contato (opcional)
                   </p>
                 </div>
                 
@@ -193,7 +208,7 @@ export default function SiteSettingsManager() {
                     defaultValue={settings.get('whatsapp_number') || ''}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Para clientes do Brasil. Formato: código do país + DDD + número
+                    Para clientes do Brasil. Formato: código do país + DDD + número (ex: 5545999887766). Usado no botão WhatsApp flutuante e formulário de contato.
                   </p>
                 </div>
                 
@@ -207,7 +222,7 @@ export default function SiteSettingsManager() {
                     defaultValue={settings.get('whatsapp_international') || ''}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Para Paraguay e outros países. Formato: código do país + DDD + número
+                    Para Paraguay e outros países. Formato: código do país + número (ex: 595981234567). Usado automaticamente quando cliente seleciona país diferente de Brasil no formulário.
                   </p>
                 </div>
               </div>
@@ -320,7 +335,12 @@ export default function SiteSettingsManager() {
               <div className="space-y-1 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <Phone className="h-3 w-3" />
-                  {settings.get('contact_phone') || 'Telefone não configurado'}
+                  <div className="flex flex-col">
+                    <span>{settings.get('contact_phone') || 'Telefone não configurado'}</span>
+                    {settings.get('contact_phone_secondary') && (
+                      <span className="text-xs">{settings.get('contact_phone_secondary')}</span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-3 w-3" />

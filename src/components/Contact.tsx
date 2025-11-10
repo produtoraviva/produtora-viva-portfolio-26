@@ -34,10 +34,11 @@ const Contact = () => {
     
     setIsSubmitting(true);
 
-    // Determine which phone number to use based on country selection
-    const phoneNumber = (formData.country === "Brasil") 
-      ? settings.whatsapp_number 
-      : settings.whatsapp_international || settings.whatsapp_number;
+    // Use número internacional se o país não for Brasil, senão use o número brasileiro
+    const isBrazil = formData.country.toLowerCase() === 'brasil' || formData.country.toLowerCase() === 'brazil';
+    const phoneNumber = isBrazil 
+      ? (settings.whatsapp_number || '5545999887766')
+      : (settings.whatsapp_international || settings.whatsapp_number || '5545999887766');
     
     const whatsappMessage = `🎥 *ORÇAMENTO - RUBENS PHOTOFILM* 📸
 
@@ -123,7 +124,12 @@ Aguardo retorno. Obrigado!`;
                   </div>
                   <div>
                     <h4 className="font-semibold text-foreground">Telefone / WhatsApp</h4>
-                    <p className="text-muted-foreground">{settings.contact_phone}</p>
+                    <div className="text-muted-foreground">
+                      <p>{settings.contact_phone}</p>
+                      {settings.contact_phone_secondary && (
+                        <p>{settings.contact_phone_secondary}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Card>

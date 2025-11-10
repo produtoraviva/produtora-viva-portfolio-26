@@ -4,7 +4,8 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 const WhatsAppButton = () => {
   const { settings } = useSiteSettings();
   const handleWhatsAppClick = () => {
-    const phoneNumber = settings.whatsapp_number;
+    // Sempre usa o número brasileiro no botão flutuante
+    const phoneNumber = settings.whatsapp_number || '5545999887766';
     const message = "Olá! Vi o site de vocês e gostaria de saber mais sobre os serviços de fotografia e videografia. 📸🎥";
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');

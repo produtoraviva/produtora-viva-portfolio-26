@@ -110,7 +110,12 @@ const Footer = () => {
             <div className="space-y-4 text-muted-foreground">
               <div className="flex items-center gap-3">
                 <Phone className="h-5 w-5 text-primary flex-shrink-0" />
-                <span className="text-base font-light">{settings.contact_phone}</span>
+                <div className="flex flex-col">
+                  <span className="text-base font-light">{settings.contact_phone}</span>
+                  {settings.contact_phone_secondary && (
+                    <span className="text-base font-light">{settings.contact_phone_secondary}</span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-3">
                 <Mail className="h-5 w-5 text-primary flex-shrink-0" />

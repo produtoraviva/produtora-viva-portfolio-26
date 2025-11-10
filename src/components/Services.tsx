@@ -171,7 +171,7 @@ export default function Services() {
             })}
           </div>
         ) : (
-          <div className="mb-24">
+          <div className="mb-24 px-4 sm:px-8">
             <Carousel
               opts={{
                 align: "start",
