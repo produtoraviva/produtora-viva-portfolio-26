@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { supabase } from "@/integrations/supabase/client";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface FAQItem {
   id: string;
@@ -18,6 +19,7 @@ interface FAQItem {
 }
 
 const FAQ = () => {
+  const { settings } = useSiteSettings();
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleResults, setVisibleResults] = useState(6);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
@@ -180,7 +182,7 @@ const FAQ = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a 
-              href="https://wa.me/5545999887766?text=Olá! Tenho algumas dúvidas sobre os serviços. 🤔"
+              href={`https://wa.me/${settings.whatsapp_number || '5545999887766'}?text=${encodeURIComponent('Olá! Tenho algumas dúvidas sobre os serviços. 🤔')}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"

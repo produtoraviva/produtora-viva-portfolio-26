@@ -11,9 +11,12 @@ import WhatsAppButton from "@/components/WhatsAppButton";
 import { SEOHead } from "@/components/SEOHead";
 import { AccessibilityFeatures, useKeyboardAccessibility } from "@/components/AccessibilityFeatures";
 import ScrollToTop from "@/components/ScrollToTop";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const Index = () => {
   useKeyboardAccessibility();
+  const { settings } = useSiteSettings();
+  
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
@@ -21,8 +24,8 @@ const Index = () => {
     "description": "Fotografia e videografia profissional para casamentos, aniversários e eventos",
     "image": "/hero-wedding.jpg",
     "url": window.location.origin,
-    "telephone": "+5545999887766",
-    "email": "contato@rubensphotofilm.com",
+    "telephone": settings.whatsapp_number ? `+${settings.whatsapp_number}` : "+5545999887766",
+    "email": settings.contact_email || "contato@rubensphotofilm.com",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Foz do Iguaçu",
