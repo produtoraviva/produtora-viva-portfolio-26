@@ -7,9 +7,9 @@ export default {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
-        "2xl": "1400px",
+        "2xl": "1600px",
       },
     },
     extend: {
@@ -66,14 +66,10 @@ export default {
           muted: "hsl(var(--dark-muted))",
         },
       },
-      backgroundImage: {
-        'gradient-primary': 'var(--gradient-primary)',
-        'gradient-dark': 'var(--gradient-dark)',
-        'gradient-overlay': 'var(--gradient-overlay)',
-      },
       fontFamily: {
-        'display': ['Playfair Display', 'Georgia', 'serif'],
-        'body': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        'display': ['Helvetica Neue', 'Arial', 'sans-serif'],
+        'body': ['Helvetica Neue', 'Arial', 'sans-serif'],
+        'mono': ['SF Mono', 'Monaco', 'Consolas', 'monospace'],
       },
       spacing: {
         '18': '4.5rem',
@@ -84,6 +80,9 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      letterSpacing: {
+        'ultra-wide': '0.3em',
       },
       keyframes: {
         "accordion-down": {

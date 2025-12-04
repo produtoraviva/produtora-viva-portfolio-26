@@ -1,105 +1,69 @@
-import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const Hero = () => {
-  const scrollToPortfolio = () => {
-    const element = document.querySelector("#portfolio");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+  // Fetch homepage backgrounds from database
+  const { data: backgrounds } = useQuery({
+    queryKey: ['homepage-backgrounds'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('homepage_backgrounds')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .limit(1);
+      
+      if (error) throw error;
+      return data;
     }
-  };
+  });
 
-  const scrollToContact = () => {
-    const element = document.querySelector("#contact");
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const heroImage = backgrounds?.[0]?.file_url || "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2000&auto=format&fit=crop";
+  const heroOpacity = backgrounds?.[0]?.opacity || 40;
 
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-secondary/30 overflow-hidden">
-      {/* Elegant background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 2px 2px, hsl(var(--dark)) 1.5px, transparent 1.5px)`,
-          backgroundSize: '48px 48px'
-        }} />
+    <header id="hero" className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{ opacity: heroOpacity / 100 }}
+      >
+        <img 
+          src={heroImage}
+          className="w-full h-full object-cover grayscale" 
+          alt="Hero Background"
+        />
       </div>
 
-      {/* Content */}
-      <div className="container mx-auto px-6 sm:px-8 lg:px-16 relative z-10 py-32 md:py-40">
-        <div className="max-w-5xl mx-auto text-center space-y-12">
-          {/* Badge */}
-          <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 elegant-shadow animate-fade-in-up">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-semibold text-foreground tracking-wide">
-              Fotografia & Videografia Profissional
-            </span>
-          </div>
+      {/* Main Content */}
+      <div className="z-10 text-center space-y-4 px-4 reveal-text">
+        <p className="text-xs md:text-sm font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
+          Fotografia & Cinema
+        </p>
+        <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter uppercase leading-none">
+          Rubens
+          <br />
+          <span className="text-muted-foreground">Photofilm</span>
+        </h1>
+      </div>
 
-          {/* Main Heading with elegant typography */}
-          <div className="space-y-8 animate-fade-in-up">
-            <h1 className="text-6xl sm:text-7xl lg:text-8xl xl:text-9xl font-display font-bold tracking-tighter leading-none">
-              <span className="text-foreground">Capturamos</span>
-              <br />
-              <span className="gradient-text">Momentos Únicos</span>
-            </h1>
-            
-            <p className="text-xl sm:text-2xl lg:text-3xl text-muted-foreground max-w-3xl mx-auto leading-relaxed font-light">
-              Transformamos seus eventos especiais em memórias cinematográficas 
-              que duram para sempre
-            </p>
-          </div>
+      {/* Bottom Left Text */}
+      <div className="absolute bottom-10 left-6 md:left-10 z-10 hidden md:block">
+        <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
+          Capturando a essência através de lentes. 
+          <br />Especializado em casamentos, eventos e ensaios.
+        </p>
+      </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-5 justify-center items-center animate-slide-in-right">
-            <Button 
-              onClick={scrollToPortfolio}
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-base px-12 py-8 rounded-full hover-lift group transition-all shadow-lg"
-            >
-              Ver Portfolio
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button 
-              onClick={scrollToContact}
-              variant="outline"
-              size="lg"
-              className="text-base px-12 py-8 rounded-full border-2 hover:bg-accent transition-all shadow-sm"
-            >
-              Solicitar Orçamento
-            </Button>
-          </div>
-
-          {/* Stats with refined styling */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 sm:gap-12 max-w-4xl mx-auto pt-12 animate-fade-in-delayed">
-            <div className="text-center space-y-3">
-              <div className="text-5xl sm:text-6xl font-display font-bold text-primary tracking-tighter">500+</div>
-              <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Eventos</div>
-            </div>
-            <div className="text-center space-y-3">
-              <div className="text-5xl sm:text-6xl font-display font-bold text-primary tracking-tighter">5</div>
-              <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Anos</div>
-            </div>
-            <div className="text-center space-y-3">
-              <div className="text-5xl sm:text-6xl font-display font-bold text-primary tracking-tighter">98%</div>
-              <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Satisfação</div>
-            </div>
-            <div className="text-center space-y-3">
-              <div className="text-5xl sm:text-6xl font-display font-bold text-primary tracking-tighter">24h</div>
-              <div className="text-sm text-muted-foreground font-semibold uppercase tracking-wider">Resposta</div>
-            </div>
-          </div>
+      {/* Scroll Indicator */}
+      <div className="absolute bottom-10 right-6 md:right-10 z-10">
+        <div className="flex flex-col items-center space-y-2">
+          <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground rotate-90 origin-center translate-y-4">
+            Scroll
+          </span>
         </div>
       </div>
-
-      {/* Elegant scroll indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 border-2 border-primary/30 rounded-full flex justify-center p-1">
-          <div className="w-1.5 h-3 bg-primary rounded-full animate-pulse"></div>
-        </div>
-      </div>
-    </section>
+    </header>
   );
 };
 
