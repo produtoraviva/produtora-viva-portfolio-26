@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
 import { ChevronUp } from 'lucide-react';
 
 const ScrollToTop = () => {
@@ -30,14 +29,13 @@ const ScrollToTop = () => {
   }
 
   return (
-    <Button
+    <button
       onClick={scrollToTop}
-      className="fixed bottom-24 right-4 sm:right-6 z-40 bg-primary/90 hover:bg-primary text-primary-foreground rounded-full w-12 h-12 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm mobile-safe-area"
-      size="icon"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 bg-foreground hover:bg-foreground/90 text-background w-14 h-14 flex items-center justify-center transition-all duration-300"
       aria-label="Voltar ao topo"
     >
-      <ChevronUp className="h-5 w-5" />
-    </Button>
+      <ChevronUp className="h-6 w-6" />
+    </button>
   );
 };
 

@@ -361,9 +361,9 @@ const PortfolioFull = () => {
                   variant={activeCategory === mediaType.id ? "default" : "outline"}
                   className={`${
                     activeCategory === mediaType.id
-                      ? "bg-gradient-primary"
-                      : "border-primary/30 hover:bg-primary/10"
-                  } transition-all hover-scale`}
+                      ? "bg-foreground text-background hover:bg-foreground/90"
+                      : "border-foreground/30 text-foreground hover:bg-foreground/10"
+                  } transition-all`}
                   onClick={() => handleMediaTypeChange(mediaType.id)}
                 >
                   <Icon className="mr-2 h-4 w-4" />
@@ -384,8 +384,8 @@ const PortfolioFull = () => {
                   size="sm"
                   className={`${
                     activePortfolioCategory === category.id
-                      ? "bg-primary/20 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-foreground/20 text-foreground"
+                      : "text-muted-foreground hover:text-foreground hover:bg-foreground/10"
                   } transition-all`}
                   onClick={() => handlePortfolioCategoryChange(category.id)}
                 >
@@ -476,7 +476,7 @@ const PortfolioFull = () => {
               className="portfolio-item group cursor-pointer animate-fade-in-up"
               onClick={() => handleImageClick(index)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+              <div className="relative aspect-[4/3] overflow-hidden">
                 {item.media_type === 'video' ? (
                   <video
                     src={item.file_url}
@@ -500,12 +500,12 @@ const PortfolioFull = () => {
                     <h3 className="font-semibold text-xl">{item.title}</h3>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {item.category && (
-                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-white/20 text-xs font-medium">
                           {getCategoryLabel(item.category)}
                         </span>
                       )}
                       {item.subcategory && (
-                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs font-medium">
+                        <span className="px-3 py-1 bg-white/20 text-xs font-medium">
                           {getSubcategoryLabel(item.subcategory)}
                         </span>
                       )}

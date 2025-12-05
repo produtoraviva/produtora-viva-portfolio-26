@@ -12,12 +12,15 @@ const Navigation = () => {
     { label: "Trabalhos", href: "#portfolio", route: "/" },
     { label: "Sobre", href: "#sobre", route: "/" },
     { label: "Serviços", href: "#servicos", route: "/" },
+    { label: "Depoimentos", href: "#depoimentos", route: "/" },
+    { label: "Portfolio", href: "/portfolio", route: "/portfolio" },
     { label: "Contato", href: "#contact", route: "/" },
   ];
 
   const handleNavClick = (item: typeof navItems[0]) => {
     if (item.route === "/portfolio") {
       navigate("/portfolio");
+      setIsOpen(false);
     } else if (item.route === "/" && !isHomePage) {
       navigate("/");
       setTimeout(() => {

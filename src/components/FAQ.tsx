@@ -75,24 +75,26 @@ const FAQ = () => {
   return (
     <section id="faq" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
       {/* Header */}
-      <div className="grid lg:grid-cols-2 gap-16 mb-16">
-        <div>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
-            FAQ
-          </p>
-          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
-            Dúvidas
-            <br />
-            <span className="text-muted-foreground">Frequentes</span>
-          </h2>
-        </div>
-        
-        <div className="flex flex-col justify-end">
-          <p className="text-muted-foreground mb-6">
+      <div className="mb-16">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
+          <div>
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+              FAQ
+            </p>
+            <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
+              Dúvidas
+              <br />
+              <span className="text-muted-foreground">Frequentes</span>
+            </h2>
+          </div>
+          
+          <p className="text-muted-foreground max-w-md mt-4 md:mt-0 text-right">
             Esclarecemos as principais dúvidas sobre nossos serviços.
           </p>
-          
-          {/* Search */}
+        </div>
+        
+        {/* Search - Below title */}
+        <div className="max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
             <Input

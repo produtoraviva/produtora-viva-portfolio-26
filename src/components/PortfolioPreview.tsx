@@ -143,9 +143,7 @@ const PortfolioPreview = () => {
             <LazyImage
               src={item.image}
               alt={item.title}
-              className={`w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100 ${
-                item.media_type === "photo" ? "grayscale group-hover:grayscale-0" : ""
-              }`}
+              className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
             />
             
             {/* Play Icon for Video */}
@@ -157,7 +155,7 @@ const PortfolioPreview = () => {
             
             {/* Overlay */}
             <div className="portfolio-overlay">
-              <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 rounded-full mb-2">
+              <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
                 {item.subcategory || item.category}
               </span>
               <h3 className="text-xl font-bold uppercase">{item.title}</h3>

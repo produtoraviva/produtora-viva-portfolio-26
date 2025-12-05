@@ -13,12 +13,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X, Image, Video, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, X, Image, Video, CheckCircle, AlertCircle, Link, Plus } from 'lucide-react';
 import { MediaSelector } from './MediaSelector';
 
 interface FileWithPreview extends File {
   preview: string;
   id: string;
+}
+
+interface UrlItem {
+  id: string;
+  url: string;
+  title: string;
+  mediaType: 'photo' | 'video';
+  status: 'pending' | 'uploading' | 'success' | 'error';
+  progress: number;
 }
 
 interface MediaUploaderProps {
@@ -28,6 +37,8 @@ interface MediaUploaderProps {
 
 export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUploaderProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [urlItems, setUrlItems] = useState<UrlItem[]>([]);
+  const [urlInput, setUrlInput] = useState('');
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
   const [uploadStatus, setUploadStatus] = useState<{ [key: string]: 'uploading' | 'success' | 'error' }>({});
   const [isUploading, setIsUploading] = useState(false);
@@ -265,21 +276,32 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
   };
 
   const handleUploadAll = async () => {
-    if (files.length === 0) return;
+    if (files.length === 0 && urlItems.length === 0) return;
 
     setIsUploading(true);
     
     try {
-      await Promise.all(files.map(file => uploadFile(file)));
+      // Upload files
+      if (files.length > 0) {
+        await Promise.all(files.map(file => uploadFile(file)));
+      }
+      
+      // Upload URLs
+      if (urlItems.length > 0) {
+        await Promise.all(urlItems.filter(item => item.status === 'pending').map(item => uploadFromUrl(item)));
+      }
+      
+      const totalItems = files.length + urlItems.filter(item => item.status === 'pending').length;
       
       toast({
         title: 'Upload Concluído',
-        description: `${files.length} ${files.length === 1 ? 'arquivo enviado' : 'arquivos enviados'} com sucesso!`,
+        description: `${totalItems} ${totalItems === 1 ? 'item enviado' : 'itens enviados'} com sucesso!`,
       });
 
       // Clear files after successful upload
       files.forEach(file => URL.revokeObjectURL(file.preview));
       setFiles([]);
+      setUrlItems([]);
       setUploadProgress({});
       setUploadStatus({});
       
@@ -290,6 +312,106 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Detect media type from URL
+  const detectMediaTypeFromUrl = (url: string): 'photo' | 'video' => {
+    const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
+    const lowerUrl = url.toLowerCase();
+    if (videoExtensions.some(ext => lowerUrl.includes(ext))) {
+      return 'video';
+    }
+    return 'photo';
+  };
+
+  // Add URL to upload queue
+  const handleAddUrl = () => {
+    if (!urlInput.trim()) return;
+    
+    // Validate URL
+    try {
+      new URL(urlInput);
+    } catch {
+      toast({
+        title: 'URL Inválida',
+        description: 'Por favor, insira uma URL válida.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const mediaType = detectMediaTypeFromUrl(urlInput);
+    const newItem: UrlItem = {
+      id: Math.random().toString(36).substr(2, 9),
+      url: urlInput.trim(),
+      title: urlInput.split('/').pop()?.split('?')[0] || 'Mídia',
+      mediaType,
+      status: 'pending',
+      progress: 0,
+    };
+
+    setUrlItems(prev => [...prev, newItem]);
+    setUrlInput('');
+  };
+
+  // Upload from URL
+  const uploadFromUrl = async (item: UrlItem) => {
+    try {
+      setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading' as const, progress: 10 } : i));
+
+      // Get next display order
+      const { data: maxOrderData } = await supabase
+        .from('portfolio_items')
+        .select('display_order')
+        .order('display_order', { ascending: false })
+        .limit(1);
+
+      const nextOrder = maxOrderData && maxOrderData.length > 0 
+        ? maxOrderData[0].display_order + 1 
+        : 0;
+
+      setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: 50 } : i));
+
+      // Determine category based on media type
+      const category = item.mediaType === 'photo' ? defaultSettings.photo_category : defaultSettings.video_category;
+      const subcategory = item.mediaType === 'photo' ? defaultSettings.photo_subcategory : defaultSettings.video_subcategory;
+
+      // Insert directly with URL (no need to download and re-upload)
+      const { error: dbError } = await supabase
+        .from('portfolio_items')
+        .insert({
+          title: defaultSettings.title || item.title,
+          description: defaultSettings.description || null,
+          location: defaultSettings.location || null,
+          date_taken: defaultSettings.date_taken || null,
+          media_type: item.mediaType,
+          file_url: item.url,
+          thumbnail_url: item.mediaType === 'photo' ? item.url : null,
+          category: category || null,
+          subcategory: subcategory || null,
+          item_status: 'uploaded',
+          publish_status: defaultSettings.publish_status,
+          is_featured: defaultSettings.is_featured,
+          homepage_featured: defaultSettings.homepage_featured,
+          display_order: nextOrder,
+        });
+
+      if (dbError) throw dbError;
+
+      setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'success' as const, progress: 100 } : i));
+    } catch (error) {
+      console.error('URL upload error:', error);
+      setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'error' as const } : i));
+      toast({
+        title: 'Erro ao adicionar',
+        description: error instanceof Error ? error.message : `Erro ao adicionar mídia de ${item.url}`,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const removeUrlItem = (id: string) => {
+    setUrlItems(prev => prev.filter(item => item.id !== id));
   };
 
   const getFileIcon = (file: File) => {
@@ -596,49 +718,133 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
               </div>
             )}
           </div>
+            </CardContent>
+          </Card>
+
+          {/* URL Upload Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Link className="h-5 w-5" />
+                Adicionar por URL
+              </CardTitle>
+              <CardDescription>
+                Adicione imagens ou vídeos a partir de um link externo
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                <Input
+                  type="url"
+                  placeholder="https://exemplo.com/imagem.jpg"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
+                  className="flex-1"
+                />
+                <Button onClick={handleAddUrl} disabled={!urlInput.trim()}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                URLs de imagens (JPG, PNG, WebP) ou vídeos (MP4, WebM). As mesmas configurações padrão serão aplicadas.
+              </p>
+
+              {/* URL Items List */}
+              {urlItems.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium">URLs Adicionadas ({urlItems.length})</h4>
+                  {urlItems.map((item) => (
+                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                      {item.mediaType === 'photo' ? (
+                        <Image className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                      ) : (
+                        <Video className="h-5 w-5 text-purple-500 flex-shrink-0" />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm truncate">{item.url}</p>
+                        {item.status === 'uploading' && (
+                          <Progress value={item.progress} className="h-1 mt-1" />
+                        )}
+                      </div>
+                      {item.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
+                      {item.status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
+                      {item.status === 'pending' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeUrlItem(item.id)}
+                          disabled={isUploading}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Upload Button */}
+          {(files.length > 0 || urlItems.filter(i => i.status === 'pending').length > 0) && (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      {files.length > 0 && `${files.length} arquivo(s)`}
+                      {files.length > 0 && urlItems.filter(i => i.status === 'pending').length > 0 && ' + '}
+                      {urlItems.filter(i => i.status === 'pending').length > 0 && `${urlItems.filter(i => i.status === 'pending').length} URL(s)`}
+                      {' pronto(s) para envio'}
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        files.forEach(file => URL.revokeObjectURL(file.preview));
+                        setFiles([]);
+                        setUrlItems([]);
+                        setUploadProgress({});
+                        setUploadStatus({});
+                      }}
+                      disabled={isUploading}
+                    >
+                      Limpar Todos
+                    </Button>
+                    <Button
+                      onClick={handleUploadAll}
+                      disabled={isUploading || (files.length === 0 && urlItems.filter(i => i.status === 'pending').length === 0)}
+                    >
+                      {isUploading ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          Enviando...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          Enviar Todos
+                        </div>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {files.length > 0 && (
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">
-                  Arquivos Selecionados ({files.length})
-                </h3>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      files.forEach(file => URL.revokeObjectURL(file.preview));
-                      setFiles([]);
-                      setUploadProgress({});
-                      setUploadStatus({});
-                    }}
-                    disabled={isUploading}
-                  >
-                    Limpar Todos
-                  </Button>
-                  <Button
-                    onClick={handleUploadAll}
-                    disabled={isUploading || files.length === 0}
-                  >
-                    {isUploading ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        Enviando...
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Upload className="h-4 w-4" />
-                        Enviar Todos
-                      </div>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-4">
-                {files.map((file) => (
-                  <Card key={file.id} className="p-4">
-                    <div className="flex items-center gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Arquivos Selecionados ({files.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4">
+                  {files.map((file) => (
+                    <div key={file.id} className="flex items-center gap-4 p-4 border rounded-lg">
                       <div className="flex-shrink-0">
                         {getFileIcon(file)}
                       </div>
@@ -683,13 +889,11 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           )}
-            </CardContent>
-          </Card>
         </TabsContent>
         
         <TabsContent value="library">

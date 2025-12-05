@@ -30,7 +30,7 @@ const Hero = () => {
       >
         <img 
           src={heroImage}
-          className="w-full h-full object-cover grayscale" 
+          className="w-full h-full object-cover" 
           alt="Hero Background"
         />
       </div>
