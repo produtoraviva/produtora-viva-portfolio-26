@@ -76,19 +76,16 @@ const FAQ = () => {
     <section id="faq" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
       {/* Header */}
       <div className="mb-16">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-8">
-          <div>
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
-              FAQ
-            </p>
-            <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
-              Dúvidas
-              <br />
-              <span className="text-muted-foreground">Frequentes</span>
-            </h2>
-          </div>
-          
-          <p className="text-muted-foreground max-w-md mt-4 md:mt-0 text-right">
+        <div className="mb-8">
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+            FAQ
+          </p>
+          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter mb-6">
+            Dúvidas
+            <br />
+            <span className="text-muted-foreground">Frequentes</span>
+          </h2>
+          <p className="text-muted-foreground max-w-md mb-6">
             Esclarecemos as principais dúvidas sobre nossos serviços.
           </p>
         </div>
