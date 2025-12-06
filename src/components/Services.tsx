@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Camera, Users, Heart, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
@@ -37,6 +37,9 @@ export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -64,12 +67,68 @@ export default function Services() {
   const visibleServices = useCarousel ? 3 : services.length;
   const maxIndex = Math.max(0, services.length - visibleServices);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
     setCurrentIndex(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
+  }, [maxIndex]);
+
+  // Drag handlers
+  const handleDragStart = (clientX: number) => {
+    setIsDragging(true);
+    setStartX(clientX);
   };
 
-  const handleNext = () => {
-    setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
+  const handleDragMove = (clientX: number) => {
+    if (!isDragging) return;
+    const diff = startX - clientX;
+    setDragOffset(diff);
+  };
+
+  const handleDragEnd = () => {
+    if (!isDragging) return;
+    
+    if (Math.abs(dragOffset) > 100) {
+      if (dragOffset > 0) {
+        handleNext();
+      } else {
+        handlePrev();
+      }
+    }
+    
+    setIsDragging(false);
+    setDragOffset(0);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    handleDragStart(e.clientX);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    handleDragMove(e.clientX);
+  };
+
+  const handleMouseUp = () => {
+    handleDragEnd();
+  };
+
+  const handleMouseLeave = () => {
+    if (isDragging) handleDragEnd();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleDragStart(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    handleDragMove(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
   };
 
   if (loading) {
@@ -94,12 +153,12 @@ export default function Services() {
           useCarousel ? 'w-[calc(33.333%-1rem)]' : ''
         } ${
           service.is_highlighted 
-            ? 'border-foreground bg-foreground/5 scale-[1.02] shadow-lg' 
+            ? 'bg-foreground/5 scale-[1.02] shadow-lg' 
             : 'hover:bg-secondary/50'
         }`}
       >
         {service.is_highlighted && (
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <div className="absolute -top-3 left-8">
             <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-4 py-1.5 font-bold">
               ★ Popular
             </span>
@@ -170,6 +229,10 @@ export default function Services() {
     );
   };
 
+  const translateValue = useCarousel 
+    ? `translateX(calc(-${currentIndex * (100 / visibleServices)}% - ${isDragging ? dragOffset : 0}px))`
+    : 'translateX(0)';
+
   return (
     <section id="servicos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
       {/* Header */}
@@ -182,43 +245,51 @@ export default function Services() {
             Nossos Serviços
           </h2>
         </div>
-        <div className="flex items-center gap-4 mt-4 md:mt-0">
-          <p className="text-muted-foreground max-w-md text-right">
-            Serviços personalizados para capturar seus momentos especiais.
-          </p>
-          {useCarousel && (
-            <div className="flex gap-2">
-              <button 
-                onClick={handlePrev}
-                disabled={currentIndex === 0}
-                className="w-10 h-10 border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button 
-                onClick={handleNext}
-                disabled={currentIndex >= maxIndex}
-                className="w-10 h-10 border border-border flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          )}
-        </div>
+        <p className="text-muted-foreground max-w-md text-right mt-4 md:mt-0">
+          Serviços personalizados para capturar seus momentos especiais.
+        </p>
       </div>
 
       {/* Services Grid/Carousel */}
       {useCarousel ? (
-        <div className="overflow-hidden">
-          <div 
-            ref={carouselRef}
-            className="flex gap-4 transition-transform duration-500 ease-out"
-            style={{ transform: `translateX(-${currentIndex * (100 / visibleServices)}%)` }}
+        <div className="relative">
+          {/* Navigation Arrows */}
+          <button 
+            onClick={handlePrev}
+            disabled={currentIndex === 0}
+            className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {services.map((service) => (
-              <ServiceCard key={service.id} service={service} />
-            ))}
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={handleNext}
+            disabled={currentIndex >= maxIndex}
+            className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+
+          <div 
+            className="overflow-hidden cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div 
+              ref={carouselRef}
+              className={`flex gap-4 ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
+              style={{ transform: translateValue }}
+            >
+              {services.map((service) => (
+                <ServiceCard key={service.id} service={service} />
+              ))}
+            </div>
           </div>
+          
           {/* Carousel Indicators */}
           <div className="flex justify-center gap-2 mt-8">
             {Array.from({ length: maxIndex + 1 }).map((_, index) => (

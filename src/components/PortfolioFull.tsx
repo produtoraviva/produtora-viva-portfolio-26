@@ -465,9 +465,9 @@ const PortfolioFull = () => {
         </div>
 
         {/* Portfolio Grid */}
-        <div className={`grid gap-6 lg:gap-8 ${
+        <div className={`grid gap-4 ${
           viewType === "grid" 
-            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         }`}>
           {currentItems.map((item, index) => (
@@ -476,7 +476,7 @@ const PortfolioFull = () => {
               className="portfolio-item group cursor-pointer animate-fade-in-up"
               onClick={() => handleImageClick(index)}
             >
-              <div className="relative aspect-[4/3] overflow-hidden">
+              <div className="relative aspect-square overflow-hidden">
                 {item.media_type === 'video' ? (
                   <video
                     src={item.file_url}

@@ -131,13 +131,11 @@ const PortfolioPreview = () => {
       </div>
 
       {/* Portfolio Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems.map((item, index) => (
           <div 
             key={item.id} 
-            className={`image-card group relative aspect-[3/4] overflow-hidden bg-secondary cursor-pointer ${
-              index % 3 === 1 ? 'lg:mt-12' : ''
-            }`}
+            className="image-card group relative aspect-[3/4] overflow-hidden bg-secondary cursor-pointer"
             onClick={() => handleImageClick(index)}
           >
             <LazyImage
@@ -148,7 +146,7 @@ const PortfolioPreview = () => {
             
             {/* Play Icon for Video */}
             {item.media_type === "video" && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
               </div>
             )}
