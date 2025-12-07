@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface SiteSettings {
@@ -30,19 +30,19 @@ const defaultSettings: SiteSettings = {
 export function useSiteSettings() {
   const [settings, setSettings] = useState<SiteSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSettings();
-  }, []);
-
-  const loadSettings = async () => {
+  const loadSettings = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('site_settings')
         .select('setting_key, setting_value');
 
-      if (error) {
-        console.error('Error loading site settings:', error);
+      if (fetchError) {
+        console.error('Error loading site settings:', fetchError);
+        setError(fetchError.message);
+        setLoading(false);
         return;
       }
 
@@ -56,12 +56,17 @@ export function useSiteSettings() {
         ...prevSettings,
         ...settingsMap
       }));
-    } catch (error) {
-      console.error('Error loading site settings:', error);
+    } catch (err) {
+      console.error('Error loading site settings:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  return { settings, loading, refetch: loadSettings };
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
+
+  return { settings, loading, error, refetch: loadSettings };
 }
