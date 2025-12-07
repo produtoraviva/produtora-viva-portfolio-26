@@ -443,24 +443,6 @@ const PortfolioFull = () => {
             <div className="text-muted-foreground">
               {filteredItems.length} trabalhos encontrados
             </div>
-            
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Visualização:</span>
-              <Button
-                variant={viewType === "grid" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewType("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewType === "masonry" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setViewType("masonry")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
           </div>
         </div>
 

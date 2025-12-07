@@ -153,9 +153,11 @@ const PortfolioPreview = () => {
             
             {/* Overlay */}
             <div className="portfolio-overlay">
-              <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
-                {item.subcategory || item.category}
-              </span>
+              {(item.subcategory || (item.category && item.category !== 'Sem categoria')) && (
+                <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
+                  {item.subcategory || item.category}
+                </span>
+              )}
               <h3 className="text-xl font-bold uppercase">{item.title}</h3>
             </div>
           </div>

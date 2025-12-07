@@ -158,8 +158,8 @@ export default function Services() {
         }`}
       >
         {service.is_highlighted && (
-          <div className="absolute -top-3 left-8">
-            <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-4 py-1.5 font-bold">
+          <div className="absolute -top-3 right-4">
+            <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
               ★ Popular
             </span>
           </div>
@@ -244,10 +244,10 @@ export default function Services() {
           <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
             Nossos Serviços
           </h2>
+          <p className="text-muted-foreground max-w-md mt-4">
+            Serviços personalizados para capturar seus momentos especiais.
+          </p>
         </div>
-        <p className="text-muted-foreground max-w-md text-right mt-4 md:mt-0">
-          Serviços personalizados para capturar seus momentos especiais.
-        </p>
       </div>
 
       {/* Services Grid/Carousel */}

@@ -87,6 +87,8 @@ export default function SiteSettingsManager() {
     
     const formData = new FormData(e.currentTarget);
     const updates = [
+      { key: 'company_name', value: formData.get('company_name') as string },
+      { key: 'logo_url', value: formData.get('logo_url') as string },
       { key: 'contact_phone', value: formData.get('contact_phone') as string },
       { key: 'contact_phone_secondary', value: formData.get('contact_phone_secondary') as string },
       { key: 'contact_email', value: formData.get('contact_email') as string },
@@ -146,6 +148,45 @@ export default function SiteSettingsManager() {
         
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Identidade da Empresa */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                Identidade da Empresa
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="company_name">Nome da Empresa</Label>
+                  <Input
+                    id="company_name"
+                    name="company_name"
+                    type="text"
+                    placeholder="Rubens Photofilm"
+                    defaultValue={settings.get('company_name') || 'Rubens Photofilm'}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Aparece no cabeçalho, rodapé e outros lugares do site
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="logo_url">URL da Logo</Label>
+                  <Input
+                    id="logo_url"
+                    name="logo_url"
+                    type="url"
+                    placeholder="https://exemplo.com/logo.png"
+                    defaultValue={settings.get('logo_url') || ''}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Cole a URL de uma imagem para usar como logo no cabeçalho (deixe vazio para usar o nome)
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* Informações de Contato */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
