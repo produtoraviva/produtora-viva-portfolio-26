@@ -1,39 +1,62 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 
 const Hero = () => {
-  // Fetch homepage backgrounds from database
-  const { data: backgrounds } = useQuery({
-    queryKey: ['homepage-backgrounds'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('homepage_backgrounds')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .limit(1);
-      
-      if (error) throw error;
-      return data;
-    }
-  });
+  const [heroImage, setHeroImage] = useState<string>("");
+  const [heroOpacity, setHeroOpacity] = useState<number>(40);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const heroImage = backgrounds?.[0]?.file_url || "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?q=80&w=2000&auto=format&fit=crop";
-  const heroOpacity = backgrounds?.[0]?.opacity || 40;
+  // Fetch homepage backgrounds from database with direct query for reliability
+  useEffect(() => {
+    const loadBackground = async () => {
+      try {
+        setIsLoading(true);
+        const { data, error } = await supabase
+          .from('homepage_backgrounds')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order', { ascending: true })
+          .limit(1);
+        
+        if (error) {
+          console.error('Error loading homepage background:', error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          console.log('Homepage background loaded:', data[0].file_url);
+          setHeroImage(data[0].file_url);
+          setHeroOpacity(data[0].opacity || 40);
+        } else {
+          console.log('No active homepage background found');
+          setHeroImage("");
+        }
+      } catch (error) {
+        console.error('Error loading homepage background:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBackground();
+  }, []);
 
   return (
     <header id="hero" className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
       {/* Background Image */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{ opacity: heroOpacity / 100 }}
-      >
-        <img 
-          src={heroImage}
-          className="w-full h-full object-cover" 
-          alt="Hero Background"
-        />
-      </div>
+      {heroImage && (
+        <div 
+          className="absolute inset-0 z-0"
+          style={{ opacity: heroOpacity / 100 }}
+        >
+          <img 
+            src={heroImage}
+            className="w-full h-full object-cover" 
+            alt="Hero Background"
+          />
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="z-10 text-center space-y-4 px-4 reveal-text">

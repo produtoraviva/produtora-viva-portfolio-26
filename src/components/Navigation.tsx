@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
-
+  const { config } = useSiteConfig();
   const navItems = [
+    { label: "Portfolio", href: "/portfolio", route: "/portfolio", highlight: true },
     { label: "Trabalhos", href: "#portfolio", route: "/" },
     { label: "Sobre", href: "#sobre", route: "/" },
     { label: "Serviços", href: "#servicos", route: "/" },
     { label: "Depoimentos", href: "#depoimentos", route: "/" },
-    { label: "Portfolio", href: "/portfolio", route: "/portfolio" },
     { label: "Contato", href: "#contact", route: "/" },
   ];
 
@@ -44,9 +45,13 @@ const Navigation = () => {
       {/* Logo */}
       <Link 
         to="/" 
-        className="text-sm tracking-[0.2em] uppercase font-bold text-foreground"
+        className="text-sm tracking-[0.2em] uppercase font-bold text-foreground flex items-center gap-2"
       >
-        Rubens Photofilm.
+        {config.logo_url ? (
+          <img src={config.logo_url} alt={config.company_name} className="h-8 w-auto" />
+        ) : (
+          <span>{config.company_name || 'Rubens Photofilm'}.</span>
+        )}
       </Link>
 
       {/* Desktop Menu */}
@@ -55,7 +60,11 @@ const Navigation = () => {
           <button
             key={item.label}
             onClick={() => handleNavClick(item)}
-            className="text-xs uppercase tracking-[0.15em] text-foreground hover:line-through transition-all duration-300"
+            className={`text-xs uppercase tracking-[0.15em] text-foreground transition-all duration-300 ${
+              item.highlight 
+                ? 'border border-foreground/50 px-3 py-1.5 hover:bg-foreground hover:text-background' 
+                : 'hover:line-through'
+            }`}
           >
             {item.label}
           </button>

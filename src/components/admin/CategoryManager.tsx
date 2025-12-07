@@ -5,11 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAdmin } from '@/hooks/useAdmin';
-import { Plus, Edit, Trash2, Save, X, Folder, Tag } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Folder, Tag, Settings } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -35,6 +36,10 @@ export function CategoryManager() {
   const [editingSubcategory, setEditingSubcategory] = useState<Subcategory | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [isCreatingSubcategory, setIsCreatingSubcategory] = useState(false);
+  const [subcategoryModalOpen, setSubcategoryModalOpen] = useState(false);
+  const [selectedCategoryForSubcategories, setSelectedCategoryForSubcategories] = useState<Category | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [confirmCloseDialogOpen, setConfirmCloseDialogOpen] = useState(false);
   const [newCategoryData, setNewCategoryData] = useState({
     name: '',
     type: 'photo' as 'photo' | 'video' | 'custom',
@@ -143,7 +148,9 @@ export function CategoryManager() {
   };
 
   const handleCreateSubcategory = async () => {
-    if (!newSubcategoryData.name.trim() || !newSubcategoryData.category_id) {
+    const categoryId = selectedCategoryForSubcategories?.id || newSubcategoryData.category_id;
+    
+    if (!newSubcategoryData.name.trim() || !categoryId) {
       toast({
         title: 'Erro',
         description: 'Nome e categoria são obrigatórios.',
@@ -157,8 +164,8 @@ export function CategoryManager() {
         .from('portfolio_subcategories')
         .insert({
           name: newSubcategoryData.name,
-          category_id: newSubcategoryData.category_id,
-          display_order: subcategories.filter(s => s.category_id === newSubcategoryData.category_id).length + 1,
+          category_id: categoryId,
+          display_order: subcategories.filter(s => s.category_id === categoryId).length + 1,
         });
 
       if (error) throw error;
@@ -170,6 +177,7 @@ export function CategoryManager() {
       
       setNewSubcategoryData({ name: '', category_id: '' });
       setIsCreatingSubcategory(false);
+      setHasUnsavedChanges(false);
       loadData();
     } catch (error) {
       console.error('Error creating subcategory:', error);
@@ -229,6 +237,7 @@ export function CategoryManager() {
       });
       
       setEditingSubcategory(null);
+      setHasUnsavedChanges(false);
       loadData();
     } catch (error) {
       console.error('Error updating subcategory:', error);
@@ -238,6 +247,33 @@ export function CategoryManager() {
         variant: 'destructive',
       });
     }
+  };
+
+  const openSubcategoryModal = (category: Category) => {
+    setSelectedCategoryForSubcategories(category);
+    setSubcategoryModalOpen(true);
+    setHasUnsavedChanges(false);
+  };
+
+  const handleCloseSubcategoryModal = () => {
+    if (hasUnsavedChanges || isCreatingSubcategory || editingSubcategory) {
+      setConfirmCloseDialogOpen(true);
+    } else {
+      closeSubcategoryModal();
+    }
+  };
+
+  const closeSubcategoryModal = () => {
+    setSubcategoryModalOpen(false);
+    setSelectedCategoryForSubcategories(null);
+    setIsCreatingSubcategory(false);
+    setEditingSubcategory(null);
+    setNewSubcategoryData({ name: '', category_id: '' });
+    setHasUnsavedChanges(false);
+  };
+
+  const getCategorySubcategories = (categoryId: string) => {
+    return subcategories.filter(s => s.category_id === categoryId);
   };
 
   const handleDeleteCategory = async (categoryId: string) => {
@@ -460,6 +496,14 @@ export function CategoryManager() {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => openSubcategoryModal(category)}
+                          title="Gerenciar subcategorias"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => setEditingCategory(category)}
                         >
                           <Edit className="h-4 w-4" />
@@ -564,6 +608,14 @@ export function CategoryManager() {
                           </div>
                         </div>
                       <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openSubcategoryModal(category)}
+                          title="Gerenciar subcategorias"
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -776,6 +828,128 @@ export function CategoryManager() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Subcategory Modal */}
+      <Dialog open={subcategoryModalOpen} onOpenChange={(open) => !open && handleCloseSubcategoryModal()}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Tag className="h-5 w-5" />
+              Subcategorias de {selectedCategoryForSubcategories?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Gerencie as subcategorias desta categoria
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Add new subcategory */}
+            {isCreatingSubcategory ? (
+              <div className="border rounded-lg p-4 bg-muted/30">
+                <div className="space-y-3">
+                  <Input
+                    value={newSubcategoryData.name}
+                    onChange={(e) => {
+                      setNewSubcategoryData({ ...newSubcategoryData, name: e.target.value });
+                      setHasUnsavedChanges(true);
+                    }}
+                    placeholder="Nome da subcategoria"
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={handleCreateSubcategory} size="sm">
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsCreatingSubcategory(false);
+                        setNewSubcategoryData({ name: '', category_id: '' });
+                      }}
+                      size="sm"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <Button onClick={() => setIsCreatingSubcategory(true)} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Nova Subcategoria
+              </Button>
+            )}
+
+            {/* List subcategories */}
+            <div className="space-y-2">
+              {selectedCategoryForSubcategories && getCategorySubcategories(selectedCategoryForSubcategories.id).map((subcategory) => (
+                <div key={subcategory.id} className="border rounded-lg p-3 bg-muted/30">
+                  {editingSubcategory?.id === subcategory.id ? (
+                    <div className="space-y-3">
+                      <Input
+                        value={editingSubcategory.name}
+                        onChange={(e) => {
+                          setEditingSubcategory({ ...editingSubcategory, name: e.target.value });
+                          setHasUnsavedChanges(true);
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <Button onClick={() => handleUpdateSubcategory(editingSubcategory)} size="sm">
+                          <Save className="h-4 w-4 mr-2" />
+                          Salvar
+                        </Button>
+                        <Button variant="outline" onClick={() => setEditingSubcategory(null)} size="sm">
+                          <X className="h-4 w-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{subcategory.name}</span>
+                        <Badge variant={subcategory.is_active ? 'outline' : 'destructive'}>
+                          {subcategory.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setEditingSubcategory(subcategory)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteSubcategory(subcategory.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {selectedCategoryForSubcategories && getCategorySubcategories(selectedCategoryForSubcategories.id).length === 0 && !isCreatingSubcategory && (
+                <p className="text-muted-foreground text-center py-4">Nenhuma subcategoria cadastrada</p>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirm close dialog */}
+      <AlertDialog open={confirmCloseDialogOpen} onOpenChange={setConfirmCloseDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você tem alterações não salvas. Deseja sair sem salvar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction onClick={closeSubcategoryModal}>
+              Descartar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -160,7 +160,8 @@ const Testimonials = () => {
   const translateValue = `translateX(calc(-${currentIndex * 100}% - ${isDragging ? dragOffset : 0}px))`;
 
   return (
-    <section id="depoimentos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
+    <section id="depoimentos" className="py-24 border-t border-border" style={{ background: 'linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(0 0% 15%) 100%)' }}>
+      <div className="max-w-[1600px] mx-auto px-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
         <div>
@@ -172,10 +173,10 @@ const Testimonials = () => {
             <br />
             <span className="text-muted-foreground">nossos clientes</span>
           </h2>
+          <p className="text-muted-foreground max-w-md mt-4">
+            Histórias reais de quem confiou em nosso trabalho.
+          </p>
         </div>
-        <p className="text-muted-foreground max-w-md text-right mt-4 md:mt-0">
-          Histórias reais de quem confiou em nosso trabalho.
-        </p>
       </div>
 
       {/* Carousel */}
@@ -279,6 +280,7 @@ const Testimonials = () => {
             </div>
           </div>
         )}
+      </div>
       </div>
     </section>
   );
