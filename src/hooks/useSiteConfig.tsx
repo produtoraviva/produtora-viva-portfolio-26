@@ -1,33 +1,44 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface SiteConfig {
   company_name: string;
   logo_url: string;
+  contact_email: string;
+  contact_phone: string;
+  secondary_phone: string;
+  whatsapp_number: string;
+  whatsapp_international: string;
+  address: string;
 }
 
 const defaultConfig: SiteConfig = {
   company_name: 'Rubens Photofilm',
   logo_url: '',
+  contact_email: '',
+  contact_phone: '',
+  secondary_phone: '',
+  whatsapp_number: '',
+  whatsapp_international: '',
+  address: '',
 };
 
 export function useSiteConfig() {
   const [config, setConfig] = useState<SiteConfig>(defaultConfig);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadConfig();
-  }, []);
-
-  const loadConfig = async () => {
+  const loadConfig = useCallback(async () => {
     try {
-      const { data, error } = await supabase
+      setError(null);
+      const { data, error: fetchError } = await supabase
         .from('site_settings')
         .select('setting_key, setting_value')
-        .in('setting_key', ['company_name', 'logo_url']);
+        .in('setting_key', ['company_name', 'logo_url', 'contact_email', 'contact_phone', 'secondary_phone', 'whatsapp_number', 'whatsapp_international', 'address']);
 
-      if (error) {
-        console.error('Error loading site config:', error);
+      if (fetchError) {
+        console.error('Error loading site config:', fetchError);
+        setError(fetchError.message);
         return;
       }
 
@@ -40,12 +51,17 @@ export function useSiteConfig() {
         ...prevConfig,
         ...configMap
       }));
-    } catch (error) {
-      console.error('Error loading site config:', error);
+    } catch (err) {
+      console.error('Error loading site config:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  return { config, loading, refetch: loadConfig };
+  useEffect(() => {
+    loadConfig();
+  }, [loadConfig]);
+
+  return { config, loading, error, refetch: loadConfig };
 }

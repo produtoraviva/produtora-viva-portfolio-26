@@ -158,11 +158,9 @@ export default function Services() {
         }`}
       >
         {service.is_highlighted && (
-          <div className="absolute -top-3 right-4">
-            <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
-              ★ Popular
-            </span>
-          </div>
+          <span className="absolute top-8 right-8 bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
+            ★ Popular
+          </span>
         )}
         
         <div className="space-y-6">

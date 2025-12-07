@@ -160,7 +160,7 @@ const Testimonials = () => {
   const translateValue = `translateX(calc(-${currentIndex * 100}% - ${isDragging ? dragOffset : 0}px))`;
 
   return (
-    <section id="depoimentos" className="py-24 border-t border-border" style={{ background: 'linear-gradient(180deg, hsl(0 0% 5%) 0%, hsl(0 0% 15%) 100%)' }}>
+    <section id="depoimentos" className="py-24 border-t border-border" style={{ background: 'linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 3%) 100%)' }}>
       <div className="max-w-[1600px] mx-auto px-4">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
