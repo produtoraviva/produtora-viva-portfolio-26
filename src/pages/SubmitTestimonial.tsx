@@ -9,7 +9,6 @@ import { Card } from '@/components/ui/card';
 import { Star, Upload, Image as ImageIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { SEOHead } from '@/components/SEOHead';
-import { Logo } from '@/components/Logo';
 
 export default function SubmitTestimonial() {
   const [name, setName] = useState('');
@@ -97,7 +96,6 @@ export default function SubmitTestimonial() {
         description: 'Obrigado! Seu depoimento está aguardando aprovação.',
       });
 
-      // Reset form
       setName('');
       setEvent('');
       setText('');
@@ -105,7 +103,6 @@ export default function SubmitTestimonial() {
       setImage(null);
       setImagePreview('');
 
-      // Navigate to home after 2 seconds
       setTimeout(() => {
         navigate('/');
       }, 2000);
@@ -131,9 +128,6 @@ export default function SubmitTestimonial() {
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 py-20 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-12">
-            <div className="flex justify-center mb-2">
-              <Logo size="xl" className="brightness-0 invert scale-[0.7]" />
-            </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
               Compartilhe sua Experiência
             </h1>

@@ -21,12 +21,10 @@ import {
   Filter,
   Grid,
   List,
-  History,
   RefreshCw
 } from 'lucide-react';
 import { PortfolioManager } from '@/components/admin/PortfolioManager';
 import { MediaUploader } from '@/components/admin/MediaUploader';
-import { EditHistory } from '@/components/admin/EditHistory';
 import { CategoryManager } from '@/components/admin/CategoryManager';
 import { HomepageBackgroundManager } from '@/components/admin/HomepageBackgroundManager';
 import { PortfolioVisualizer } from '@/components/admin/PortfolioVisualizer';
@@ -43,8 +41,8 @@ interface PortfolioItem {
   media_type: 'photo' | 'video';
   file_url: string;
   thumbnail_url?: string;
-  category: string; // Now UUID reference to portfolio_categories
-  subcategory?: string; // Now UUID reference to portfolio_subcategories
+  category: string;
+  subcategory?: string;
   publish_status: 'draft' | 'published' | 'hidden';
   is_featured: boolean;
   homepage_featured: boolean;
@@ -145,216 +143,109 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'published': return 'bg-green-500';
-      case 'draft': return 'bg-yellow-500';
-      case 'hidden': return 'bg-red-500';
-      default: return 'bg-gray-500';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'published': return 'Publicado';
-      case 'draft': return 'Rascunho';
-      case 'hidden': return 'Oculto';
-      default: return status;
-    }
-  };
-
-  const getCategoryText = (category: string) => {
-    switch (category) {
-      case 'casamento': return 'Casamento';
-      case 'aniversario': return 'Aniversário';
-      case 'corporativo': return 'Corporativo';
-      case 'familia': return 'Família';
-      default: return category;
-    }
-  };
-
   if (!isAuthenticated) {
     return null;
   }
 
+  const tabCount = user?.role === 'admin' ? 9 : 8;
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-3">
-                <div className="p-3 bg-primary/10 rounded-xl">
-                  <Edit className="h-8 w-8 text-primary" />
+      <header className="border-b bg-card sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 md:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1 md:space-y-2">
+              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2 md:gap-3">
+                <div className="p-2 md:p-3 bg-primary/10 rounded-xl">
+                  <Edit className="h-5 w-5 md:h-8 md:w-8 text-primary" />
                 </div>
-                Painel Administrativo
+                <span className="hidden sm:inline">Painel Administrativo</span>
+                <span className="sm:hidden">Admin</span>
               </h1>
-              <p className="text-lg text-muted-foreground">
-                Bem-vindo, <span className="font-semibold text-foreground">{user?.full_name}</span>
+              <p className="text-sm md:text-lg text-muted-foreground">
+                Olá, <span className="font-semibold text-foreground">{user?.full_name}</span>
               </p>
             </div>
             <Button 
               variant="outline" 
               onClick={handleLogout}
               className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              size="sm"
             >
               <LogOut className="h-4 w-4 mr-2" />
-              Sair
+              <span className="hidden sm:inline">Sair</span>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-4 md:py-8">
         <Tabs defaultValue="portfolio" className="w-full">
-          <TabsList className={`grid w-full ${user?.role === 'admin' ? 'grid-cols-10' : 'grid-cols-9'} h-12 mb-6 bg-card border shadow-sm rounded-lg overflow-x-auto`}>
-            <TabsTrigger 
-              value="portfolio" 
-              onClick={loadPortfolioItems}
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Portfólio
-            </TabsTrigger>
-            <TabsTrigger 
-              value="upload"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Upload
-            </TabsTrigger>
-            <TabsTrigger 
-              value="categories"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Categorias
-            </TabsTrigger>  
-            <TabsTrigger 
-              value="homepage-bg"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Fundo Home
-            </TabsTrigger>
-            <TabsTrigger 
-              value="visualizer"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Métricas
-            </TabsTrigger>
-            <TabsTrigger 
-              value="history"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Histórico
-            </TabsTrigger>
-            <TabsTrigger 
-              value="testimonials"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Depoimentos
-            </TabsTrigger>
-            <TabsTrigger 
-              value="services"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              Serviços
-            </TabsTrigger>
-            <TabsTrigger 
-              value="faq"
-              className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-            >
-              FAQ
-            </TabsTrigger>
-            {user?.role === 'admin' && (
+          <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+            <TabsList className={`inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-${tabCount} h-auto md:h-12 mb-6 bg-card border shadow-sm rounded-lg p-1`}>
               <TabsTrigger 
-                value="accounts"
-                className="text-sm font-medium whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                value="portfolio" 
+                onClick={loadPortfolioItems}
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                Contas
+                Portfólio
               </TabsTrigger>
-            )}
-          </TabsList>
+              <TabsTrigger 
+                value="upload"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Upload
+              </TabsTrigger>
+              <TabsTrigger 
+                value="categories"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Categorias
+              </TabsTrigger>  
+              <TabsTrigger 
+                value="homepage-bg"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Fundo Home
+              </TabsTrigger>
+              <TabsTrigger 
+                value="visualizer"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Métricas
+              </TabsTrigger>
+              <TabsTrigger 
+                value="testimonials"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Depoimentos
+              </TabsTrigger>
+              <TabsTrigger 
+                value="services"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                Serviços
+              </TabsTrigger>
+              <TabsTrigger 
+                value="faq"
+                className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                FAQ
+              </TabsTrigger>
+              {user?.role === 'admin' && (
+                <TabsTrigger 
+                  value="accounts"
+                  className="text-xs md:text-sm font-medium whitespace-nowrap px-3 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  Contas
+                </TabsTrigger>
+              )}
+            </TabsList>
+          </div>
 
           <TabsContent value="portfolio" className="space-y-6">
-            {/* Filters and Search */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtros e Busca</CardTitle>
-                <CardDescription>
-                  Use os filtros abaixo para encontrar itens específicos
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                  <div>
-                    <Input
-                      placeholder="Buscar por título..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="casamento">Casamento</SelectItem>
-                      <SelectItem value="aniversario">Aniversário</SelectItem>
-                      <SelectItem value="corporativo">Corporativo</SelectItem>
-                      <SelectItem value="familia">Família</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterStatus} onValueChange={setFilterStatus}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="published">Publicado</SelectItem>
-                      <SelectItem value="draft">Rascunho</SelectItem>
-                      <SelectItem value="hidden">Oculto</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={filterMediaType} onValueChange={setFilterMediaType}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      <SelectItem value="photo">Foto</SelectItem>
-                      <SelectItem value="video">Vídeo</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={loadPortfolioItems}
-                      title="Atualizar itens"
-                    >
-                      <RefreshCw className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'grid' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                    >
-                      <Grid className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                    >
-                      <List className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Portfolio Manager */}
             <PortfolioManager
               items={filteredItems}
@@ -377,10 +268,6 @@ export default function AdminDashboard() {
 
           <TabsContent value="visualizer">
             <PortfolioVisualizer />
-          </TabsContent>
-
-          <TabsContent value="history">
-            <EditHistory />
           </TabsContent>
 
           <TabsContent value="testimonials" className="space-y-6">
