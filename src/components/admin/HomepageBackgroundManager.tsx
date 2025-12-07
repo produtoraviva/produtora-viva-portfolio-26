@@ -6,11 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { MediaUploader } from './MediaUploader';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Trash2, Eye, EyeOff, Move, Upload, Palette } from 'lucide-react';
+import { Trash2, Eye, EyeOff, Move, Palette, RefreshCw } from 'lucide-react';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableItem } from './SortableItem';
@@ -41,7 +39,6 @@ interface HomepageBackground {
 
 export function HomepageBackgroundManager() {
   const [backgrounds, setBackgrounds] = useState<HomepageBackground[]>([]);
-  const [isUploading, setIsUploading] = useState(false);
   const [isDragEnabled, setIsDragEnabled] = useState(false);
   const { toast } = useToast();
 
@@ -115,39 +112,6 @@ export function HomepageBackgroundManager() {
           variant: 'destructive',
         });
       }
-    }
-  };
-
-  const handleUploadSuccess = async (fileUrl: string, thumbnailUrl?: string) => {
-    try {
-      const maxOrder = Math.max(...backgrounds.map(bg => bg.display_order), -1);
-      
-      const { error } = await supabase
-        .from('homepage_backgrounds')
-        .insert({
-          name: `Background ${backgrounds.length + 1}`,
-          file_url: fileUrl,
-          thumbnail_url: thumbnailUrl,
-          opacity: 0.5,
-          display_order: maxOrder + 1,
-          is_active: true
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: 'Sucesso',
-        description: 'Imagem de fundo adicionada com sucesso!',
-      });
-
-      loadBackgrounds();
-    } catch (error) {
-      console.error('Error adding background:', error);
-      toast({
-        title: 'Erro',
-        description: 'Erro ao adicionar imagem de fundo.',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -282,14 +246,14 @@ export function HomepageBackgroundManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold flex items-center gap-2">
             <Palette className="h-6 w-6" />
             Fundos da Homepage
           </h2>
           <p className="text-muted-foreground">
-            Gerencie as imagens de fundo da homepage com transições suaves
+            Gerencie as imagens de fundo da homepage. Use a aba Portfólio ou Biblioteca de Mídia para adicionar novas imagens.
           </p>
         </div>
         <div className="flex gap-2">
@@ -299,7 +263,7 @@ export function HomepageBackgroundManager() {
             size="sm"
             className="flex items-center gap-2"
           >
-            <Upload className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
             Atualizar
           </Button>
           <Button 
@@ -309,28 +273,10 @@ export function HomepageBackgroundManager() {
             className="flex items-center gap-2"
           >
             <Move className="h-4 w-4" />
-            {isDragEnabled ? "Desativar ordenação" : "Ativar ordenação"}
+            <span className="hidden sm:inline">{isDragEnabled ? "Desativar ordenação" : "Ativar ordenação"}</span>
           </Button>
         </div>
       </div>
-
-      {/* Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Upload className="h-5 w-5" />
-            Adicionar Nova Imagem de Fundo
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <MediaUploader
-            onUploadComplete={() => {
-              setIsUploading(false);
-              loadBackgrounds();
-            }}
-          />
-        </CardContent>
-      </Card>
 
       {backgrounds.length === 0 ? (
         <Card>
@@ -339,7 +285,7 @@ export function HomepageBackgroundManager() {
               <Palette className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">Nenhuma imagem de fundo</h3>
               <p className="text-muted-foreground mb-4">
-                Adicione imagens para criar um slideshow de fundo na homepage.
+                Use a aba "Portfólio" ou "Biblioteca de Mídia" e clique no botão de casa (🏠) para adicionar imagens como fundo.
               </p>
             </div>
           </CardContent>
@@ -359,10 +305,10 @@ export function HomepageBackgroundManager() {
                 <SortableItem key={background.id} id={background.id} isDragEnabled={isDragEnabled}>
                   <Card className="overflow-hidden">
                     <CardContent className="p-4">
-                      <div className="flex gap-4">
+                      <div className="flex flex-col md:flex-row gap-4">
                         {/* Preview */}
                         <div className="flex-shrink-0">
-                          <div className="w-32 h-20 relative overflow-hidden rounded-lg">
+                          <div className="w-full md:w-32 h-20 relative overflow-hidden rounded-lg">
                             <img
                               src={background.thumbnail_url || background.file_url}
                               alt={background.name}
@@ -438,7 +384,7 @@ export function HomepageBackgroundManager() {
                         </div>
 
                         {/* Actions */}
-                        <div className="flex flex-col gap-2">
+                        <div className="flex md:flex-col gap-2">
                           <Button
                             size="sm"
                             variant="outline"
@@ -493,13 +439,8 @@ export function HomepageBackgroundManager() {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Palette className="h-4 w-4" />
               <span>
-                {backgrounds.filter(bg => bg.is_active).length} de {backgrounds.length} imagens ativas no slideshow
+                {backgrounds.filter(bg => bg.is_active).length} de {backgrounds.length} imagens ativas serão exibidas na homepage
               </span>
-              {backgrounds.filter(bg => bg.is_active).length > 1 && (
-                <Badge variant="outline" className="text-xs">
-                  Transição automática ativada
-                </Badge>
-              )}
             </div>
           </CardContent>
         </Card>

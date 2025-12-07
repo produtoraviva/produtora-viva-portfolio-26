@@ -10,10 +10,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X, Image, Video, CheckCircle, AlertCircle, Link, Plus } from 'lucide-react';
+import { Upload, X, Image, Video, CheckCircle, AlertCircle, Link, Plus, ChevronDown, Settings, FolderOpen, ToggleLeft } from 'lucide-react';
 import { MediaSelector } from './MediaSelector';
 
 interface FileWithPreview extends File {
@@ -45,6 +45,12 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
   const { toast } = useToast();
+
+  // Collapsible states
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true);
+  const [isInfoOpen, setIsInfoOpen] = useState(true);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isStatusOpen, setIsStatusOpen] = useState(false);
 
   const [defaultSettings, setDefaultSettings] = useState({
     title: '',
@@ -104,7 +110,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       'video/*': ['.mp4', '.webm', '.ogg', '.mov']
     },
     multiple: true,
-    // No size limit for uploads
   });
 
   const removeFile = (fileId: string) => {
@@ -117,57 +122,15 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
     });
   };
 
-  const generateThumbnail = async (file: File): Promise<string | null> => {
-    if (file.type.startsWith('image/')) {
-      return null; // Use original image as thumbnail
-    }
-    
-    if (file.type.startsWith('video/')) {
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        video.onloadedmetadata = () => {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-          video.currentTime = 1; // Get frame at 1 second
-        };
-
-        video.oncanplay = () => {
-          if (ctx) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            canvas.toBlob((blob) => {
-              if (blob) {
-                resolve(URL.createObjectURL(blob));
-              } else {
-                resolve(null);
-              }
-            }, 'image/jpeg', 0.8);
-          } else {
-            resolve(null);
-          }
-        };
-
-        video.onerror = () => resolve(null);
-        video.src = URL.createObjectURL(file);
-      });
-    }
-
-    return null;
-  };
-
   const uploadFile = async (file: FileWithPreview) => {
     try {
       setUploadStatus(prev => ({ ...prev, [file.id]: 'uploading' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
 
-      // Generate unique filename
       const fileExtension = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExtension}`;
       const filePath = `uploads/${fileName}`;
 
-      // Simulate progress for better UX
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => ({
           ...prev,
@@ -176,7 +139,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       }, 200);
 
       try {
-        // Upload main file
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('portfolio-media')
           .upload(filePath, file);
@@ -188,12 +150,10 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
 
         setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
 
-        // Get public URL
         const { data: { publicUrl } } = supabase.storage
           .from('portfolio-media')
           .getPublicUrl(filePath);
 
-        // Get file dimensions
         let dimensions = null;
         if (file.type.startsWith('image/')) {
           dimensions = await new Promise<{width: number, height: number}>((resolve) => {
@@ -211,7 +171,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           });
         }
 
-        // Get next display order
         const { data: maxOrderData } = await supabase
           .from('portfolio_items')
           .select('display_order')
@@ -222,18 +181,14 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           ? maxOrderData[0].display_order + 1 
           : 0;
 
-        // Determinar tipo de mídia
         const mediaType = file.type.startsWith('image/') ? 'photo' : 'video';
-        
-        // Determinar categoria e subcategoria baseado no tipo de mídia
         const category = mediaType === 'photo' ? defaultSettings.photo_category : defaultSettings.video_category;
         const subcategory = mediaType === 'photo' ? defaultSettings.photo_subcategory : defaultSettings.video_subcategory;
 
-        // Insert into portfolio_items as uploaded media
         const { error: dbError } = await supabase
           .from('portfolio_items')
           .insert({
-            title: defaultSettings.title || file.name.replace(/\.[^/.]+$/, ''), // Remove extension
+            title: defaultSettings.title || file.name.replace(/\.[^/.]+$/, ''),
             description: defaultSettings.description || null,
             location: defaultSettings.location || null,
             date_taken: defaultSettings.date_taken || null,
@@ -241,7 +196,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
             file_url: publicUrl,
             category: category || null,
             subcategory: subcategory || null,
-            item_status: 'uploaded', // Mark as uploaded media
+            item_status: 'uploaded',
             publish_status: defaultSettings.publish_status,
             is_featured: defaultSettings.is_featured,
             homepage_featured: defaultSettings.homepage_featured,
@@ -281,12 +236,10 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
     setIsUploading(true);
     
     try {
-      // Upload files
       if (files.length > 0) {
         await Promise.all(files.map(file => uploadFile(file)));
       }
       
-      // Upload URLs
       if (urlItems.length > 0) {
         await Promise.all(urlItems.filter(item => item.status === 'pending').map(item => uploadFromUrl(item)));
       }
@@ -298,7 +251,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
         description: `${totalItems} ${totalItems === 1 ? 'item enviado' : 'itens enviados'} com sucesso!`,
       });
 
-      // Clear files after successful upload
       files.forEach(file => URL.revokeObjectURL(file.preview));
       setFiles([]);
       setUrlItems([]);
@@ -314,7 +266,6 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
     }
   };
 
-  // Detect media type from URL
   const detectMediaTypeFromUrl = (url: string): 'photo' | 'video' => {
     const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov', '.avi', '.mkv'];
     const lowerUrl = url.toLowerCase();
@@ -324,42 +275,62 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
     return 'photo';
   };
 
-  // Add URL to upload queue
-  const handleAddUrl = () => {
+  // Handle multiple URLs (one per line)
+  const handleAddUrls = () => {
     if (!urlInput.trim()) return;
     
-    // Validate URL
-    try {
-      new URL(urlInput);
-    } catch {
-      toast({
-        title: 'URL Inválida',
-        description: 'Por favor, insira uma URL válida.',
-        variant: 'destructive',
-      });
-      return;
+    const urls = urlInput.split('\n').map(url => url.trim()).filter(url => url.length > 0);
+    const newItems: UrlItem[] = [];
+    const invalidUrls: string[] = [];
+
+    for (const url of urls) {
+      try {
+        new URL(url);
+        const mediaType = detectMediaTypeFromUrl(url);
+        newItems.push({
+          id: Math.random().toString(36).substr(2, 9),
+          url: url,
+          title: url.split('/').pop()?.split('?')[0] || 'Mídia',
+          mediaType,
+          status: 'pending',
+          progress: 0,
+        });
+      } catch {
+        invalidUrls.push(url);
+      }
     }
 
-    const mediaType = detectMediaTypeFromUrl(urlInput);
-    const newItem: UrlItem = {
-      id: Math.random().toString(36).substr(2, 9),
-      url: urlInput.trim(),
-      title: urlInput.split('/').pop()?.split('?')[0] || 'Mídia',
-      mediaType,
-      status: 'pending',
-      progress: 0,
-    };
-
-    setUrlItems(prev => [...prev, newItem]);
-    setUrlInput('');
+    if (newItems.length > 0) {
+      setUrlItems(prev => [...prev, ...newItems]);
+      setUrlInput('');
+      
+      if (invalidUrls.length > 0) {
+        toast({
+          title: 'Algumas URLs inválidas',
+          description: `${newItems.length} URLs adicionadas. ${invalidUrls.length} URLs inválidas ignoradas.`,
+          variant: 'default',
+        });
+      }
+    } else if (invalidUrls.length > 0) {
+      toast({
+        title: 'URLs Inválidas',
+        description: 'Todas as URLs fornecidas são inválidas.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  // Upload from URL
+  const handleUrlKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddUrls();
+    }
+  };
+
   const uploadFromUrl = async (item: UrlItem) => {
     try {
       setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, status: 'uploading' as const, progress: 10 } : i));
 
-      // Get next display order
       const { data: maxOrderData } = await supabase
         .from('portfolio_items')
         .select('display_order')
@@ -372,11 +343,9 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
 
       setUrlItems(prev => prev.map(i => i.id === item.id ? { ...i, progress: 50 } : i));
 
-      // Determine category based on media type
       const category = item.mediaType === 'photo' ? defaultSettings.photo_category : defaultSettings.video_category;
       const subcategory = item.mediaType === 'photo' ? defaultSettings.photo_subcategory : defaultSettings.video_subcategory;
 
-      // Insert directly with URL (no need to download and re-upload)
       const { error: dbError } = await supabase
         .from('portfolio_items')
         .insert({
@@ -445,243 +414,280 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
   return (
     <div className="space-y-6">
       <Tabs defaultValue="upload" className="w-full">
-        <TabsList>
-          <TabsTrigger value="upload">Upload de Mídia</TabsTrigger>
-          <TabsTrigger value="library">Biblioteca de Mídia</TabsTrigger>
+        <TabsList className="w-full flex flex-wrap">
+          <TabsTrigger value="upload" className="flex-1">Upload de Mídia</TabsTrigger>
+          <TabsTrigger value="library" className="flex-1">Biblioteca de Mídia</TabsTrigger>
         </TabsList>
         
         <TabsContent value="upload" className="space-y-6">
+          {/* Collapsible Default Settings */}
           <Card>
-            <CardHeader>
-              <CardTitle>Configurações Padrão</CardTitle>
-              <CardDescription>
-                Essas configurações serão aplicadas a todos os arquivos enviados
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Informações Gerais */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Informações Gerais
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="default-title">Título (Opcional)</Label>
-                    <Input
-                      id="default-title"
-                      placeholder="Título para todas as mídias"
-                      value={defaultSettings.title}
-                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, title: e.target.value }))}
-                    />
+            <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+              <CollapsibleTrigger asChild>
+                <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      <CardTitle>Configurações Padrão</CardTitle>
+                    </div>
+                    <ChevronDown className={`h-5 w-5 transition-transform ${isSettingsOpen ? 'rotate-180' : ''}`} />
                   </div>
-                  <div>
-                    <Label htmlFor="default-location">Localização (Opcional)</Label>
-                    <Input
-                      id="default-location"
-                      placeholder="Ex: São Paulo, SP"
-                      value={defaultSettings.location}
-                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, location: e.target.value }))}
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor="default-description">Descrição (Opcional)</Label>
-                    <Textarea
-                      id="default-description"
-                      placeholder="Descrição para todas as mídias"
-                      value={defaultSettings.description}
-                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, description: e.target.value }))}
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="default-date">Data (Opcional)</Label>
-                    <Input
-                      id="default-date"
-                      type="date"
-                      value={defaultSettings.date_taken}
-                      onChange={(e) => setDefaultSettings(prev => ({ ...prev, date_taken: e.target.value }))}
-                    />
-                  </div>
-                </div>
-              </div>
+                  <CardDescription>
+                    Essas configurações serão aplicadas a todos os arquivos enviados
+                  </CardDescription>
+                </CardHeader>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <CardContent className="space-y-4">
+                  {/* Informações Gerais */}
+                  <Collapsible open={isInfoOpen} onOpenChange={setIsInfoOpen}>
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <Settings className="h-4 w-4" />
+                          <span className="text-sm font-semibold uppercase tracking-wide">Informações Gerais</span>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isInfoOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="default-title">Título (Opcional)</Label>
+                          <Input
+                            id="default-title"
+                            placeholder="Título para todas as mídias"
+                            value={defaultSettings.title}
+                            onChange={(e) => setDefaultSettings(prev => ({ ...prev, title: e.target.value }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="default-location">Localização (Opcional)</Label>
+                          <Input
+                            id="default-location"
+                            placeholder="Ex: São Paulo, SP"
+                            value={defaultSettings.location}
+                            onChange={(e) => setDefaultSettings(prev => ({ ...prev, location: e.target.value }))}
+                          />
+                        </div>
+                        <div className="md:col-span-2">
+                          <Label htmlFor="default-description">Descrição (Opcional)</Label>
+                          <Textarea
+                            id="default-description"
+                            placeholder="Descrição para todas as mídias"
+                            value={defaultSettings.description}
+                            onChange={(e) => setDefaultSettings(prev => ({ ...prev, description: e.target.value }))}
+                            rows={3}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="default-date">Data (Opcional)</Label>
+                          <Input
+                            id="default-date"
+                            type="date"
+                            value={defaultSettings.date_taken}
+                            onChange={(e) => setDefaultSettings(prev => ({ ...prev, date_taken: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
-              <Separator />
+                  {/* Categorias */}
+                  <Collapsible open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <FolderOpen className="h-4 w-4" />
+                          <span className="text-sm font-semibold uppercase tracking-wide">Categorias</span>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4 space-y-6">
+                      {/* Categorias para Fotos */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                          <Image className="h-4 w-4" />
+                          Categorias para Fotos
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="photo-category">Categoria</Label>
+                            <Select
+                              value={defaultSettings.photo_category || "none"}
+                              onValueChange={(value) => 
+                                setDefaultSettings(prev => ({ 
+                                  ...prev, 
+                                  photo_category: value === "none" ? "" : value 
+                                }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma categoria" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Nenhuma</SelectItem>
+                                {categories
+                                  .filter(category => category.type === 'photo')
+                                  .map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="photo-subcategory">Subcategoria</Label>
+                            <Select
+                              value={defaultSettings.photo_subcategory || "none"}
+                              onValueChange={(value) => 
+                                setDefaultSettings(prev => ({ 
+                                  ...prev, 
+                                  photo_subcategory: value === "none" ? "" : value 
+                                }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma subcategoria" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Nenhuma</SelectItem>
+                                {subcategories
+                                  .filter(sub => !defaultSettings.photo_category || sub.category_id === defaultSettings.photo_category)
+                                  .map((subcategory) => (
+                                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                                      {subcategory.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Categorias para Fotos */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide flex items-center gap-2">
-                  <Image className="h-4 w-4" />
-                  Categorias para Fotos
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="photo-category">Categoria</Label>
-                    <Select
-                      value={defaultSettings.photo_category || "none"}
-                      onValueChange={(value) => 
-                        setDefaultSettings(prev => ({ 
-                          ...prev, 
-                          photo_category: value === "none" ? "" : value 
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {categories
-                          .filter(category => category.type === 'photo')
-                          .map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="photo-subcategory">Subcategoria</Label>
-                    <Select
-                      value={defaultSettings.photo_subcategory || "none"}
-                      onValueChange={(value) => 
-                        setDefaultSettings(prev => ({ 
-                          ...prev, 
-                          photo_subcategory: value === "none" ? "" : value 
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma subcategoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {subcategories
-                          .filter(sub => !defaultSettings.photo_category || sub.category_id === defaultSettings.photo_category)
-                          .map((subcategory) => (
-                            <SelectItem key={subcategory.id} value={subcategory.id}>
-                              {subcategory.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
+                      {/* Categorias para Vídeos */}
+                      <div className="space-y-4">
+                        <h4 className="text-sm font-semibold text-purple-600 dark:text-purple-400 flex items-center gap-2">
+                          <Video className="h-4 w-4" />
+                          Categorias para Vídeos
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="video-category">Categoria</Label>
+                            <Select
+                              value={defaultSettings.video_category || "none"}
+                              onValueChange={(value) => 
+                                setDefaultSettings(prev => ({ 
+                                  ...prev, 
+                                  video_category: value === "none" ? "" : value 
+                                }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma categoria" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Nenhuma</SelectItem>
+                                {categories
+                                  .filter(category => category.type === 'video')
+                                  .map((category) => (
+                                    <SelectItem key={category.id} value={category.id}>
+                                      {category.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="video-subcategory">Subcategoria</Label>
+                            <Select
+                              value={defaultSettings.video_subcategory || "none"}
+                              onValueChange={(value) => 
+                                setDefaultSettings(prev => ({ 
+                                  ...prev, 
+                                  video_subcategory: value === "none" ? "" : value 
+                                }))
+                              }
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Selecione uma subcategoria" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Nenhuma</SelectItem>
+                                {subcategories
+                                  .filter(sub => !defaultSettings.video_category || sub.category_id === defaultSettings.video_category)
+                                  .map((subcategory) => (
+                                    <SelectItem key={subcategory.id} value={subcategory.id}>
+                                      {subcategory.name}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
-              <Separator />
-
-              {/* Categorias para Vídeos */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wide flex items-center gap-2">
-                  <Video className="h-4 w-4" />
-                  Categorias para Vídeos
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="video-category">Categoria</Label>
-                    <Select
-                      value={defaultSettings.video_category || "none"}
-                      onValueChange={(value) => 
-                        setDefaultSettings(prev => ({ 
-                          ...prev, 
-                          video_category: value === "none" ? "" : value 
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {categories
-                          .filter(category => category.type === 'video')
-                          .map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="video-subcategory">Subcategoria</Label>
-                    <Select
-                      value={defaultSettings.video_subcategory || "none"}
-                      onValueChange={(value) => 
-                        setDefaultSettings(prev => ({ 
-                          ...prev, 
-                          video_subcategory: value === "none" ? "" : value 
-                        }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma subcategoria" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Nenhuma</SelectItem>
-                        {subcategories
-                          .filter(sub => !defaultSettings.video_category || sub.category_id === defaultSettings.video_category)
-                          .map((subcategory) => (
-                            <SelectItem key={subcategory.id} value={subcategory.id}>
-                              {subcategory.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Status e Destaques */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Status e Destaques
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="default-status">Status de Publicação</Label>
-                    <Select
-                      value={defaultSettings.publish_status}
-                      onValueChange={(value: any) => 
-                        setDefaultSettings(prev => ({ ...prev, publish_status: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="draft">Rascunho</SelectItem>
-                        <SelectItem value="published">Publicado</SelectItem>
-                        <SelectItem value="hidden">Oculto</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Switch
-                      id="default-featured"
-                      checked={defaultSettings.is_featured}
-                      onCheckedChange={(checked) => 
-                        setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
-                      }
-                    />
-                    <Label htmlFor="default-featured">Item em Destaque</Label>
-                  </div>
-                  <div className="flex items-center space-x-2 pt-6">
-                    <Switch
-                      id="default-homepage"
-                      checked={defaultSettings.homepage_featured}
-                      onCheckedChange={(checked) => 
-                        setDefaultSettings(prev => ({ ...prev, homepage_featured: checked }))
-                      }
-                    />
-                    <Label htmlFor="default-homepage">Destaque na Homepage</Label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
+                  {/* Status e Destaques */}
+                  <Collapsible open={isStatusOpen} onOpenChange={setIsStatusOpen}>
+                    <CollapsibleTrigger asChild>
+                      <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg cursor-pointer hover:bg-muted/50">
+                        <div className="flex items-center gap-2">
+                          <ToggleLeft className="h-4 w-4" />
+                          <span className="text-sm font-semibold uppercase tracking-wide">Status e Destaques</span>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${isStatusOpen ? 'rotate-180' : ''}`} />
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="default-status">Status de Publicação</Label>
+                          <Select
+                            value={defaultSettings.publish_status}
+                            onValueChange={(value: any) => 
+                              setDefaultSettings(prev => ({ ...prev, publish_status: value }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="draft">Rascunho</SelectItem>
+                              <SelectItem value="published">Publicado</SelectItem>
+                              <SelectItem value="hidden">Oculto</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="flex items-center space-x-2 pt-6">
+                          <Switch
+                            id="default-featured"
+                            checked={defaultSettings.is_featured}
+                            onCheckedChange={(checked) => 
+                              setDefaultSettings(prev => ({ ...prev, is_featured: checked }))
+                            }
+                          />
+                          <Label htmlFor="default-featured">Item em Destaque</Label>
+                        </div>
+                        <div className="flex items-center space-x-2 pt-6">
+                          <Switch
+                            id="default-homepage"
+                            checked={defaultSettings.homepage_featured}
+                            onCheckedChange={(checked) => 
+                              setDefaultSettings(prev => ({ ...prev, homepage_featured: checked }))
+                            }
+                          />
+                          <Label htmlFor="default-homepage">Destaque na Homepage</Label>
+                        </div>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </CardContent>
+              </CollapsibleContent>
+            </Collapsible>
           </Card>
 
           <Card>
@@ -691,33 +697,33 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                 Arraste e solte ou clique para selecionar fotos e vídeos
               </CardDescription>
             </CardHeader>
-        <CardContent>
-          <div
-            {...getRootProps()}
-            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              isDragActive 
-                ? 'border-primary bg-primary/5' 
-                : 'border-muted-foreground/25 hover:border-primary/50'
-            }`}
-          >
-            <input {...getInputProps()} />
-            <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            {isDragActive ? (
-              <p className="text-lg">Solte os arquivos aqui...</p>
-            ) : (
-              <div>
-                <p className="text-lg mb-2">
-                  Arraste e solte arquivos aqui, ou clique para selecionar
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Suporte para imagens (JPG, PNG, WebP, GIF) e vídeos (MP4, WebM, MOV)
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Sem limite de tamanho
-                </p>
+            <CardContent>
+              <div
+                {...getRootProps()}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  isDragActive 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-muted-foreground/25 hover:border-primary/50'
+                }`}
+              >
+                <input {...getInputProps()} />
+                <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                {isDragActive ? (
+                  <p className="text-lg">Solte os arquivos aqui...</p>
+                ) : (
+                  <div>
+                    <p className="text-lg mb-2">
+                      Arraste e solte arquivos aqui, ou clique para selecionar
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Suporte para imagens (JPG, PNG, WebP, GIF) e vídeos (MP4, WebM, MOV)
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Sem limite de tamanho
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
             </CardContent>
           </Card>
 
@@ -729,59 +735,61 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                 Adicionar por URL
               </CardTitle>
               <CardDescription>
-                Adicione imagens ou vídeos a partir de um link externo
+                Adicione imagens ou vídeos a partir de links externos. Use Shift+Enter para adicionar múltiplas URLs.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex gap-2">
-                <Input
-                  type="url"
-                  placeholder="https://exemplo.com/imagem.jpg"
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Textarea
+                  placeholder="https://exemplo.com/imagem.jpg&#10;https://exemplo.com/imagem2.jpg&#10;(Shift+Enter para nova linha)"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleAddUrl()}
-                  className="flex-1"
+                  onKeyDown={handleUrlKeyDown}
+                  className="flex-1 min-h-[80px]"
+                  rows={3}
                 />
-                <Button onClick={handleAddUrl} disabled={!urlInput.trim()}>
+                <Button onClick={handleAddUrls} disabled={!urlInput.trim()} className="sm:self-start">
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                URLs de imagens (JPG, PNG, WebP) ou vídeos (MP4, WebM). As mesmas configurações padrão serão aplicadas.
+                Cole múltiplas URLs (uma por linha) para adicionar várias mídias de uma vez. As mesmas configurações padrão serão aplicadas a todas.
               </p>
 
               {/* URL Items List */}
               {urlItems.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium">URLs Adicionadas ({urlItems.length})</h4>
-                  {urlItems.map((item) => (
-                    <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                      {item.mediaType === 'photo' ? (
-                        <Image className="h-5 w-5 text-blue-500 flex-shrink-0" />
-                      ) : (
-                        <Video className="h-5 w-5 text-purple-500 flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm truncate">{item.url}</p>
-                        {item.status === 'uploading' && (
-                          <Progress value={item.progress} className="h-1 mt-1" />
+                  <div className="max-h-48 overflow-y-auto space-y-2">
+                    {urlItems.map((item) => (
+                      <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
+                        {item.mediaType === 'photo' ? (
+                          <Image className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                        ) : (
+                          <Video className="h-5 w-5 text-purple-500 flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm truncate">{item.url}</p>
+                          {item.status === 'uploading' && (
+                            <Progress value={item.progress} className="h-1 mt-1" />
+                          )}
+                        </div>
+                        {item.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
+                        {item.status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
+                        {item.status === 'pending' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeUrlItem(item.id)}
+                            disabled={isUploading}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
                         )}
                       </div>
-                      {item.status === 'success' && <CheckCircle className="h-5 w-5 text-green-500" />}
-                      {item.status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
-                      {item.status === 'pending' && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeUrlItem(item.id)}
-                          disabled={isUploading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -791,7 +799,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
           {(files.length > 0 || urlItems.filter(i => i.status === 'pending').length > 0) && (
             <Card>
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">
                       {files.length > 0 && `${files.length} arquivo(s)`}
@@ -865,7 +873,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                           </div>
                         )}
                       </div>
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 hidden sm:block">
                         {file.type.startsWith('image/') ? (
                           <img
                             src={file.preview}
@@ -884,7 +892,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
                         variant="outline"
                         size="sm"
                         onClick={() => removeFile(file.id)}
-                        disabled={isUploading}
+                        disabled={uploadStatus[file.id] === 'uploading'}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -895,12 +903,11 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
             </Card>
           )}
         </TabsContent>
-        
+
         <TabsContent value="library">
           <MediaSelector 
-            onSelect={(mediaItem) => {
-              // Just show details for now, can be extended later
-              console.log('Selected media:', mediaItem);
+            onSelect={(media) => {
+              console.log('Selected media:', media);
             }}
           />
         </TabsContent>

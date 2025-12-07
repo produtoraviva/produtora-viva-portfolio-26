@@ -61,7 +61,7 @@ const Footer = () => {
       </div>
 
       <div className="mt-20 text-[10px] text-muted-foreground uppercase font-mono tracking-wider">
-        &copy; {new Date().getFullYear()} Rubens Photofilm. Todos os direitos reservados.
+        &copy; {new Date().getFullYear()} Todos os direitos reservados.
       </div>
     </footer>
   );
