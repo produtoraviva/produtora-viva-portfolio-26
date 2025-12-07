@@ -483,16 +483,22 @@ export function CategoryManager() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-medium">{category.name}</h4>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-1">
                             <Badge variant="default">Foto</Badge>
                             <Badge variant={category.is_active ? 'outline' : 'destructive'}>
                               {category.is_active ? 'Ativo' : 'Inativo'}
                             </Badge>
                           </div>
+                          {/* Show subcategories in small text */}
+                          {getCategorySubcategories(category.id).length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Subcategorias: {getCategorySubcategories(category.id).map(s => s.name).join(', ')}
+                            </p>
+                          )}
                         </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 ml-4">
                         <Button
                           variant="outline"
                           size="sm"
@@ -598,16 +604,22 @@ export function CategoryManager() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-between">
-                        <div>
+                        <div className="flex-1">
                           <h4 className="font-medium">{category.name}</h4>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 mt-1">
                             <Badge variant="secondary">Vídeo</Badge>
                             <Badge variant={category.is_active ? 'outline' : 'destructive'}>
                               {category.is_active ? 'Ativo' : 'Inativo'}
                             </Badge>
                           </div>
+                          {/* Show subcategories in small text */}
+                          {getCategorySubcategories(category.id).length > 0 && (
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Subcategorias: {getCategorySubcategories(category.id).map(s => s.name).join(', ')}
+                            </p>
+                          )}
                         </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 ml-4">
                         <Button
                           variant="outline"
                           size="sm"
@@ -657,177 +669,6 @@ export function CategoryManager() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Subcategories Section */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Tag className="h-5 w-5" />
-              <CardTitle>Subcategorias</CardTitle>
-            </div>
-            <Button
-              onClick={() => setIsCreatingSubcategory(true)}
-              size="sm"
-              disabled={categories.length === 0}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Subcategoria
-            </Button>
-          </div>
-          <CardDescription>
-            Gerencie as subcategorias vinculadas às categorias principais
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isCreatingSubcategory && (
-            <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="subcategory-name">Nome</Label>
-                  <Input
-                    id="subcategory-name"
-                    value={newSubcategoryData.name}
-                    onChange={(e) => setNewSubcategoryData({ ...newSubcategoryData, name: e.target.value })}
-                    placeholder="Nome da subcategoria"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="subcategory-category">Categoria</Label>
-                  <Select
-                    value={newSubcategoryData.category_id}
-                    onValueChange={(value) => setNewSubcategoryData({ ...newSubcategoryData, category_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name} ({category.type === 'photo' ? 'Foto' : 'Vídeo'})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex items-end gap-2">
-                  <Button onClick={handleCreateSubcategory} size="sm">
-                    <Save className="h-4 w-4 mr-2" />
-                    Salvar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCreatingSubcategory(false)}
-                    size="sm"
-                  >
-                    <X className="h-4 w-4 mr-2" />
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            {categories.map((category) => {
-              const categorySubcategories = subcategories.filter(s => s.category_id === category.id);
-              
-              if (categorySubcategories.length === 0) return null;
-              
-              return (
-                <div key={category.id} className="border rounded-lg p-4">
-                  <h4 className="font-medium mb-3 flex items-center gap-2">
-                    {category.name}
-                    <Badge variant={category.type === 'photo' ? 'default' : 'secondary'}>
-                      {category.type === 'photo' ? 'Foto' : 'Vídeo'}
-                    </Badge>
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {categorySubcategories.map((subcategory) => (
-                      <div
-                        key={subcategory.id}
-                        className="border rounded-lg p-3 bg-muted/30"
-                      >
-                        {editingSubcategory?.id === subcategory.id ? (
-                          <div className="space-y-3">
-                            <Input
-                              value={editingSubcategory.name}
-                              onChange={(e) => setEditingSubcategory({ ...editingSubcategory, name: e.target.value })}
-                            />
-                            <div className="flex gap-2">
-                              <Button
-                                onClick={() => handleUpdateSubcategory(editingSubcategory)}
-                                size="sm"
-                              >
-                                <Save className="h-4 w-4 mr-2" />
-                                Salvar
-                              </Button>
-                              <Button
-                                variant="outline"
-                                onClick={() => setEditingSubcategory(null)}
-                                size="sm"
-                              >
-                                <X className="h-4 w-4 mr-2" />
-                                Cancelar
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <span className="font-medium">{subcategory.name}</span>
-                              <Badge 
-                                variant={subcategory.is_active ? 'outline' : 'destructive'}
-                                className="ml-2"
-                              >
-                                {subcategory.is_active ? 'Ativo' : 'Inativo'}
-                              </Badge>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => setEditingSubcategory(subcategory)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="destructive" size="sm">
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Tem certeza que deseja excluir a subcategoria "{subcategory.name}"? 
-                                      Esta ação não pode ser desfeita.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleDeleteSubcategory(subcategory.id)}
-                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                    >
-                                      Excluir
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Subcategory Modal */}
       <Dialog open={subcategoryModalOpen} onOpenChange={(open) => !open && handleCloseSubcategoryModal()}>
