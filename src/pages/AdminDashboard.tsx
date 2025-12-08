@@ -151,8 +151,8 @@ export default function AdminDashboard() {
         onLogout={handleLogout}
       />
 
-      {/* Main Content */}
-      <main className="transition-all duration-300 p-4 md:p-6 lg:p-8 lg:ml-56">
+      {/* Main Content - Add top padding for mobile header */}
+      <main className="transition-all duration-300 p-4 md:p-6 lg:p-8 lg:ml-56 pt-20 lg:pt-8">
         <div className="max-w-[1600px] mx-auto">
           {renderContent()}
         </div>

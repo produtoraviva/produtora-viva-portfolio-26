@@ -197,31 +197,31 @@ const PortfolioPreview = () => {
         <img
           src={item.thumbnail_url}
           alt={item.title}
-          className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100 group-hover:scale-[1.03]"
+          className="w-full h-full object-cover transition-all duration-700"
         />
       ) : (
         <LazyImage
           src={item.image}
           alt={item.title}
-          className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100 group-hover:scale-[1.03]"
+          className="w-full h-full object-cover transition-all duration-700"
         />
       )}
       
       {/* Play Icon for Video */}
       {item.media_type === "video" && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
           <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
         </div>
       )}
       
-      {/* Overlay - Only show category if it exists and is not empty */}
-      <div className="portfolio-overlay">
+      {/* Overlay - Bottom info only, no darkening */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         {(item.subcategory || (item.category && item.category.trim() !== '')) && (
-          <span className="text-[8px] md:text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
+          <span className="text-[8px] md:text-[10px] font-mono text-white/80 uppercase tracking-wider mb-1 block">
             {item.subcategory || item.category}
           </span>
         )}
-        <h3 className="text-sm md:text-xl font-bold uppercase">{item.title}</h3>
+        <h3 className="text-sm md:text-lg font-light uppercase text-white">{item.title}</h3>
       </div>
     </div>
   );

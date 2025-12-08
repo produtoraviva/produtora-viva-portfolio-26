@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Star, Quote, ChevronLeft, ChevronRight, Mouse } from 'lucide-react';
+import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Testimonial {
@@ -22,7 +22,6 @@ const Testimonials = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
-  const carouselRef = useRef<HTMLDivElement>(null);
   const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ const Testimonials = () => {
     if (!isDragging && testimonials.length > 1) {
       autoPlayRef.current = setInterval(() => {
         handleNext();
-      }, 5000);
+      }, 6000);
       return () => {
         if (autoPlayRef.current) clearInterval(autoPlayRef.current);
       };
@@ -130,137 +129,123 @@ const Testimonials = () => {
     return null;
   }
 
-  const translateValue = `translateX(calc(-${currentIndex * 100}% - ${isDragging ? dragOffset : 0}px))`;
+  const currentTestimonial = testimonials[currentIndex];
 
   return (
     <section 
       id="depoimentos" 
-      className="py-16 border-t border-border bg-background"
+      className="py-24 md:py-32 border-t border-border bg-background relative overflow-hidden"
     >
-      <div className="max-w-[1400px] mx-auto px-4">
+      {/* Large decorative quote */}
+      <div className="absolute top-12 left-8 md:left-16 opacity-[0.03] pointer-events-none">
+        <Quote className="w-32 h-32 md:w-64 md:h-64" />
+      </div>
+
+      <div className="max-w-[1200px] mx-auto px-4 relative">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <div>
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
-              Depoimentos
-            </p>
-            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tighter">
-              O que dizem
-            </h2>
-          </div>
-          
-          {/* Navigation arrows - desktop */}
-          {testimonials.length > 1 && (
-            <div className="hidden md:flex items-center gap-3 mt-4 md:mt-0">
-              <button 
-                onClick={handlePrev}
-                className="p-2 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
-                aria-label="Anterior"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <span className="text-xs font-mono text-muted-foreground min-w-[50px] text-center">
-                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
-              </span>
-              <button 
-                onClick={handleNext}
-                className="p-2 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
-                aria-label="Próximo"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+        <div className="text-center mb-16 md:mb-20">
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+            Depoimentos
+          </p>
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-light uppercase tracking-tighter">
+            O que nossos
+            <br />
+            <span className="text-muted-foreground">clientes dizem</span>
+          </h2>
         </div>
 
-        {/* Testimonial Content Area with Gray Background - Compact Layout */}
-        <div className="relative bg-secondary py-8 px-4 md:px-8">
-          {/* Carousel */}
-          <div 
-            className="overflow-hidden cursor-grab active:cursor-grabbing"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div 
-              ref={carouselRef}
-              className={`flex ${isDragging ? '' : 'transition-transform duration-700 ease-out'}`}
-              style={{ transform: translateValue }}
-            >
-              {testimonials.map((testimonial) => (
-                <div 
-                  key={testimonial.id}
-                  className="w-full flex-shrink-0"
-                >
-                  <div className="max-w-5xl mx-auto select-none">
-                    {/* Compact horizontal layout: Left (photo/name) | Right (stars/text) */}
-                    <div className="flex flex-row gap-4 sm:gap-6 md:gap-10 items-start">
-                      {/* Left side - Author info */}
-                      <div className="flex-shrink-0 flex flex-col items-center text-center w-16 sm:w-24 md:w-40">
-                        {testimonial.image && (
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 mb-2 sm:mb-3 overflow-hidden border border-border">
-                            <img
-                              src={testimonial.image}
-                              alt={testimonial.name}
-                              className="w-full h-full object-cover grayscale"
-                            />
-                          </div>
-                        )}
-                        <div className="font-bold uppercase tracking-[0.05em] sm:tracking-[0.1em] text-[9px] sm:text-[10px] md:text-xs mb-0.5 sm:mb-1 leading-tight">
-                          {testimonial.name}
-                        </div>
-                        <div className="text-[8px] sm:text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider leading-tight">
-                          {testimonial.event}
-                        </div>
-                      </div>
-                      
-                      {/* Right side - Stars and text */}
-                      <div className="flex-1 min-w-0">
-                        {/* Stars */}
-                        <div className="flex gap-0.5 sm:gap-1 mb-2 sm:mb-3 md:mb-4">
-                          {[...Array(testimonial.rating)].map((_, i) => (
-                            <Star key={i} className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground fill-current" />
-                          ))}
-                        </div>
+        {/* Main Testimonial Card */}
+        <div 
+          className="relative cursor-grab active:cursor-grabbing"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className="bg-secondary/50 border border-border p-8 md:p-12 lg:p-16 select-none">
+            <div className="max-w-4xl mx-auto">
+              {/* Quote Icon */}
+              <div className="mb-8">
+                <Quote className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground/30" />
+              </div>
 
-                        {/* Text */}
-                        <blockquote className="text-sm sm:text-base md:text-lg lg:text-xl font-light leading-relaxed tracking-tight italic">
-                          "{testimonial.text}"
-                        </blockquote>
-                      </div>
+              {/* Testimonial Text */}
+              <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed tracking-tight mb-10 md:mb-12">
+                "{currentTestimonial.text}"
+              </blockquote>
+
+              {/* Author Info */}
+              <div className="flex items-center gap-4 md:gap-6">
+                {currentTestimonial.image && (
+                  <div className="w-14 h-14 md:w-16 md:h-16 overflow-hidden border border-border flex-shrink-0">
+                    <img
+                      src={currentTestimonial.image}
+                      alt={currentTestimonial.name}
+                      className="w-full h-full object-cover grayscale"
+                    />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-1">
+                    <span className="font-bold uppercase tracking-[0.1em] text-sm md:text-base">
+                      {currentTestimonial.name}
+                    </span>
+                    <div className="flex gap-0.5">
+                      {[...Array(currentTestimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 text-foreground fill-current" />
+                      ))}
                     </div>
                   </div>
+                  <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
+                    {currentTestimonial.event}
+                  </span>
                 </div>
-              ))}
+              </div>
             </div>
           </div>
 
-          {/* Scroll indicator with arrow - mobile */}
+          {/* Navigation */}
           {testimonials.length > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6 md:hidden text-muted-foreground">
-              <ChevronLeft className="w-4 h-4" />
-              <span className="text-[9px] uppercase tracking-[0.15em]">Scroll</span>
-              <ChevronRight className="w-4 h-4" />
-            </div>
-          )}
-          
-          {/* Progress dots */}
-          {testimonials.length > 1 && (
-            <div className="flex justify-center gap-2 mt-4">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`h-0.5 transition-all duration-300 ${
-                    index === currentIndex ? "bg-foreground w-6" : "bg-muted-foreground/30 w-3"
-                  }`}
-                  aria-label={`Ir para depoimento ${index + 1}`}
-                />
-              ))}
+            <div className="flex items-center justify-between mt-8">
+              {/* Prev/Next Buttons */}
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={handlePrev}
+                  className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                  aria-label="Anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={handleNext}
+                  className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                  aria-label="Próximo"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Counter */}
+              <span className="text-sm font-mono text-muted-foreground">
+                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
+              </span>
+
+              {/* Progress Dots */}
+              <div className="flex gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`h-1 transition-all duration-300 ${
+                      index === currentIndex ? "bg-foreground w-8" : "bg-muted-foreground/30 w-4 hover:bg-muted-foreground/50"
+                    }`}
+                    aria-label={`Ir para depoimento ${index + 1}`}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </div>

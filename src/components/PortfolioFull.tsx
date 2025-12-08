@@ -465,19 +465,19 @@ const PortfolioFull = () => {
                       <img
                         src={item.thumbnail_url}
                         alt={item.title}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-all duration-700"
                       />
                     ) : (
                       <video
                         src={item.file_url}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-all duration-700"
                         muted
                         playsInline
                       />
                     )}
                     {/* Play icon overlay for videos */}
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
                         <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
                       </div>
                     </div>
@@ -486,30 +486,17 @@ const PortfolioFull = () => {
                   <img
                     src={item.thumbnail_url || item.file_url}
                     alt={item.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover transition-all duration-700"
                   />
                 )}
-                <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-all duration-700 flex items-center justify-center p-8 backdrop-blur-sm">
-                  <div className="text-center text-white space-y-3">
-                    {item.media_type === "video" ? (
-                      <Video className="h-10 w-10 mx-auto mb-3" />
-                    ) : (
-                      <Camera className="h-10 w-10 mx-auto mb-3" />
-                    )}
-                    <h3 className="font-semibold text-xl">{item.title}</h3>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {item.category && (
-                        <span className="px-3 py-1 bg-white/20 text-xs font-medium">
-                          {getCategoryLabel(item.category)}
-                        </span>
-                      )}
-                      {item.subcategory && (
-                        <span className="px-3 py-1 bg-white/20 text-xs font-medium">
-                          {getSubcategoryLabel(item.subcategory)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                {/* Overlay - Bottom info only */}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <h3 className="font-light text-lg text-white uppercase">{item.title}</h3>
+                  {item.category && (
+                    <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider">
+                      {getCategoryLabel(item.category)}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
