@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Check, Plus, ShoppingCart } from 'lucide-react';
+import { Check, Plus, Share2, X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
-import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface Photo {
   id: string;
@@ -21,8 +21,8 @@ interface FotoFacilPhotoGridProps {
 const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridProps) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
-  const { addItem, removeItem, isInCart, itemCount } = useFotoFacilCart();
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
+  const { addItem, removeItem, isInCart } = useFotoFacilCart();
 
   useEffect(() => {
     loadPhotos();
@@ -58,11 +58,13 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
     return photo.price_cents ?? defaultPriceCents;
   };
 
-  const handleToggleCart = (photo: Photo) => {
+  const handleToggleCart = (photo: Photo, e?: React.MouseEvent) => {
+    e?.stopPropagation();
     const priceCents = getPhotoPrice(photo);
     
     if (isInCart(photo.id)) {
       removeItem(photo.id);
+      toast.success('Foto removida do carrinho');
     } else {
       addItem({
         photoId: photo.id,
@@ -71,13 +73,46 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
         thumbUrl: photo.thumb_url || photo.url,
         priceCents
       });
+      toast.success('Foto adicionada ao carrinho!');
     }
   };
+
+  const handleShare = async (photo: Photo, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const shareUrl = window.location.href;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: photo.title || 'Confira esta foto!',
+          text: 'Veja esta foto incrível no FOTOFÁCIL',
+          url: shareUrl
+        });
+      } catch (err) {
+        // User cancelled or error
+      }
+    } else {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success('Link copiado!');
+    }
+  };
+
+  const navigatePhoto = (direction: 'prev' | 'next') => {
+    if (selectedPhotoIndex === null) return;
+    
+    if (direction === 'prev' && selectedPhotoIndex > 0) {
+      setSelectedPhotoIndex(selectedPhotoIndex - 1);
+    } else if (direction === 'next' && selectedPhotoIndex < photos.length - 1) {
+      setSelectedPhotoIndex(selectedPhotoIndex + 1);
+    }
+  };
+
+  const selectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null;
 
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-300 border-t-gray-900"></div>
       </div>
     );
   }
@@ -92,60 +127,57 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
 
   return (
     <div>
-      {/* Cart Floating Button */}
-      {itemCount > 0 && (
-        <div className="fixed bottom-6 right-6 z-50">
-          <Link to="/fotofacil/carrinho">
-            <Button size="lg" className="bg-gray-900 hover:bg-gray-800 text-white shadow-lg">
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Ver Carrinho ({itemCount})
-            </Button>
-          </Link>
-        </div>
-      )}
-
       {/* Photos Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {photos.map(photo => {
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+        {photos.map((photo, index) => {
           const inCart = isInCart(photo.id);
           const price = getPhotoPrice(photo);
 
           return (
             <div 
               key={photo.id}
-              className="group relative bg-white border border-gray-200 rounded-lg overflow-hidden"
+              className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
             >
               {/* Photo */}
               <div 
                 className="aspect-square bg-gray-100 cursor-pointer overflow-hidden"
-                onClick={() => setSelectedPhoto(photo)}
+                onClick={() => setSelectedPhotoIndex(index)}
               >
                 <img 
                   src={photo.thumb_url || photo.url}
                   alt={photo.title || 'Foto'}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
                 />
               </div>
 
               {/* Add/Remove Button Overlay */}
               <button
-                onClick={() => handleToggleCart(photo)}
-                className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                onClick={(e) => handleToggleCart(photo, e)}
+                className={`absolute top-2 right-2 w-9 h-9 rounded-full flex items-center justify-center transition-all shadow-md ${
                   inCart 
-                    ? 'bg-green-500 text-white' 
-                    : 'bg-white/90 text-gray-700 hover:bg-gray-900 hover:text-white'
+                    ? 'bg-emerald-500 text-white' 
+                    : 'bg-white/95 text-gray-700 hover:bg-gray-900 hover:text-white'
                 }`}
               >
                 {inCart ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
               </button>
 
-              {/* Price */}
+              {/* Price & Info */}
               <div className="p-3">
-                <p className="text-sm font-semibold text-gray-900">
-                  {formatPrice(price)}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-900">
+                    {formatPrice(price)}
+                  </p>
+                  <button
+                    onClick={(e) => handleShare(photo, e)}
+                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                </div>
                 {photo.title && (
-                  <p className="text-xs text-gray-500 truncate">{photo.title}</p>
+                  <p className="text-xs text-gray-500 truncate mt-1">{photo.title}</p>
                 )}
               </div>
             </div>
@@ -156,43 +188,94 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
       {/* Photo Modal */}
       {selectedPhoto && (
         <div 
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
-          onClick={() => setSelectedPhoto(null)}
+          className="fixed inset-0 z-50 bg-black/95 flex flex-col"
+          onClick={() => setSelectedPhotoIndex(null)}
         >
-          <div className="relative max-w-4xl w-full" onClick={e => e.stopPropagation()}>
+          {/* Close Button */}
+          <button
+            onClick={() => setSelectedPhotoIndex(null)}
+            className="absolute top-4 right-4 z-10 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-10 h-10 flex items-center justify-center transition-all"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          {/* Navigation Arrows */}
+          {selectedPhotoIndex > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigatePhoto('prev'); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-10 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 flex items-center justify-center transition-all"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          )}
+          {selectedPhotoIndex < photos.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); navigatePhoto('next'); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-10 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full w-12 h-12 flex items-center justify-center transition-all"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          )}
+
+          {/* Image Container */}
+          <div className="flex-1 flex items-center justify-center p-4 pb-24" onClick={e => e.stopPropagation()}>
             <img 
               src={selectedPhoto.url}
               alt={selectedPhoto.title || 'Foto'}
-              className="w-full h-auto max-h-[80vh] object-contain rounded-lg"
+              className="max-w-full max-h-full object-contain"
             />
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between bg-white/95 rounded-lg p-4">
-              <div>
-                <p className="font-semibold">{selectedPhoto.title || 'Foto'}</p>
-                <p className="text-lg font-bold">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
+          </div>
+
+          {/* Bottom Info Bar */}
+          <div 
+            className="absolute bottom-0 left-0 right-0 bg-white p-4 md:p-5"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-4 text-center sm:text-left">
+                <div>
+                  <p className="font-semibold text-gray-900">{selectedPhoto.title || 'Foto'}</p>
+                  <p className="text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
+                </div>
               </div>
-              <Button
-                onClick={() => handleToggleCart(selectedPhoto)}
-                className={isInCart(selectedPhoto.id) ? 'bg-green-500 hover:bg-green-600' : 'bg-gray-900 hover:bg-gray-800'}
-              >
-                {isInCart(selectedPhoto.id) ? (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    No carrinho
-                  </>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar
-                  </>
-                )}
-              </Button>
+              
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleShare(selectedPhoto)}
+                  className="border-gray-300"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Compartilhar
+                </Button>
+                
+                <Button
+                  onClick={() => handleToggleCart(selectedPhoto)}
+                  className={`${isInCart(selectedPhoto.id) 
+                    ? 'bg-emerald-500 hover:bg-emerald-600' 
+                    : 'bg-gray-900 hover:bg-gray-800'
+                  } text-white`}
+                >
+                  {isInCart(selectedPhoto.id) ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      No carrinho
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Adicionar
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
-            <button
-              onClick={() => setSelectedPhoto(null)}
-              className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/70"
-            >
-              ✕
-            </button>
+          </div>
+
+          {/* Photo Counter */}
+          <div className="absolute top-4 left-4 text-white/80 text-sm bg-white/10 px-3 py-1 rounded-full">
+            {selectedPhotoIndex + 1} / {photos.length}
           </div>
         </div>
       )}

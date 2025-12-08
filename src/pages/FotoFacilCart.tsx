@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, ShoppingBag, CreditCard } from 'lucide-react';
+import { ArrowLeft, Trash2, ShoppingBag, CreditCard, Shield, Lock, Tag, X, Check, Copy, Clock, QrCode } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,12 +18,37 @@ const FotoFacilCart = () => {
     email: '',
     cpf: ''
   });
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    id: string;
+    code: string;
+    discountType: string;
+    discountValue: number;
+  } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
   const [paymentData, setPaymentData] = useState<{
     orderId: string;
     qrCode: string;
     qrCodeBase64: string;
     pixCopiaCola: string;
   } | null>(null);
+  const paymentCheckInterval = useRef<NodeJS.Timeout | null>(null);
+
+  // Calculate discount
+  const discountCents = appliedCoupon 
+    ? appliedCoupon.discountType === 'percentage'
+      ? Math.round(totalCents * (appliedCoupon.discountValue / 100))
+      : appliedCoupon.discountValue
+    : 0;
+  const finalTotalCents = Math.max(0, totalCents - discountCents);
+
+  useEffect(() => {
+    return () => {
+      if (paymentCheckInterval.current) {
+        clearInterval(paymentCheckInterval.current);
+      }
+    };
+  }, []);
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -64,12 +89,94 @@ const FotoFacilCart = () => {
     return true;
   };
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    
+    setCouponLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('fotofacil_coupons')
+        .select('*')
+        .eq('code', couponCode.toUpperCase().trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      if (!data) {
+        toast.error('Cupom inválido ou expirado');
+        return;
+      }
+
+      // Check validity dates
+      const now = new Date();
+      if (data.valid_from && new Date(data.valid_from) > now) {
+        toast.error('Cupom ainda não está ativo');
+        return;
+      }
+      if (data.valid_until && new Date(data.valid_until) < now) {
+        toast.error('Cupom expirado');
+        return;
+      }
+
+      // Check min order
+      if (data.min_order_cents && totalCents < data.min_order_cents) {
+        toast.error(`Pedido mínimo: ${formatPrice(data.min_order_cents)}`);
+        return;
+      }
+
+      // Check max uses
+      if (data.max_uses && data.current_uses >= data.max_uses) {
+        toast.error('Cupom esgotado');
+        return;
+      }
+
+      setAppliedCoupon({
+        id: data.id,
+        code: data.code,
+        discountType: data.discount_type,
+        discountValue: data.discount_value
+      });
+      toast.success('Cupom aplicado!');
+      setCouponCode('');
+    } catch (error) {
+      console.error('Error applying coupon:', error);
+      toast.error('Erro ao aplicar cupom');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+  };
+
   const handleCheckout = () => {
     if (items.length === 0) {
       toast.error('Seu carrinho está vazio');
       return;
     }
     setStep('checkout');
+  };
+
+  const startPaymentCheck = (orderId: string) => {
+    paymentCheckInterval.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('fotofacil-check-payment', {
+          body: { orderId }
+        });
+
+        if (error) throw error;
+
+        if (data.status === 'paid') {
+          clearInterval(paymentCheckInterval.current!);
+          clearCart();
+          navigate(`/fotofacil/entrega/${orderId}/${data.deliveryToken}`);
+        }
+      } catch (error) {
+        console.error('Error checking payment:', error);
+      }
+    }, 5000);
   };
 
   const handlePayment = async () => {
@@ -100,7 +207,8 @@ const FotoFacilCart = () => {
             photo_id: item.photoId,
             title: item.title,
             price_cents: item.priceCents
-          }))
+          })),
+          couponId: appliedCoupon?.id || null
         }
       });
 
@@ -117,6 +225,9 @@ const FotoFacilCart = () => {
         pixCopiaCola: data.pixCopiaCola || ''
       });
       setStep('payment');
+      
+      // Start checking for payment
+      startPaymentCheck(data.orderId);
 
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -131,61 +242,78 @@ const FotoFacilCart = () => {
     toast.success('Código PIX copiado!');
   };
 
+  // Payment Screen
   if (step === 'payment' && paymentData) {
     return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <h1 className="text-2xl font-bold tracking-tight text-center">Pagamento PIX</h1>
+            <h1 className="text-xl font-bold tracking-tight text-center text-gray-900">Pagamento PIX</h1>
           </div>
         </header>
 
-        <main className="max-w-2xl mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-              <CreditCard className="w-8 h-8 text-green-600" />
+        <main className="max-w-lg mx-auto px-4 py-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
+                <QrCode className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pedido Criado!</h2>
+              <p className="text-gray-600">Escaneie o QR Code ou copie o código PIX</p>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Pedido Criado!</h2>
-            <p className="text-gray-600">Escaneie o QR Code ou copie o código PIX</p>
-            <p className="text-lg font-semibold mt-2">Total: {formatPrice(totalCents)}</p>
-          </div>
 
-          {paymentData.qrCodeBase64 && (
-            <div className="flex justify-center mb-6">
-              <img 
-                src={`data:image/png;base64,${paymentData.qrCodeBase64}`} 
-                alt="QR Code PIX"
-                className="w-64 h-64 border border-gray-200 rounded-lg"
-              />
+            <div className="bg-emerald-50 rounded-xl p-4 mb-6 text-center">
+              <span className="text-sm text-emerald-700">Total a pagar</span>
+              <p className="text-3xl font-bold text-emerald-600">{formatPrice(finalTotalCents)}</p>
             </div>
-          )}
 
-          {paymentData.pixCopiaCola && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-gray-600 mb-2">PIX Copia e Cola:</p>
-              <div className="flex gap-2">
-                <Input 
-                  value={paymentData.pixCopiaCola} 
-                  readOnly 
-                  className="font-mono text-xs bg-white"
-                />
-                <Button onClick={() => copyToClipboard(paymentData.pixCopiaCola)}>
-                  Copiar
-                </Button>
+            {paymentData.qrCodeBase64 && (
+              <div className="flex justify-center mb-6">
+                <div className="bg-white p-4 rounded-xl border-2 border-gray-200">
+                  <img 
+                    src={`data:image/png;base64,${paymentData.qrCodeBase64}`} 
+                    alt="QR Code PIX"
+                    className="w-48 h-48"
+                  />
+                </div>
+              </div>
+            )}
+
+            {paymentData.pixCopiaCola && (
+              <div className="mb-6">
+                <p className="text-sm text-gray-600 mb-2 font-medium">PIX Copia e Cola:</p>
+                <div className="flex gap-2">
+                  <Input 
+                    value={paymentData.pixCopiaCola} 
+                    readOnly 
+                    className="font-mono text-xs bg-gray-50"
+                  />
+                  <Button onClick={() => copyToClipboard(paymentData.pixCopiaCola)} variant="outline">
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl mb-6">
+              <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">Aguardando pagamento...</p>
+                <p className="text-xs text-blue-700">Você será redirecionado automaticamente após a confirmação</p>
               </div>
             </div>
-          )}
 
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-yellow-800">
-              <strong>Atenção:</strong> Após o pagamento, você receberá um e-mail com o link para baixar suas fotos. 
-              O link expira em 24 horas.
-            </p>
+            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl">
+              <Shield className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <p className="text-xs text-amber-800">
+                Suas fotos estarão disponíveis para download imediatamente após a confirmação do pagamento.
+              </p>
+            </div>
           </div>
 
           <div className="text-center">
             <Link to="/fotofacil">
-              <Button variant="outline" className="mr-4">
+              <Button variant="ghost" className="text-gray-600">
                 Continuar Navegando
               </Button>
             </Link>
@@ -195,162 +323,298 @@ const FotoFacilCart = () => {
     );
   }
 
+  // Checkout Screen
   if (step === 'checkout') {
     return (
-      <div className="min-h-screen bg-white text-gray-900">
-        <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-          <div className="max-w-2xl mx-auto px-4 py-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+        <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+          <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900">
+              <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
               </button>
-              <h1 className="text-2xl font-bold tracking-tight">Seus Dados</h1>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">Finalizar Compra</h1>
             </div>
           </div>
         </header>
 
-        <main className="max-w-2xl mx-auto px-4 py-8">
-          <div className="space-y-6">
-            <div>
-              <Label htmlFor="name">Nome Completo *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Seu nome completo"
-                className="mt-1"
-              />
-            </div>
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <div className="grid lg:grid-cols-5 gap-8">
+            {/* Form */}
+            <div className="lg:col-span-3">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">Seus Dados</h2>
+                
+                <div className="space-y-5">
+                  <div>
+                    <Label htmlFor="name" className="text-gray-700">Nome Completo</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Seu nome completo"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                    />
+                  </div>
 
-            <div>
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                placeholder="seu@email.com"
-                className="mt-1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                O link para download será enviado para este e-mail
-              </p>
-            </div>
+                  <div>
+                    <Label htmlFor="email" className="text-gray-700">E-mail</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="seu@email.com"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                    />
+                    <p className="text-xs text-gray-500 mt-1.5">
+                      Use este e-mail para baixar suas fotos posteriormente
+                    </p>
+                  </div>
 
-            <div>
-              <Label htmlFor="cpf">CPF *</Label>
-              <Input
-                id="cpf"
-                value={formData.cpf}
-                onChange={(e) => setFormData(prev => ({ ...prev, cpf: formatCPF(e.target.value) }))}
-                placeholder="000.000.000-00"
-                className="mt-1"
-              />
-            </div>
+                  <div>
+                    <Label htmlFor="cpf" className="text-gray-700">CPF</Label>
+                    <Input
+                      id="cpf"
+                      value={formData.cpf}
+                      onChange={(e) => setFormData(prev => ({ ...prev, cpf: formatCPF(e.target.value) }))}
+                      placeholder="000.000.000-00"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                    />
+                  </div>
+                </div>
 
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-gray-600">{items.length} foto(s)</span>
-                <span className="font-bold text-lg">{formatPrice(totalCents)}</span>
+                {/* Security Badges */}
+                <div className="mt-8 pt-6 border-t border-gray-100">
+                  <div className="flex flex-wrap items-center justify-center gap-6 text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-5 h-5" />
+                      <span className="text-xs">Compra Segura</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-5 h-5" />
+                      <span className="text-xs">Dados Criptografados</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <Button 
-              onClick={handlePayment} 
-              disabled={loading}
-              className="w-full bg-gray-900 hover:bg-gray-800"
-              size="lg"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5 mr-2" />
-                  Pagar com PIX - {formatPrice(totalCents)}
-                </>
-              )}
-            </Button>
+            {/* Order Summary */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo do Pedido</h2>
+                
+                <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
+                  {items.map(item => (
+                    <div key={item.photoId} className="flex items-center gap-3">
+                      <img 
+                        src={item.thumbUrl}
+                        alt={item.title}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                        <p className="text-sm text-gray-500">{formatPrice(item.priceCents)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border-t border-gray-100 pt-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal ({items.length} foto{items.length > 1 ? 's' : ''})</span>
+                    <span className="text-gray-900">{formatPrice(totalCents)}</span>
+                  </div>
+                  
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span>Desconto ({appliedCoupon.code})</span>
+                      <span>-{formatPrice(discountCents)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-100">
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-emerald-600">{formatPrice(finalTotalCents)}</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handlePayment} 
+                  disabled={loading}
+                  className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white h-12"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                      Processando...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="w-5 h-5 mr-2" />
+                      Pagar com PIX
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
+  // Cart Screen
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
-        <div className="max-w-2xl mx-auto px-4 py-4">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
-            <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900">
+            <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <h1 className="text-2xl font-bold tracking-tight">Carrinho</h1>
+            <h1 className="text-xl font-bold tracking-tight text-gray-900">Carrinho</h1>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="max-w-6xl mx-auto px-4 py-8">
         {items.length === 0 ? (
           <div className="text-center py-20">
-            <ShoppingBag className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
+              <ShoppingBag className="w-10 h-10 text-gray-400" />
+            </div>
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Seu carrinho está vazio</h2>
             <p className="text-gray-500 mb-6">Adicione algumas fotos para continuar</p>
             <Link to="/fotofacil">
-              <Button>Ver Fotos</Button>
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white">Ver Fotos</Button>
             </Link>
           </div>
         ) : (
-          <>
-            <div className="space-y-4 mb-8">
-              {items.map(item => (
-                <div 
-                  key={item.photoId}
-                  className="flex items-center gap-4 bg-gray-50 border border-gray-200 rounded-lg p-4"
-                >
-                  <img 
-                    src={item.thumbUrl}
-                    alt={item.title}
-                    className="w-20 h-20 object-cover rounded"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-lg font-bold text-gray-900">{formatPrice(item.priceCents)}</p>
-                  </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Products */}
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {items.length} foto{items.length > 1 ? 's' : ''} selecionada{items.length > 1 ? 's' : ''}
+                  </h2>
                   <button
-                    onClick={() => removeItem(item.photoId)}
-                    className="text-red-500 hover:text-red-700 p-2"
+                    onClick={clearCart}
+                    className="text-sm text-red-500 hover:text-red-700 transition-colors"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    Limpar tudo
                   </button>
                 </div>
-              ))}
-            </div>
 
-            <div className="border-t border-gray-200 pt-6">
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-lg text-gray-600">Total ({items.length} foto{items.length > 1 ? 's' : ''})</span>
-                <span className="text-2xl font-bold">{formatPrice(totalCents)}</span>
+                <div className="space-y-4">
+                  {items.map(item => (
+                    <div 
+                      key={item.photoId}
+                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
+                    >
+                      <img 
+                        src={item.thumbUrl}
+                        alt={item.title}
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{item.title}</p>
+                        <p className="text-lg font-bold text-emerald-600">{formatPrice(item.priceCents)}</p>
+                      </div>
+                      <button
+                        onClick={() => removeItem(item.photoId)}
+                        className="text-gray-400 hover:text-red-500 p-2 transition-colors"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
-
-              <Button 
-                onClick={handleCheckout}
-                className="w-full bg-gray-900 hover:bg-gray-800"
-                size="lg"
-              >
-                Realizar Pagamento
-              </Button>
-
-              <button
-                onClick={clearCart}
-                className="w-full text-center text-red-500 hover:text-red-700 mt-4 text-sm"
-              >
-                Limpar Carrinho
-              </button>
             </div>
-          </>
+
+            {/* Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+                <h2 className="text-lg font-semibold text-gray-900 mb-6">Resumo</h2>
+
+                {/* Coupon */}
+                <div className="mb-6">
+                  {appliedCoupon ? (
+                    <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-600" />
+                        <span className="text-sm font-medium text-emerald-700">{appliedCoupon.code}</span>
+                      </div>
+                      <button onClick={handleRemoveCoupon} className="text-emerald-600 hover:text-emerald-800">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Código do cupom"
+                        value={couponCode}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        className="bg-white border-gray-200"
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading}
+                        className="shrink-0"
+                      >
+                        {couponLoading ? '...' : 'Aplicar'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="text-gray-900">{formatPrice(totalCents)}</span>
+                  </div>
+                  
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-sm text-emerald-600">
+                      <span>Desconto</span>
+                      <span>-{formatPrice(discountCents)}</span>
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between text-xl font-bold pt-3 border-t border-gray-100">
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-emerald-600">{formatPrice(finalTotalCents)}</span>
+                  </div>
+                </div>
+
+                <Button 
+                  onClick={handleCheckout}
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-12"
+                  size="lg"
+                >
+                  Continuar
+                </Button>
+
+                {/* Trust badges */}
+                <div className="mt-6 pt-6 border-t border-gray-100">
+                  <div className="flex flex-col items-center gap-3 text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      <span className="text-xs">Compra 100% Segura</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4" />
+                      <span className="text-xs">Pagamento via PIX</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

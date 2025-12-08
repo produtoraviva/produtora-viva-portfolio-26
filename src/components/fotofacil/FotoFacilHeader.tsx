@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, ArrowLeft, Download, X } from 'lucide-react';
+import { ShoppingCart, Search, ArrowLeft, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
@@ -82,7 +82,7 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder = "Buscar eventos...", sh
                 size="sm"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
-                <span>Carrinho</span>
+                <span className="text-white">Carrinho</span>
                 {itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {itemCount}
@@ -105,13 +105,6 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder = "Buscar eventos...", sh
               />
             </div>
           </div>
-
-          {/* Cart Total */}
-          {itemCount > 0 && (
-            <div className="mt-2 text-sm text-gray-600 text-right">
-              Total: <span className="font-semibold text-gray-900">{formatPrice(totalCents)}</span>
-            </div>
-          )}
         </div>
       </header>
 
