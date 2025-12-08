@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Star, Quote, ChevronRight } from 'lucide-react';
+import { Star, Quote, ChevronLeft, ChevronRight, Mouse } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Testimonial {
@@ -23,6 +23,7 @@ const Testimonials = () => {
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     loadTestimonials();
@@ -42,36 +43,11 @@ const Testimonials = () => {
       setTestimonials(data || []);
     } catch (error) {
       console.error('Error loading testimonials:', error);
-      setTestimonials([
-        {
-          id: '1',
-          name: "Ana & João Silva",
-          event: "Casamento - Dezembro 2023",
-          rating: 5,
-          text: "A nossa fotógrafa superou todas nossas expectativas! As fotos ficaram incríveis e o vídeo do nosso casamento parece um filme.",
-          image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&h=100&fit=crop&crop=face",
-          background_opacity: 0.3,
-          display_order: 0,
-          is_active: true
-        },
-        {
-          id: '2',
-          name: "Maria Santos",
-          event: "15 Anos da Sofia - Outubro 2023",
-          rating: 5,
-          text: "O trabalho foi impecável! Captaram todos os momentos especiais da festa de 15 anos da minha filha.",
-          image: "https://images.unsplash.com/photo-1494790108755-2616b612b11c?w=100&h=100&fit=crop&crop=face",
-          background_opacity: 0.3,
-          display_order: 1,
-          is_active: true
-        }
-      ]);
+      setTestimonials([]);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const maxIndex = Math.max(0, testimonials.length - 1);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex(prev => prev > 0 ? prev - 1 : testimonials.length - 1);
@@ -81,13 +57,15 @@ const Testimonials = () => {
     setCurrentIndex(prev => prev < testimonials.length - 1 ? prev + 1 : 0);
   }, [testimonials.length]);
 
-  // Auto-advance
+  // Auto-advance with reset on interaction
   useEffect(() => {
     if (!isDragging && testimonials.length > 1) {
-      const interval = setInterval(() => {
+      autoPlayRef.current = setInterval(() => {
         handleNext();
-      }, 6000);
-      return () => clearInterval(interval);
+      }, 5000);
+      return () => {
+        if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+      };
     }
   }, [testimonials.length, isDragging, handleNext]);
 
@@ -95,6 +73,7 @@ const Testimonials = () => {
   const handleDragStart = (clientX: number) => {
     setIsDragging(true);
     setStartX(clientX);
+    if (autoPlayRef.current) clearInterval(autoPlayRef.current);
   };
 
   const handleDragMove = (clientX: number) => {
@@ -106,7 +85,7 @@ const Testimonials = () => {
   const handleDragEnd = () => {
     if (!isDragging) return;
     
-    if (Math.abs(dragOffset) > 80) {
+    if (Math.abs(dragOffset) > 60) {
       if (dragOffset > 0) {
         handleNext();
       } else {
@@ -148,13 +127,7 @@ const Testimonials = () => {
   };
 
   if (isLoading || testimonials.length === 0) {
-    return (
-      <section id="depoimentos" className="max-w-[1600px] mx-auto px-4 py-16 border-t border-border">
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-6 w-6 border-b border-foreground"></div>
-        </div>
-      </section>
-    );
+    return null;
   }
 
   const translateValue = `translateX(calc(-${currentIndex * 100}% - ${isDragging ? dragOffset : 0}px))`;
@@ -162,38 +135,50 @@ const Testimonials = () => {
   return (
     <section 
       id="depoimentos" 
-      className="py-16 border-t border-border bg-background"
+      className="py-20 border-t border-border bg-background"
     >
-      <div className="max-w-[1200px] mx-auto px-4">
-        {/* Header - More compact */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
+      <div className="max-w-[1400px] mx-auto px-4">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
           <div>
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-3">
               Depoimentos
             </p>
-            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tighter">
-              O que dizem nossos clientes
+            <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-tighter">
+              O que dizem
             </h2>
           </div>
+          
+          {/* Navigation arrows - desktop */}
           {testimonials.length > 1 && (
-            <div className="flex items-center gap-2 mt-4 md:mt-0">
-              <span className="text-xs text-muted-foreground font-mono">
+            <div className="hidden md:flex items-center gap-4 mt-4 md:mt-0">
+              <button 
+                onClick={handlePrev}
+                className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                aria-label="Anterior"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <span className="text-sm font-mono text-muted-foreground min-w-[60px] text-center">
                 {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
               </span>
+              <button 
+                onClick={handleNext}
+                className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                aria-label="Próximo"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
           )}
         </div>
 
-        {/* Testimonial Card with gray background */}
-        <div className="relative bg-secondary/50 p-6 md:p-10">
-          {/* Scroll Hint Arrow */}
-          {testimonials.length > 1 && currentIndex < maxIndex && (
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none flex flex-col items-center">
-              <span className="text-[8px] uppercase tracking-wider text-muted-foreground mb-1 hidden md:block">Scroll</span>
-              <ChevronRight className="h-5 w-5 text-muted-foreground/60 animate-bounce-horizontal" />
-            </div>
-          )}
-
+        {/* Testimonial Content Area with Gray Background */}
+        <div className="relative bg-secondary py-12 px-6 md:px-12">
+          {/* Quote icon */}
+          <Quote className="absolute top-6 left-6 w-8 h-8 text-muted-foreground/20" />
+          
+          {/* Carousel */}
           <div 
             className="overflow-hidden cursor-grab active:cursor-grabbing"
             onMouseDown={handleMouseDown}
@@ -206,7 +191,7 @@ const Testimonials = () => {
           >
             <div 
               ref={carouselRef}
-              className={`flex ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
+              className={`flex ${isDragging ? '' : 'transition-transform duration-700 ease-out'}`}
               style={{ transform: translateValue }}
             >
               {testimonials.map((testimonial) => (
@@ -214,37 +199,35 @@ const Testimonials = () => {
                   key={testimonial.id}
                   className="w-full flex-shrink-0"
                 >
-                  <div className="max-w-3xl mx-auto select-none py-4">
+                  <div className="max-w-4xl mx-auto select-none text-center py-8">
                     {/* Stars */}
-                    <div className="flex gap-0.5 mb-4">
+                    <div className="flex justify-center gap-1 mb-8">
                       {[...Array(testimonial.rating)].map((_, i) => (
                         <Star key={i} className="h-4 w-4 text-foreground fill-current" />
                       ))}
                     </div>
 
-                    {/* Text - More compact */}
-                    <blockquote className="text-lg md:text-xl lg:text-2xl font-light leading-relaxed mb-6 tracking-tight">
+                    {/* Text */}
+                    <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed mb-10 tracking-tight italic">
                       "{testimonial.text}"
                     </blockquote>
 
-                    {/* Author - More compact */}
-                    <div className="flex items-center gap-3 pt-4 border-t border-border/50">
+                    {/* Author */}
+                    <div className="flex flex-col items-center">
                       {testimonial.image && (
-                        <div className="w-10 h-10 overflow-hidden grayscale">
+                        <div className="w-14 h-14 mb-4 overflow-hidden border border-border">
                           <img
                             src={testimonial.image}
                             alt={testimonial.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover grayscale"
                           />
                         </div>
                       )}
-                      <div>
-                        <div className="font-bold uppercase tracking-wide text-sm">
-                          {testimonial.name}
-                        </div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                          {testimonial.event}
-                        </div>
+                      <div className="font-bold uppercase tracking-[0.15em] text-sm mb-1">
+                        {testimonial.name}
+                      </div>
+                      <div className="text-xs text-muted-foreground uppercase tracking-wider">
+                        {testimonial.event}
                       </div>
                     </div>
                   </div>
@@ -253,16 +236,27 @@ const Testimonials = () => {
             </div>
           </div>
 
-          {/* Indicators - Minimal */}
+          {/* Scroll indicator - mobile */}
           {testimonials.length > 1 && (
-            <div className="flex justify-center gap-1 mt-4">
+            <div className="flex flex-col items-center mt-8 md:hidden">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Mouse className="w-5 h-5 animate-pulse" />
+                <span className="text-[10px] uppercase tracking-[0.2em]">Deslize</span>
+              </div>
+            </div>
+          )}
+          
+          {/* Progress dots */}
+          {testimonials.length > 1 && (
+            <div className="flex justify-center gap-2 mt-6">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
-                  className={`h-px transition-all duration-300 ${
-                    index === currentIndex ? "bg-foreground w-6" : "bg-muted-foreground/30 w-3"
+                  className={`h-1 transition-all duration-300 ${
+                    index === currentIndex ? "bg-foreground w-8" : "bg-muted-foreground/30 w-4"
                   }`}
+                  aria-label={`Ir para depoimento ${index + 1}`}
                 />
               ))}
             </div>

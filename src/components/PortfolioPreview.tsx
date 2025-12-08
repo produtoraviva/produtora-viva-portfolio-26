@@ -113,15 +113,43 @@ const PortfolioPreview = () => {
     return itemsToFilter.filter((item) => item.media_type === activeCategory);
   })();
 
+  // Get aspect ratio class based on item count and position
+  const getItemAspectClass = (index: number) => {
+    const count = filteredItems.length;
+    
+    if (count === 1) {
+      // 1 item: horizontal (16:9)
+      return 'aspect-video';
+    }
+    if (count === 2) {
+      // 2 items: both square
+      return 'aspect-square';
+    }
+    if (count === 3) {
+      // 3 items: normal portrait
+      return 'aspect-[3/4]';
+    }
+    if (count === 4) {
+      // 4 items: first 3 normal, 4th horizontal
+      return index === 3 ? 'aspect-video md:col-span-3' : 'aspect-[3/4]';
+    }
+    if (count === 5) {
+      // 5 items: first 3 normal, last 2 square
+      return index >= 3 ? 'aspect-square' : 'aspect-[3/4]';
+    }
+    // 6 items: all normal portrait
+    return 'aspect-[3/4]';
+  };
+
   // Dynamic grid based on item count
   const getGridClass = () => {
     const count = filteredItems.length;
     if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-1 md:grid-cols-2';
-    if (count === 3) return 'grid-cols-1 md:grid-cols-3';
-    if (count === 4) return 'grid-cols-2 md:grid-cols-2 lg:grid-cols-4';
-    if (count === 5) return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-3';
-    return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+    if (count === 2) return 'grid-cols-2';
+    if (count === 3) return 'grid-cols-3';
+    if (count === 4) return 'grid-cols-3'; // 3 + 1 spanning 3
+    if (count === 5) return 'grid-cols-3 md:grid-cols-3'; // 3 + 2
+    return 'grid-cols-3'; // 6: 3 + 3
   };
 
   const handleImageClick = (index: number) => {
@@ -160,7 +188,7 @@ const PortfolioPreview = () => {
         {filteredItems.map((item, index) => (
           <div 
             key={item.id} 
-            className="image-card group relative aspect-[3/4] overflow-hidden bg-secondary cursor-pointer"
+            className={`image-card group relative overflow-hidden bg-secondary cursor-pointer ${getItemAspectClass(index)}`}
             onClick={() => handleImageClick(index)}
           >
             {/* Use thumbnail for videos if available */}
@@ -202,7 +230,7 @@ const PortfolioPreview = () => {
       <div className="text-center mt-20">
         <Link 
           to="/portfolio"
-          className="text-sm uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors duration-300 border-b border-muted-foreground hover:border-foreground pb-1 font-bold"
+          className="text-sm uppercase tracking-[0.2em] text-white hover:text-white/80 transition-colors duration-300 border-b border-white hover:border-white/80 pb-1 font-bold"
         >
           Ver Portfolio Completo
         </Link>

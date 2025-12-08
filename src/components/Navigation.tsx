@@ -6,11 +6,11 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
-  const { config } = useSiteConfig();
+  const { config, loading: configLoading } = useSiteConfig();
   
   const navItems = [
     { label: "Portfolio", href: "/portfolio", route: "/portfolio", highlight: true },
@@ -21,10 +21,10 @@ const Navigation = () => {
     { label: "Contato", href: "#contact", route: "/" },
   ];
 
-  // Track scroll for blur effect
+  // Track scroll for blend effect transition
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
+      setScrollY(window.scrollY);
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -74,20 +74,49 @@ const Navigation = () => {
     };
   }, [isOpen]);
 
+  // Calculate transition progress (0 at top, 1 after scrolling 100px)
+  const scrollProgress = Math.min(scrollY / 100, 1);
+  
+  // Mix blend only activates after scroll
+  const headerStyle = {
+    mixBlendMode: scrollProgress > 0 ? 'difference' as const : 'normal' as const,
+    opacity: 1,
+  };
+
+  // Logo component - shows nothing while loading if logo_url exists
+  const LogoContent = () => {
+    // If still loading, show nothing to prevent flash
+    if (configLoading) {
+      return <span className="opacity-0">Loading...</span>;
+    }
+    
+    if (config.logo_url) {
+      return (
+        <img 
+          src={config.logo_url} 
+          alt={config.company_name} 
+          className="h-9 w-auto" 
+          style={{ height: '2.26rem' }} 
+        />
+      );
+    }
+    
+    return <span>{config.company_name || 'Rubens Photofilm'}.</span>;
+  };
+
   return (
-    <nav className="fixed top-0 w-full z-50 transition-all duration-300 mix-blend-difference text-foreground">
+    <nav 
+      className="fixed top-0 w-full z-50 transition-all duration-500"
+      style={headerStyle}
+    >
       {/* Regular header for desktop */}
       <div className="hidden lg:flex justify-between items-center p-6 md:p-10">
         {/* Logo */}
         <Link 
           to="/" 
-          className="text-sm tracking-[0.2em] uppercase font-bold text-foreground flex items-center gap-2"
+          className="text-sm tracking-[0.2em] uppercase font-bold text-white flex items-center gap-2"
         >
-          {config.logo_url ? (
-            <img src={config.logo_url} alt={config.company_name} className="h-9 w-auto" style={{ height: '2.26rem' }} />
-          ) : (
-            <span>{config.company_name || 'Rubens Photofilm'}.</span>
-          )}
+          <LogoContent />
         </Link>
 
         {/* Desktop Menu */}
@@ -96,9 +125,9 @@ const Navigation = () => {
             <button
               key={item.label}
               onClick={() => handleNavClick(item)}
-              className={`text-xs uppercase tracking-[0.15em] text-foreground transition-all duration-300 ${
+              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 ${
                 item.highlight 
-                  ? 'border border-foreground/50 px-3 py-1.5 hover:bg-foreground hover:text-background' 
+                  ? 'border border-white/50 px-3 py-1.5 hover:bg-white hover:text-black' 
                   : 'hover:line-through'
               }`}
             >
@@ -113,13 +142,9 @@ const Navigation = () => {
         {/* Logo line */}
         <Link 
           to="/" 
-          className="text-sm tracking-[0.2em] uppercase font-bold text-foreground flex items-center gap-2 mb-3"
+          className="text-sm tracking-[0.2em] uppercase font-bold text-white flex items-center gap-2 mb-3"
         >
-          {config.logo_url ? (
-            <img src={config.logo_url} alt={config.company_name} className="h-9 w-auto" style={{ height: '2.26rem' }} />
-          ) : (
-            <span>{config.company_name || 'Rubens Photofilm'}.</span>
-          )}
+          <LogoContent />
         </Link>
         
         {/* Navigation line */}
@@ -128,9 +153,9 @@ const Navigation = () => {
             <button
               key={item.label}
               onClick={() => handleNavClick(item)}
-              className={`text-xs uppercase tracking-[0.15em] text-foreground transition-all duration-300 ${
+              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 ${
                 item.highlight 
-                  ? 'border border-foreground/50 px-3 py-1.5 hover:bg-foreground hover:text-background' 
+                  ? 'border border-white/50 px-3 py-1.5 hover:bg-white hover:text-black' 
                   : 'hover:line-through'
               }`}
             >
@@ -145,19 +170,15 @@ const Navigation = () => {
         {/* Logo */}
         <Link 
           to="/" 
-          className="text-sm tracking-[0.2em] uppercase font-bold text-foreground flex items-center gap-2"
+          className="text-sm tracking-[0.2em] uppercase font-bold text-white flex items-center gap-2"
         >
-          {config.logo_url ? (
-            <img src={config.logo_url} alt={config.company_name} className="h-9 w-auto" style={{ height: '2.26rem' }} />
-          ) : (
-            <span>{config.company_name || 'Rubens Photofilm'}.</span>
-          )}
+          <LogoContent />
         </Link>
 
         {/* Mobile Menu Button - Hamburger Icon */}
         <button
           onClick={isOpen ? handleClose : handleOpen}
-          className="text-foreground p-2"
+          className="text-white p-2"
           aria-label={isOpen ? "Fechar menu" : "Abrir menu"}
         >
           {isOpen ? (
@@ -168,24 +189,23 @@ const Navigation = () => {
         </button>
       </div>
 
-      {/* Mobile Menu with animated blur background - fixed position with proper centering */}
+      {/* Mobile Menu - black 30% opacity background */}
       {isOpen && (
         <>
-          {/* Blurred background layer - covers everything behind using backdrop-filter */}
+          {/* Background overlay - black 30% opacity, no blur */}
           <div 
-            className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${
-              isAnimating ? 'backdrop-blur-sm bg-black/70' : 'bg-transparent'
+            className={`md:hidden fixed inset-0 z-40 transition-opacity duration-300 ${
+              isAnimating ? 'bg-black/30' : 'bg-transparent'
             }`}
             onClick={handleClose}
           />
           
-          {/* Menu content layer - NOT blurred, white text */}
+          {/* Menu content layer - white text, no effects */}
           <div 
             className={`md:hidden fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-300 ${
               isAnimating ? 'opacity-100' : 'opacity-0'
             }`}
             onClick={(e) => {
-              // Close if clicking on the background (not on menu items)
               if (e.target === e.currentTarget) {
                 handleClose();
               }
