@@ -10,8 +10,7 @@ import { FotoFacilBannersManager } from '@/components/admin/FotoFacilBannersMana
 import { FotoFacilCouponsManager } from '@/components/admin/FotoFacilCouponsManager';
 import { FotoFacilFooterManager } from '@/components/admin/FotoFacilFooterManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket, FileText, Settings, Camera } from 'lucide-react';
+import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket, Settings, Camera } from 'lucide-react';
 
 export default function AdminFotoFacil() {
   const { user, logout, isAuthenticated } = useAdmin();
@@ -44,7 +43,7 @@ export default function AdminFotoFacil() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <AdminSidebar 
         activeTab="fotofacil" 
         onTabChange={(tab) => {
@@ -61,7 +60,7 @@ export default function AdminFotoFacil() {
 
       <main className="transition-all duration-300 p-4 md:p-6 lg:p-8 lg:ml-56 pt-20 lg:pt-8">
         <div className="max-w-[1600px] mx-auto">
-          {/* Modern Header */}
+          {/* Header */}
           <div className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
@@ -71,20 +70,20 @@ export default function AdminFotoFacil() {
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                   FOTOFÁCIL
                 </h1>
-                <p className="text-muted-foreground">Painel de Gestão da Loja de Fotos</p>
+                <p className="text-gray-500">Painel de Gestão da Loja de Fotos</p>
               </div>
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            {/* Modern Tab Navigation */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
+            {/* Tab Navigation */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-2">
               <TabsList className="flex flex-wrap gap-1 w-full h-auto bg-transparent p-0">
                 {tabs.map(tab => (
                   <TabsTrigger 
                     key={tab.id}
                     value={tab.id} 
-                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 hover:bg-gray-100 data-[state=active]:hover:bg-emerald-500"
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl text-gray-600 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 hover:bg-gray-100 data-[state=active]:hover:bg-emerald-500"
                   >
                     <tab.icon className="h-4 w-4" />
                     <span className="hidden sm:inline font-medium">{tab.label}</span>
@@ -94,7 +93,7 @@ export default function AdminFotoFacil() {
             </div>
 
             {/* Tab Content */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <TabsContent value="categories" className="m-0">
                 <FotoFacilCategoriesManager />
               </TabsContent>

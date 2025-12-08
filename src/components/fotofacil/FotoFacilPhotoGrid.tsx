@@ -167,21 +167,35 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
 
               {/* Price & Info */}
               <div className="p-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {formatPrice(price)}
-                  </p>
-                  <button
-                    onClick={(e) => handleShare(photo, e)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">
+                      {formatPrice(price)}
+                    </p>
+                    <p className="text-xs text-gray-400">ID: {photo.id.slice(0, 8)}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={(e) => handleToggleCart(photo, e)}
+                      className={`p-2 rounded-lg transition-all ${
+                        inCart 
+                          ? 'bg-emerald-500 text-white' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white'
+                      }`}
+                    >
+                      {inCart ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={(e) => handleShare(photo, e)}
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg bg-gray-50"
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
                 {photo.title && (
                   <p className="text-xs text-gray-500 truncate mt-1">{photo.title}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-0.5">ID: {photo.id.slice(0, 8)}</p>
               </div>
             </div>
           );

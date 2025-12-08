@@ -82,15 +82,24 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
             
             {/* Search Bar - Desktop */}
             <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-md mx-4">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  type="text"
-                  placeholder={getPlaceholder()}
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-lg"
-                />
+              <div className="relative w-full flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input
+                    type="text"
+                    placeholder={getPlaceholder()}
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                    className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-lg"
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg px-4"
+                >
+                  <Search className="w-4 h-4" />
+                </Button>
               </div>
             </form>
 
@@ -121,15 +130,24 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
           
           {/* Search Bar - Mobile */}
           <form onSubmit={handleSearchSubmit} className="mt-3 md:hidden">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                type="text"
-                placeholder={getPlaceholder()}
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-lg"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  type="text"
+                  placeholder={getPlaceholder()}
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-lg"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                size="sm" 
+                className="bg-gray-800 hover:bg-gray-900 text-white rounded-lg px-3"
+              >
+                <Search className="w-4 h-4" />
+              </Button>
             </div>
           </form>
         </div>
