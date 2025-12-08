@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Plus, Pencil, Trash2, Save, X, Link as LinkIcon, Upload, Cloud, Loader2, Check, Image } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, X, Link as LinkIcon, Upload, Cloud, Loader2, Check, Image, CheckSquare, Square } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -55,12 +56,17 @@ export function FotoFacilPhotosManager() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEventId, setSelectedEventId] = useState<string>('all');
+  const [uploadEventId, setUploadEventId] = useState<string>('');
   const [editingPhoto, setEditingPhoto] = useState<Photo | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importUrls, setImportUrls] = useState('');
   const [importEventId, setImportEventId] = useState('');
+  
+  // Selection state
+  const [selectedPhotos, setSelectedPhotos] = useState<Set<string>>(new Set());
+  const [selectionMode, setSelectionMode] = useState(false);
   
   // GCS Upload state
   const [uploading, setUploading] = useState(false);
@@ -83,6 +89,7 @@ export function FotoFacilPhotosManager() {
 
   useEffect(() => {
     loadPhotos();
+    setSelectedPhotos(new Set());
   }, [selectedEventId]);
 
   const loadData = async () => {
@@ -239,7 +246,6 @@ export function FotoFacilPhotosManager() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
-    // First check if the photo is referenced by any order items
     const { data: orderItems } = await supabase
       .from('fotofacil_order_items')
       .select('id')
@@ -270,6 +276,48 @@ export function FotoFacilPhotosManager() {
     setDeleteId(null);
   };
 
+  const handleDeleteSelected = async () => {
+    if (selectedPhotos.size === 0) return;
+    
+    if (!confirm(`Deseja excluir ${selectedPhotos.size} foto(s) selecionada(s)?`)) return;
+
+    const photoIds = Array.from(selectedPhotos);
+    
+    // Check for orders
+    const { data: orderItems } = await supabase
+      .from('fotofacil_order_items')
+      .select('photo_id')
+      .in('photo_id', photoIds);
+
+    const photosInOrders = new Set(orderItems?.map(i => i.photo_id) || []);
+    const photosToDelete = photoIds.filter(id => !photosInOrders.has(id));
+
+    if (photosInOrders.size > 0) {
+      toast({ 
+        title: 'Algumas fotos não podem ser excluídas', 
+        description: `${photosInOrders.size} foto(s) estão em pedidos e serão mantidas.`,
+        variant: 'destructive' 
+      });
+    }
+
+    if (photosToDelete.length > 0) {
+      const { error } = await supabase
+        .from('fotofacil_photos')
+        .delete()
+        .in('id', photosToDelete);
+
+      if (error) {
+        toast({ title: 'Erro ao excluir fotos', variant: 'destructive' });
+      } else {
+        toast({ title: `${photosToDelete.length} foto(s) excluída(s)!` });
+      }
+    }
+
+    setSelectedPhotos(new Set());
+    setSelectionMode(false);
+    loadPhotos();
+  };
+
   const toggleActive = async (photo: Photo) => {
     const { error } = await supabase
       .from('fotofacil_photos')
@@ -283,14 +331,36 @@ export function FotoFacilPhotosManager() {
     }
   };
 
+  const togglePhotoSelection = (photoId: string) => {
+    setSelectedPhotos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(photoId)) {
+        newSet.delete(photoId);
+      } else {
+        newSet.add(photoId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllPhotos = () => {
+    if (selectedPhotos.size === photos.length) {
+      setSelectedPhotos(new Set());
+    } else {
+      setSelectedPhotos(new Set(photos.map(p => p.id)));
+    }
+  };
+
   const formatPrice = (cents: number) => {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
   // GCS Upload handler
   const handleGCSUpload = useCallback(async (files: File[]) => {
-    if (selectedEventId === 'all') {
-      toast({ title: 'Selecione um evento primeiro', variant: 'destructive' });
+    const targetEventId = uploadEventId || (selectedEventId !== 'all' ? selectedEventId : '');
+    
+    if (!targetEventId) {
+      toast({ title: 'Selecione um evento para upload', variant: 'destructive' });
       return;
     }
 
@@ -304,7 +374,7 @@ export function FotoFacilPhotosManager() {
       const results = await uploadMultipleToGCS(
         files,
         'fotofacil',
-        selectedEventId,
+        targetEventId,
         (completed, total, currentFile) => {
           setUploadProgress({ completed, total, currentFile });
         }
@@ -312,7 +382,6 @@ export function FotoFacilPhotosManager() {
 
       setUploadResults(results);
 
-      // Save successful uploads to database
       const successfulUploads = results.filter(r => r.success);
       
       for (const result of successfulUploads) {
@@ -323,7 +392,7 @@ export function FotoFacilPhotosManager() {
         await supabase
           .from('fotofacil_photos')
           .insert({
-            event_id: selectedEventId,
+            event_id: targetEventId,
             title: result.fileName?.replace(/\.[^/.]+$/, '') || 'Foto',
             url: result.originalUrl,
             thumb_url: result.watermarkedUrl,
@@ -348,7 +417,7 @@ export function FotoFacilPhotosManager() {
     } finally {
       setUploading(false);
     }
-  }, [selectedEventId, photos, toast]);
+  }, [selectedEventId, uploadEventId, photos, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -356,30 +425,30 @@ export function FotoFacilPhotosManager() {
       'video/*': ['.mp4', '.mov', '.avi', '.webm'],
     },
     onDrop: handleGCSUpload,
-    disabled: uploading || selectedEventId === 'all',
+    disabled: uploading || (!uploadEventId && selectedEventId === 'all'),
   });
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Carregando...</div>;
+    return <div className="flex items-center justify-center p-8 text-gray-700">Carregando...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold">Fotos FOTOFÁCIL</h2>
-          <p className="text-muted-foreground text-sm">Upload para Google Cloud Storage com marca d'água automática</p>
+          <h2 className="text-2xl font-bold text-gray-900">Fotos FOTOFÁCIL</h2>
+          <p className="text-gray-600 text-sm">Upload para Google Cloud Storage com marca d'água automática</p>
         </div>
         <div className="flex items-center gap-2">
-          <Cloud className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Google Cloud Storage</span>
+          <Cloud className="h-4 w-4 text-gray-500" />
+          <span className="text-sm text-gray-500">Google Cloud Storage</span>
         </div>
       </div>
 
-      {/* Event Selector */}
+      {/* Event Filter and Actions */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-          <SelectTrigger className="w-[250px] rounded-lg">
+          <SelectTrigger className="w-[250px] rounded-lg bg-white border-gray-300 text-gray-900">
             <SelectValue placeholder="Filtrar por evento" />
           </SelectTrigger>
           <SelectContent>
@@ -389,42 +458,96 @@ export function FotoFacilPhotosManager() {
             ))}
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => setIsImportDialogOpen(true)} className="rounded-lg">
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setIsImportDialogOpen(true)} 
+          className="rounded-lg bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
+        >
           <LinkIcon className="h-4 w-4 mr-2" />
           Importar URLs
         </Button>
-        <Button onClick={openCreateDialog} className="rounded-lg">
+        
+        <Button onClick={openCreateDialog} className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">
           <Plus className="h-4 w-4 mr-2" />
           Nova Foto
         </Button>
+
+        <Button 
+          variant={selectionMode ? "secondary" : "outline"} 
+          onClick={() => {
+            setSelectionMode(!selectionMode);
+            setSelectedPhotos(new Set());
+          }}
+          className="rounded-lg bg-white border-gray-300 text-gray-900 hover:bg-gray-100"
+        >
+          <CheckSquare className="h-4 w-4 mr-2" />
+          {selectionMode ? 'Cancelar Seleção' : 'Selecionar'}
+        </Button>
       </div>
 
-      {/* GCS Upload Zone - Always visible */}
-      <Card className="rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/30">
+      {/* Selection Actions */}
+      {selectionMode && (
+        <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+          <Button variant="outline" size="sm" onClick={selectAllPhotos} className="bg-white text-gray-900">
+            {selectedPhotos.size === photos.length ? 'Desmarcar Todas' : 'Selecionar Todas'}
+          </Button>
+          <span className="text-gray-700">
+            {selectedPhotos.size} foto(s) selecionada(s)
+          </span>
+          {selectedPhotos.size > 0 && (
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={handleDeleteSelected}
+              className="ml-auto"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir Selecionadas
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* GCS Upload Zone */}
+      <Card className="rounded-xl border-2 border-dashed border-emerald-300 bg-white">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 text-gray-900">
             <Upload className="h-5 w-5 text-emerald-600" />
             Upload de Fotos para Google Cloud Storage
           </CardTitle>
-          <CardDescription>
-            Arraste fotos ou clique para selecionar. As fotos serão enviadas para o GCS com marca d'água automática e qualidade reduzida.
+          <CardDescription className="text-gray-600">
+            Arraste fotos ou clique para selecionar. As fotos serão enviadas para o GCS com marca d'água automática.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Event selector for upload */}
-          {selectedEventId === 'all' && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
-              <strong>Selecione um evento acima</strong> para habilitar o upload de fotos.
-            </div>
-          )}
+          {/* Upload Event Selector */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-gray-50 rounded-xl">
+            <Label className="text-gray-700 font-medium whitespace-nowrap">Evento para upload:</Label>
+            <Select value={uploadEventId} onValueChange={setUploadEventId}>
+              <SelectTrigger className="w-full sm:w-[300px] rounded-lg bg-white border-gray-300 text-gray-900">
+                <SelectValue placeholder="Selecione o evento de destino" />
+              </SelectTrigger>
+              <SelectContent>
+                {events.map((event) => (
+                  <SelectItem key={event.id} value={event.id}>{event.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!uploadEventId && selectedEventId !== 'all' && (
+              <span className="text-sm text-gray-500">
+                (Usando filtro atual: {events.find(e => e.id === selectedEventId)?.title})
+              </span>
+            )}
+          </div>
           
           <div
             {...getRootProps()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
               isDragActive 
-                ? 'border-emerald-500 bg-emerald-100' 
-                : selectedEventId === 'all'
-                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                ? 'border-emerald-500 bg-emerald-50' 
+                : !uploadEventId && selectedEventId === 'all'
+                  ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
                   : 'border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50'
             } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
@@ -433,8 +556,8 @@ export function FotoFacilPhotosManager() {
               <div className="space-y-3">
                 <Loader2 className="h-10 w-10 mx-auto animate-spin text-emerald-600" />
                 <div>
-                  <p className="font-medium text-lg">Enviando fotos para GCS...</p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="font-medium text-lg text-gray-900">Enviando fotos para GCS...</p>
+                  <p className="text-sm text-gray-600">
                     {uploadProgress.completed} de {uploadProgress.total} - {uploadProgress.currentFile}
                   </p>
                 </div>
@@ -446,17 +569,17 @@ export function FotoFacilPhotosManager() {
                   <Cloud className="h-8 w-8 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="font-medium text-lg">
+                  <p className="font-medium text-lg text-gray-900">
                     {isDragActive ? 'Solte as fotos aqui' : 'Arraste fotos ou clique para selecionar'}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-gray-600">
                     Suporta JPG, PNG, WebP, GIF e vídeos MP4, MOV
                   </p>
                 </div>
-                {selectedEventId !== 'all' && (
+                {(uploadEventId || selectedEventId !== 'all') && (
                   <div className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-100 rounded-lg py-2 px-4 max-w-fit mx-auto">
                     <Check className="h-4 w-4" />
-                    <span>Evento selecionado: <strong>{events.find(e => e.id === selectedEventId)?.title}</strong></span>
+                    <span>Evento: <strong>{events.find(e => e.id === (uploadEventId || selectedEventId))?.title}</strong></span>
                   </div>
                 )}
               </div>
@@ -466,7 +589,7 @@ export function FotoFacilPhotosManager() {
           {/* Upload Results */}
           {uploadResults.length > 0 && (
             <div className="space-y-2">
-              <p className="font-medium text-sm">Resultados do upload:</p>
+              <p className="font-medium text-sm text-gray-900">Resultados do upload:</p>
               <div className="max-h-40 overflow-y-auto space-y-1">
                 {uploadResults.map((result, index) => (
                   <div 
@@ -498,27 +621,41 @@ export function FotoFacilPhotosManager() {
         {photos.map((photo) => (
           <div 
             key={photo.id} 
-            className={`group relative rounded-lg overflow-hidden border ${!photo.is_active ? 'opacity-50' : ''}`}
+            className={`group relative rounded-lg overflow-hidden border bg-white ${!photo.is_active ? 'opacity-50' : ''} ${
+              selectionMode && selectedPhotos.has(photo.id) ? 'ring-2 ring-emerald-500' : ''
+            }`}
+            onClick={() => selectionMode && togglePhotoSelection(photo.id)}
           >
+            {selectionMode && (
+              <div className="absolute top-2 left-2 z-10">
+                <div className={`w-6 h-6 rounded flex items-center justify-center ${
+                  selectedPhotos.has(photo.id) ? 'bg-emerald-500 text-white' : 'bg-white/80 border border-gray-300'
+                }`}>
+                  {selectedPhotos.has(photo.id) && <Check className="h-4 w-4" />}
+                </div>
+              </div>
+            )}
             <img 
               src={photo.thumb_url || photo.url} 
               alt={photo.title || 'Foto'} 
               className="w-full aspect-square object-cover"
             />
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
-              <div className="flex items-center gap-1">
-                <Button variant="secondary" size="icon" onClick={() => openEditDialog(photo)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button variant="secondary" size="icon" onClick={() => setDeleteId(photo.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+            {!selectionMode && (
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
+                <div className="flex items-center gap-1">
+                  <Button variant="secondary" size="icon" onClick={() => openEditDialog(photo)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button variant="secondary" size="icon" onClick={() => setDeleteId(photo.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+                <Switch
+                  checked={photo.is_active ?? true}
+                  onCheckedChange={() => toggleActive(photo)}
+                />
               </div>
-              <Switch
-                checked={photo.is_active ?? true}
-                onCheckedChange={() => toggleActive(photo)}
-              />
-            </div>
+            )}
             {photo.price_cents && (
               <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded">
                 {formatPrice(photo.price_cents)}
@@ -529,25 +666,25 @@ export function FotoFacilPhotosManager() {
       </div>
 
       {photos.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-gray-600 bg-white rounded-xl border border-gray-200">
           Nenhuma foto encontrada. Use "Importar URLs" ou "Nova Foto" para adicionar.
         </div>
       )}
 
       {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>{editingPhoto ? 'Editar Foto' : 'Nova Foto'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{editingPhoto ? 'Editar Foto' : 'Nova Foto'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Evento</Label>
+              <Label className="text-gray-700">Evento</Label>
               <Select
                 value={formData.event_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, event_id: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                   <SelectValue placeholder="Selecione um evento" />
                 </SelectTrigger>
                 <SelectContent>
@@ -558,39 +695,43 @@ export function FotoFacilPhotosManager() {
               </Select>
             </div>
             <div>
-              <Label>URL da Foto (alta resolução)</Label>
+              <Label className="text-gray-700">URL da Foto (alta resolução)</Label>
               <Input
                 value={formData.url}
                 onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
                 placeholder="https://..."
+                className="bg-white border-gray-300 text-gray-900"
               />
             </div>
             <div>
-              <Label>URL da Miniatura (opcional)</Label>
+              <Label className="text-gray-700">URL da Miniatura (opcional)</Label>
               <Input
                 value={formData.thumb_url}
                 onChange={(e) => setFormData(prev => ({ ...prev, thumb_url: e.target.value }))}
                 placeholder="https://..."
+                className="bg-white border-gray-300 text-gray-900"
               />
             </div>
             <div>
-              <Label>Título (opcional)</Label>
+              <Label className="text-gray-700">Título (opcional)</Label>
               <Input
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 placeholder="Foto 001"
+                className="bg-white border-gray-300 text-gray-900"
               />
             </div>
             <div>
-              <Label>Descrição (opcional)</Label>
+              <Label className="text-gray-700">Descrição (opcional)</Label>
               <Textarea
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 placeholder="Descrição da foto..."
+                className="bg-white border-gray-300 text-gray-900"
               />
             </div>
             <div>
-              <Label>Preço Específico (R$) - deixe 0 para usar preço do evento</Label>
+              <Label className="text-gray-700">Preço Específico (R$) - deixe 0 para usar preço do evento</Label>
               <Input
                 type="number"
                 step="0.01"
@@ -600,6 +741,7 @@ export function FotoFacilPhotosManager() {
                   price_cents: Math.round(parseFloat(e.target.value || '0') * 100) 
                 }))}
                 placeholder="0.00"
+                className="bg-white border-gray-300 text-gray-900"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -608,15 +750,15 @@ export function FotoFacilPhotosManager() {
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
               />
-              <Label htmlFor="is_active">Foto ativa</Label>
+              <Label htmlFor="is_active" className="text-gray-700">Foto ativa</Label>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDialogOpen(false)} className="bg-white text-gray-900 border-gray-300">
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
+            <Button onClick={handleSave} className="bg-emerald-600 text-white hover:bg-emerald-700">
               <Save className="h-4 w-4 mr-2" />
               Salvar
             </Button>
@@ -626,15 +768,15 @@ export function FotoFacilPhotosManager() {
 
       {/* Import URLs Dialog */}
       <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-        <DialogContent>
+        <DialogContent className="bg-white">
           <DialogHeader>
-            <DialogTitle>Importar Fotos por URL</DialogTitle>
+            <DialogTitle className="text-gray-900">Importar Fotos por URL</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Evento</Label>
+              <Label className="text-gray-700">Evento</Label>
               <Select value={importEventId} onValueChange={setImportEventId}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white border-gray-300 text-gray-900">
                   <SelectValue placeholder="Selecione um evento" />
                 </SelectTrigger>
                 <SelectContent>
@@ -645,21 +787,21 @@ export function FotoFacilPhotosManager() {
               </Select>
             </div>
             <div>
-              <Label>URLs (uma por linha)</Label>
+              <Label className="text-gray-700">URLs (uma por linha)</Label>
               <Textarea
                 value={importUrls}
                 onChange={(e) => setImportUrls(e.target.value)}
                 placeholder="https://exemplo.com/foto1.jpg&#10;https://exemplo.com/foto2.jpg&#10;https://exemplo.com/foto3.jpg"
-                className="min-h-[200px] font-mono text-sm"
+                className="min-h-[200px] font-mono text-sm bg-white border-gray-300 text-gray-900"
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(false)} className="bg-white text-gray-900 border-gray-300">
               <X className="h-4 w-4 mr-2" />
               Cancelar
             </Button>
-            <Button onClick={handleImport}>
+            <Button onClick={handleImport} className="bg-emerald-600 text-white hover:bg-emerald-700">
               <Upload className="h-4 w-4 mr-2" />
               Importar
             </Button>
@@ -669,15 +811,15 @@ export function FotoFacilPhotosManager() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white">
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir foto?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-gray-900">Excluir foto?</AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-600">
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="bg-white text-gray-900 border-gray-300">Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
               Excluir
             </AlertDialogAction>

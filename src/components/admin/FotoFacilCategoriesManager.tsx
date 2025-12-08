@@ -207,17 +207,17 @@ export function FotoFacilCategoriesManager() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Carregando...</div>;
+    return <div className="flex items-center justify-center p-8 text-gray-700">Carregando...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Categorias FOTOFÁCIL</h2>
-          <p className="text-muted-foreground text-sm">Gerencie as categorias de eventos</p>
+          <h2 className="text-2xl font-bold text-gray-900">Categorias FOTOFÁCIL</h2>
+          <p className="text-gray-600 text-sm">Gerencie as categorias de eventos</p>
         </div>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={openCreateDialog} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
           <Plus className="h-4 w-4 mr-2" />
           Nova Categoria
         </Button>
@@ -225,15 +225,15 @@ export function FotoFacilCategoriesManager() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {categories.map((category) => (
-          <Card key={category.id} className={!category.is_active ? 'opacity-60' : ''}>
+          <Card key={category.id} className={`bg-white border-gray-200 ${!category.is_active ? 'opacity-60' : ''}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
-                  <GripVertical className="h-4 w-4 text-muted-foreground cursor-grab" />
-                  <CardTitle className="text-lg">{category.name}</CardTitle>
+                  <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                  <CardTitle className="text-lg text-gray-900">{category.name}</CardTitle>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(category)}>
+                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(category)} className="text-gray-600 hover:text-gray-900">
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleteId(category.id)}>
@@ -243,9 +243,9 @@ export function FotoFacilCategoriesManager() {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground font-mono">/{category.slug}</p>
+              <p className="text-xs text-gray-500 font-mono">/{category.slug}</p>
               {category.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{category.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-2">{category.description}</p>
               )}
               {category.image_url && (
                 <img 
@@ -255,7 +255,7 @@ export function FotoFacilCategoriesManager() {
                 />
               )}
               <div className="flex items-center justify-between pt-2">
-                <Label htmlFor={`active-${category.id}`} className="text-sm">Ativa</Label>
+                <Label htmlFor={`active-${category.id}`} className="text-sm text-gray-700">Ativa</Label>
                 <Switch
                   id={`active-${category.id}`}
                   checked={category.is_active ?? true}
@@ -268,7 +268,7 @@ export function FotoFacilCategoriesManager() {
       </div>
 
       {categories.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-gray-600 bg-white rounded-xl border border-gray-200">
           Nenhuma categoria criada. Clique em "Nova Categoria" para começar.
         </div>
       )}

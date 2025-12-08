@@ -273,17 +273,17 @@ export function FotoFacilEventsManager() {
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center p-8">Carregando...</div>;
+    return <div className="flex items-center justify-center p-8 text-gray-700">Carregando...</div>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Eventos FOTOFÁCIL</h2>
-          <p className="text-muted-foreground text-sm">Gerencie os eventos e seus preços</p>
+          <h2 className="text-2xl font-bold text-gray-900">Eventos FOTOFÁCIL</h2>
+          <p className="text-gray-600 text-sm">Gerencie os eventos e seus preços</p>
         </div>
-        <Button onClick={openCreateDialog}>
+        <Button onClick={openCreateDialog} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
           <Plus className="h-4 w-4 mr-2" />
           Novo Evento
         </Button>
@@ -291,19 +291,19 @@ export function FotoFacilEventsManager() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {events.map((event) => (
-          <Card key={event.id} className={!event.is_active ? 'opacity-60' : ''}>
+          <Card key={event.id} className={`bg-white border-gray-200 ${!event.is_active ? 'opacity-60' : ''}`}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-lg">{event.title}</CardTitle>
+                  <CardTitle className="text-lg text-gray-900">{event.title}</CardTitle>
                   {event.fotofacil_categories && (
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs text-gray-600 border-gray-300">
                       {event.fotofacil_categories.name}
                     </Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(event)}>
+                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(event)} className="text-gray-600 hover:text-gray-900">
                     <Pencil className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" onClick={() => setDeleteId(event.id)}>
@@ -322,11 +322,11 @@ export function FotoFacilEventsManager() {
               )}
               <div className="flex items-center justify-between">
                 {getStatusBadge(event.status)}
-                <span className="text-sm font-medium text-primary">
+                <span className="text-sm font-medium text-emerald-600">
                   {formatPrice(event.default_price_cents)}/foto
                 </span>
               </div>
-              <div className="space-y-1 text-xs text-muted-foreground">
+              <div className="space-y-1 text-xs text-gray-500">
                 {event.event_date && (
                   <div className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -346,7 +346,7 @@ export function FotoFacilEventsManager() {
       </div>
 
       {events.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
+        <div className="text-center py-12 text-gray-600 bg-white rounded-xl border border-gray-200">
           Nenhum evento criado. Clique em "Novo Evento" para começar.
         </div>
       )}

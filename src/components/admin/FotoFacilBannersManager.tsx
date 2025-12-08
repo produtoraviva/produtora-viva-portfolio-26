@@ -157,43 +157,43 @@ export function FotoFacilBannersManager() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Image className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 text-gray-900">
+            <Image className="w-5 h-5 text-emerald-600" />
             Banners da Página Inicial
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Add New Banner */}
-          <div className="p-4 border border-dashed rounded-xl space-y-4">
-            <h4 className="font-medium">Adicionar Novo Banner</h4>
+          <div className="p-4 border border-dashed border-gray-300 rounded-xl space-y-4 bg-gray-50">
+            <h4 className="font-medium text-gray-900">Adicionar Novo Banner</h4>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="banner-title">Título</Label>
+                <Label htmlFor="banner-title" className="text-gray-700">Título</Label>
                 <Input
                   id="banner-title"
                   value={newBanner.title}
                   onChange={(e) => setNewBanner(prev => ({ ...prev, title: e.target.value }))}
                   placeholder="Ex: Encontre suas fotos"
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
               <div>
-                <Label htmlFor="banner-url">URL da Imagem</Label>
+                <Label htmlFor="banner-url" className="text-gray-700">URL da Imagem</Label>
                 <Input
                   id="banner-url"
                   value={newBanner.image_url}
                   onChange={(e) => setNewBanner(prev => ({ ...prev, image_url: e.target.value }))}
                   placeholder="https://..."
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
             </div>
             
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <Clock className="w-4 h-4" />
                   Duração do Slide (segundos): {newBanner.slide_duration}s
                 </Label>
@@ -207,7 +207,7 @@ export function FotoFacilBannersManager() {
                 />
               </div>
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <Eye className="w-4 h-4" />
                   Opacidade: {Math.round(newBanner.opacity * 100)}%
                 </Label>
@@ -222,7 +222,7 @@ export function FotoFacilBannersManager() {
               </div>
             </div>
             
-            <Button onClick={handleCreate} className="rounded-lg">
+            <Button onClick={handleCreate} className="rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white">
               <Plus className="w-4 h-4 mr-2" />
               Adicionar Banner
             </Button>
