@@ -48,7 +48,7 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
 
   // Collapsible states
   const [isSettingsOpen, setIsSettingsOpen] = useState(true);
-  const [isInfoOpen, setIsInfoOpen] = useState(true);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
 

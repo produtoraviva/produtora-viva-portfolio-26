@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ImageModal from "./ImageModal";
 import { LazyImage } from "./LazyImage";
@@ -118,6 +119,13 @@ const OtherWorks = () => {
             <span className="text-muted-foreground">Trabalhos</span>
           </h2>
         </div>
+        
+        <Link 
+          to="/portfolio"
+          className="mt-4 md:mt-0 text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-6 py-3 font-bold"
+        >
+          Ver Portfolio Completo
+        </Link>
       </div>
 
       {/* Grid - Max 2 items, 1 item takes full width */}

@@ -135,49 +135,46 @@ const Testimonials = () => {
   return (
     <section 
       id="depoimentos" 
-      className="py-20 border-t border-border bg-background"
+      className="py-16 border-t border-border bg-background"
     >
       <div className="max-w-[1400px] mx-auto px-4">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-3">
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
               Depoimentos
             </p>
-            <h2 className="text-3xl md:text-5xl font-bold uppercase tracking-tighter">
+            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tighter">
               O que dizem
             </h2>
           </div>
           
           {/* Navigation arrows - desktop */}
           {testimonials.length > 1 && (
-            <div className="hidden md:flex items-center gap-4 mt-4 md:mt-0">
+            <div className="hidden md:flex items-center gap-3 mt-4 md:mt-0">
               <button 
                 onClick={handlePrev}
-                className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                className="p-2 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
                 aria-label="Anterior"
               >
-                <ChevronLeft className="w-5 h-5" />
+                <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm font-mono text-muted-foreground min-w-[60px] text-center">
+              <span className="text-xs font-mono text-muted-foreground min-w-[50px] text-center">
                 {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
               </span>
               <button 
                 onClick={handleNext}
-                className="p-3 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
+                className="p-2 border border-border hover:border-foreground hover:bg-foreground hover:text-background transition-all duration-300"
                 aria-label="Próximo"
               >
-                <ChevronRight className="w-5 h-5" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
 
-        {/* Testimonial Content Area with Gray Background */}
-        <div className="relative bg-secondary py-12 px-6 md:px-12">
-          {/* Quote icon */}
-          <Quote className="absolute top-6 left-6 w-8 h-8 text-muted-foreground/20" />
-          
+        {/* Testimonial Content Area with Gray Background - Compact Layout */}
+        <div className="relative bg-secondary py-8 px-4 md:px-8">
           {/* Carousel */}
           <div 
             className="overflow-hidden cursor-grab active:cursor-grabbing"
@@ -199,35 +196,41 @@ const Testimonials = () => {
                   key={testimonial.id}
                   className="w-full flex-shrink-0"
                 >
-                  <div className="max-w-4xl mx-auto select-none text-center py-8">
-                    {/* Stars */}
-                    <div className="flex justify-center gap-1 mb-8">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 text-foreground fill-current" />
-                      ))}
-                    </div>
-
-                    {/* Text */}
-                    <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed mb-10 tracking-tight italic">
-                      "{testimonial.text}"
-                    </blockquote>
-
-                    {/* Author */}
-                    <div className="flex flex-col items-center">
-                      {testimonial.image && (
-                        <div className="w-14 h-14 mb-4 overflow-hidden border border-border">
-                          <img
-                            src={testimonial.image}
-                            alt={testimonial.name}
-                            className="w-full h-full object-cover grayscale"
-                          />
+                  <div className="max-w-5xl mx-auto select-none">
+                    {/* Compact horizontal layout: Left (photo/name) | Right (stars/text) */}
+                    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
+                      {/* Left side - Author info */}
+                      <div className="flex-shrink-0 flex flex-col items-center md:items-start text-center md:text-left md:w-40">
+                        {testimonial.image && (
+                          <div className="w-16 h-16 mb-3 overflow-hidden border border-border">
+                            <img
+                              src={testimonial.image}
+                              alt={testimonial.name}
+                              className="w-full h-full object-cover grayscale"
+                            />
+                          </div>
+                        )}
+                        <div className="font-bold uppercase tracking-[0.1em] text-xs mb-1">
+                          {testimonial.name}
                         </div>
-                      )}
-                      <div className="font-bold uppercase tracking-[0.15em] text-sm mb-1">
-                        {testimonial.name}
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          {testimonial.event}
+                        </div>
                       </div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                        {testimonial.event}
+                      
+                      {/* Right side - Stars and text */}
+                      <div className="flex-1">
+                        {/* Stars */}
+                        <div className="flex gap-1 mb-4">
+                          {[...Array(testimonial.rating)].map((_, i) => (
+                            <Star key={i} className="h-3 w-3 text-foreground fill-current" />
+                          ))}
+                        </div>
+
+                        {/* Text */}
+                        <blockquote className="text-base md:text-lg lg:text-xl font-light leading-relaxed tracking-tight italic">
+                          "{testimonial.text}"
+                        </blockquote>
                       </div>
                     </div>
                   </div>
@@ -236,25 +239,24 @@ const Testimonials = () => {
             </div>
           </div>
 
-          {/* Scroll indicator - mobile */}
+          {/* Scroll indicator with arrow - mobile */}
           {testimonials.length > 1 && (
-            <div className="flex flex-col items-center mt-8 md:hidden">
-              <div className="flex items-center gap-2 text-muted-foreground">
-                <Mouse className="w-5 h-5 animate-pulse" />
-                <span className="text-[10px] uppercase tracking-[0.2em]">Deslize</span>
-              </div>
+            <div className="flex items-center justify-center gap-2 mt-6 md:hidden text-muted-foreground">
+              <ChevronLeft className="w-4 h-4" />
+              <span className="text-[9px] uppercase tracking-[0.15em]">Scroll</span>
+              <ChevronRight className="w-4 h-4" />
             </div>
           )}
           
           {/* Progress dots */}
           {testimonials.length > 1 && (
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center gap-2 mt-4">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
-                  className={`h-1 transition-all duration-300 ${
-                    index === currentIndex ? "bg-foreground w-8" : "bg-muted-foreground/30 w-4"
+                  className={`h-0.5 transition-all duration-300 ${
+                    index === currentIndex ? "bg-foreground w-6" : "bg-muted-foreground/30 w-3"
                   }`}
                   aria-label={`Ir para depoimento ${index + 1}`}
                 />
