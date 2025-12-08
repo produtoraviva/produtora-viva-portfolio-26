@@ -45,6 +45,23 @@ interface PortfolioItem {
   created_at: string;
 }
 
+// Define the layout pattern that repeats
+// 0 = normal square (1x1)
+// 1 = two horizontal stacked vertically (2 items in 1x1 space)
+// 2 = two vertical side by side (2 items in 1x1 space) 
+// 3 = horizontal wide (1x2 horizontal)
+// 4 = vertical tall (2x1 vertical) - desktop/tablet only
+const LAYOUT_PATTERN = [
+  0, 0, 0,     // Row 1: 3 normal squares
+  1, 0, 2,     // Row 2: stacked, normal, side by side
+  0, 0, 0,     // Row 3: 3 normal squares
+  3, 0,        // Row 4: wide horizontal + normal
+  0, 4, 0,     // Row 5: normal, tall vertical (spans 2 rows), normal
+  0, 0, 0,     // Row 6: 3 normal (with tall from above)
+  0, 0, 0,     // Row 7: 3 normal squares
+  2, 0, 1,     // Row 8: side by side, normal, stacked
+];
+
 const PortfolioFull = () => {
   const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
   const [activePortfolioCategory, setActivePortfolioCategory] = useState<string>("all");
@@ -324,6 +341,11 @@ const PortfolioFull = () => {
     return subcategoryMap.get(subcategoryId) || subcategoryId;
   };
 
+  // Get layout type for an item based on its position
+  const getLayoutType = (index: number): number => {
+    return LAYOUT_PATTERN[index % LAYOUT_PATTERN.length];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -334,6 +356,242 @@ const PortfolioFull = () => {
       </div>
     );
   }
+
+  // Render a single media item
+  const renderMediaItem = (item: PortfolioItem, index: number, isSmall: boolean = false) => {
+    const categoryLabel = item.category ? getCategoryLabel(item.category) : '';
+    const subcategoryLabel = item.subcategory ? getSubcategoryLabel(item.subcategory) : '';
+    const hasCategory = categoryLabel && categoryLabel.trim() !== '';
+    const hasSubcategory = subcategoryLabel && subcategoryLabel.trim() !== '';
+
+    return (
+      <div 
+        key={`${item.id}-${index}`}
+        className={`group cursor-pointer animate-fade-in-up relative overflow-hidden ${isSmall ? 'h-full' : ''}`}
+        onClick={() => handleImageClick(index)}
+      >
+        <div className={`relative ${isSmall ? 'h-full' : 'aspect-square'} overflow-hidden`}>
+          {item.media_type === 'video' ? (
+            <>
+              {item.thumbnail_url ? (
+                <img
+                  src={item.thumbnail_url}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+              ) : (
+                <video
+                  src={item.file_url}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  muted
+                  playsInline
+                />
+              )}
+              {/* Play icon overlay for videos */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className={`${isSmall ? 'w-10 h-10' : 'w-16 h-16'} bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300`}>
+                  <Play className={`${isSmall ? 'w-4 h-4' : 'w-6 h-6'} text-foreground ml-1`} fill="currentColor" />
+                </div>
+              </div>
+            </>
+          ) : (
+            <img
+              src={item.thumbnail_url || item.file_url}
+              alt={item.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+          )}
+          {/* Overlay - Bottom info only */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {(hasCategory || hasSubcategory) && (
+              <span className={`${isSmall ? 'text-[7px]' : 'text-[10px]'} font-light font-mono text-white/80 uppercase tracking-wider mb-1 block`}>
+                {categoryLabel}{hasCategory && hasSubcategory ? ' · ' : ''}{subcategoryLabel}
+              </span>
+            )}
+            <h3 className={`font-light ${isSmall ? 'text-xs' : 'text-lg'} text-white uppercase`}>{item.title}</h3>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Render items with varied layout pattern
+  const renderGridWithPattern = () => {
+    const elements: JSX.Element[] = [];
+    let itemIndex = 0;
+
+    while (itemIndex < currentItems.length) {
+      const layoutType = getLayoutType(itemIndex);
+      const item = currentItems[itemIndex];
+
+      switch (layoutType) {
+        case 0: // Normal square
+          elements.push(
+            <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1">
+              {renderMediaItem(item, itemIndex)}
+            </div>
+          );
+          itemIndex++;
+          break;
+
+        case 1: // Two horizontal stacked vertically
+          if (itemIndex + 1 < currentItems.length) {
+            elements.push(
+              <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1 flex flex-col gap-1">
+                <div className="flex-1 min-h-0">
+                  {renderMediaItem(currentItems[itemIndex], itemIndex, true)}
+                </div>
+                <div className="flex-1 min-h-0">
+                  {renderMediaItem(currentItems[itemIndex + 1], itemIndex + 1, true)}
+                </div>
+              </div>
+            );
+            itemIndex += 2;
+          } else {
+            elements.push(
+              <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1">
+                {renderMediaItem(item, itemIndex)}
+              </div>
+            );
+            itemIndex++;
+          }
+          break;
+
+        case 2: // Two vertical side by side
+          if (itemIndex + 1 < currentItems.length) {
+            elements.push(
+              <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1 flex flex-row gap-1">
+                <div className="flex-1 min-w-0">
+                  {renderMediaItem(currentItems[itemIndex], itemIndex, true)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  {renderMediaItem(currentItems[itemIndex + 1], itemIndex + 1, true)}
+                </div>
+              </div>
+            );
+            itemIndex += 2;
+          } else {
+            elements.push(
+              <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1">
+                {renderMediaItem(item, itemIndex)}
+              </div>
+            );
+            itemIndex++;
+          }
+          break;
+
+        case 3: // Horizontal wide (spans 2 columns)
+          elements.push(
+            <div key={`grid-${itemIndex}`} className="col-span-2 row-span-1">
+              <div className="aspect-[2/1] relative overflow-hidden group cursor-pointer" onClick={() => handleImageClick(itemIndex)}>
+                {item.media_type === 'video' ? (
+                  <>
+                    {item.thumbnail_url ? (
+                      <img
+                        src={item.thumbnail_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <video
+                        src={item.file_url}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        muted
+                        playsInline
+                      />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                        <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img
+                    src={item.thumbnail_url || item.file_url}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {(item.category || item.subcategory) && (
+                    <span className="text-[10px] font-light font-mono text-white/80 uppercase tracking-wider mb-1 block">
+                      {item.category ? getCategoryLabel(item.category) : ''}{item.category && item.subcategory ? ' · ' : ''}{item.subcategory ? getSubcategoryLabel(item.subcategory) : ''}
+                    </span>
+                  )}
+                  <h3 className="font-light text-lg text-white uppercase">{item.title}</h3>
+                </div>
+              </div>
+            </div>
+          );
+          itemIndex++;
+          break;
+
+        case 4: // Vertical tall (spans 2 rows) - desktop only
+          elements.push(
+            <div key={`grid-${itemIndex}`} className="col-span-1 row-span-2 hidden md:block">
+              <div className="aspect-[1/2] relative overflow-hidden group cursor-pointer h-full" onClick={() => handleImageClick(itemIndex)}>
+                {item.media_type === 'video' ? (
+                  <>
+                    {item.thumbnail_url ? (
+                      <img
+                        src={item.thumbnail_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <video
+                        src={item.file_url}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        muted
+                        playsInline
+                      />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center">
+                        <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <img
+                    src={item.thumbnail_url || item.file_url}
+                    alt={item.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                )}
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {(item.category || item.subcategory) && (
+                    <span className="text-[10px] font-light font-mono text-white/80 uppercase tracking-wider mb-1 block">
+                      {item.category ? getCategoryLabel(item.category) : ''}{item.category && item.subcategory ? ' · ' : ''}{item.subcategory ? getSubcategoryLabel(item.subcategory) : ''}
+                    </span>
+                  )}
+                  <h3 className="font-light text-lg text-white uppercase">{item.title}</h3>
+                </div>
+              </div>
+            </div>
+          );
+          // On mobile, render as normal square
+          elements.push(
+            <div key={`grid-${itemIndex}-mobile`} className="col-span-1 row-span-1 md:hidden">
+              {renderMediaItem(item, itemIndex)}
+            </div>
+          );
+          itemIndex++;
+          break;
+
+        default:
+          elements.push(
+            <div key={`grid-${itemIndex}`} className="col-span-1 row-span-1">
+              {renderMediaItem(item, itemIndex)}
+            </div>
+          );
+          itemIndex++;
+      }
+    }
+
+    return elements;
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -446,61 +704,9 @@ const PortfolioFull = () => {
           </div>
         </div>
 
-        {/* Portfolio Grid */}
-        <div className={`grid gap-4 ${
-          viewType === "grid" 
-            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-        }`}>
-          {currentItems.map((item, index) => (
-            <div 
-              key={item.id} 
-              className="portfolio-item group cursor-pointer animate-fade-in-up"
-              onClick={() => handleImageClick(index)}
-            >
-              <div className="relative aspect-square overflow-hidden">
-                {item.media_type === 'video' ? (
-                  <>
-                    {item.thumbnail_url ? (
-                      <img
-                        src={item.thumbnail_url}
-                        alt={item.title}
-                        className="w-full h-full object-cover transition-all duration-700"
-                      />
-                    ) : (
-                      <video
-                        src={item.file_url}
-                        className="w-full h-full object-cover transition-all duration-700"
-                        muted
-                        playsInline
-                      />
-                    )}
-                    {/* Play icon overlay for videos */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
-                        <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <img
-                    src={item.thumbnail_url || item.file_url}
-                    alt={item.title}
-                    className="w-full h-full object-cover transition-all duration-700"
-                  />
-                )}
-                {/* Overlay - Bottom info only */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <h3 className="font-light text-lg text-white uppercase">{item.title}</h3>
-                  {item.category && (
-                    <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider">
-                      {getCategoryLabel(item.category)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Portfolio Grid with Pattern */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 auto-rows-fr">
+          {renderGridWithPattern()}
         </div>
 
         {/* Pagination */}

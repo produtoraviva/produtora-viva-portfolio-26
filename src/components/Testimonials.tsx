@@ -130,18 +130,43 @@ const Testimonials = () => {
   }
 
   const currentTestimonial = testimonials[currentIndex];
+  const hasBackgroundImage = currentTestimonial.background_image && currentTestimonial.background_image.trim() !== '';
 
   return (
     <section 
       id="depoimentos" 
-      className="py-24 md:py-32 border-t border-border bg-background relative overflow-hidden"
+      className="py-24 md:py-32 border-t border-border relative overflow-hidden"
     >
+      {/* Background Image from testimonial */}
+      {hasBackgroundImage && (
+        <div 
+          className="absolute inset-0 z-0 transition-opacity duration-700"
+          style={{ 
+            opacity: currentTestimonial.background_opacity || 0.3
+          }}
+        >
+          <img 
+            src={currentTestimonial.background_image}
+            alt=""
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
+
+      {/* Dark overlay for readability */}
+      <div 
+        className="absolute inset-0 z-[1] bg-background"
+        style={{ 
+          opacity: hasBackgroundImage ? 0.85 : 1
+        }}
+      />
+
       {/* Large decorative quote */}
-      <div className="absolute top-12 left-8 md:left-16 opacity-[0.03] pointer-events-none">
+      <div className="absolute top-12 left-8 md:left-16 opacity-[0.03] pointer-events-none z-[2]">
         <Quote className="w-32 h-32 md:w-64 md:h-64" />
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-4 relative">
+      <div className="max-w-[1200px] mx-auto px-4 relative z-[3]">
         {/* Header */}
         <div className="text-center mb-16 md:mb-20">
           <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
@@ -165,8 +190,15 @@ const Testimonials = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className="bg-secondary/50 border border-border p-8 md:p-12 lg:p-16 select-none">
+          <div className="bg-secondary/50 border border-border p-8 md:p-12 lg:p-16 select-none backdrop-blur-sm">
             <div className="max-w-4xl mx-auto">
+              {/* Stars - above testimonial */}
+              <div className="flex gap-1 mb-6">
+                {[...Array(currentTestimonial.rating)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 md:h-5 md:w-5 text-foreground fill-current" />
+                ))}
+              </div>
+
               {/* Quote Icon */}
               <div className="mb-8">
                 <Quote className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground/30" />
@@ -177,7 +209,7 @@ const Testimonials = () => {
                 "{currentTestimonial.text}"
               </blockquote>
 
-              {/* Author Info */}
+              {/* Author Info - below testimonial */}
               <div className="flex items-center gap-4 md:gap-6">
                 {currentTestimonial.image && (
                   <div className="w-14 h-14 md:w-16 md:h-16 overflow-hidden border border-border flex-shrink-0">
@@ -189,16 +221,9 @@ const Testimonials = () => {
                   </div>
                 )}
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <span className="font-bold uppercase tracking-[0.1em] text-sm md:text-base">
-                      {currentTestimonial.name}
-                    </span>
-                    <div className="flex gap-0.5">
-                      {[...Array(currentTestimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 text-foreground fill-current" />
-                      ))}
-                    </div>
-                  </div>
+                  <span className="font-bold uppercase tracking-[0.1em] text-sm md:text-base block mb-1">
+                    {currentTestimonial.name}
+                  </span>
                   <span className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
                     {currentTestimonial.event}
                   </span>
