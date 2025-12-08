@@ -1,12 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
 
 const Hero = () => {
   const [heroImage, setHeroImage] = useState<string>("");
   const [heroOpacity, setHeroOpacity] = useState<number>(100);
   const [isLoading, setIsLoading] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
+  const heroRef = useRef<HTMLElement>(null);
+
+  // Parallax effect on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Fetch homepage backgrounds from database with direct query for reliability
   useEffect(() => {
@@ -51,11 +63,24 @@ const Hero = () => {
     }
   };
 
+  // Parallax transform - image moves slower than scroll
+  const parallaxOffset = scrollY * 0.4;
+
   return (
-    <header id="hero" className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
-      {/* Background Image - opacity is now applied correctly */}
+    <header 
+      ref={heroRef}
+      id="hero" 
+      className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden"
+    >
+      {/* Background Image with Parallax - Higher z-index and proper opacity */}
       {heroImage && (
-        <div className="absolute inset-0 z-0">
+        <div 
+          className="absolute inset-0"
+          style={{ 
+            transform: `translateY(${parallaxOffset}px) scale(1.1)`,
+            transition: 'transform 0.1s ease-out'
+          }}
+        >
           <img 
             src={heroImage}
             className="w-full h-full object-cover" 

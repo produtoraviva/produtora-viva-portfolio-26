@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Camera, Users, Heart, Briefcase, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Camera, Users, Heart, Briefcase, Star, ChevronRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Service {
@@ -279,21 +279,15 @@ export default function Services() {
       {/* Services Grid/Carousel */}
       {useCarousel ? (
         <div className="relative">
-          {/* Navigation Arrows */}
-          <button 
-            onClick={handlePrev}
-            disabled={currentIndex === 0}
-            className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button 
-            onClick={handleNext}
-            disabled={currentIndex >= maxIndex}
-            className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+          {/* Scroll Hint Arrow Animation - Right side */}
+          {currentIndex < maxIndex && (
+            <div className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+              <div className="flex items-center gap-1 text-muted-foreground animate-pulse">
+                <span className="text-[10px] uppercase tracking-wider hidden md:block">Scroll</span>
+                <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
+              </div>
+            </div>
+          )}
 
           <div 
             className="overflow-hidden cursor-grab active:cursor-grabbing"
@@ -316,14 +310,14 @@ export default function Services() {
             </div>
           </div>
           
-          {/* Carousel Indicators */}
-          <div className="flex justify-center gap-2 mt-8">
+          {/* Carousel Indicators - smaller on mobile */}
+          <div className="flex justify-center gap-1.5 md:gap-2 mt-6 md:mt-8">
             {Array.from({ length: maxIndex + 1 }).map((_, index) => (
               <button
                 key={index}
                 onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 transition-all duration-300 ${
-                  currentIndex === index ? 'bg-foreground w-6' : 'bg-border'
+                className={`h-1.5 md:h-2 transition-all duration-300 ${
+                  currentIndex === index ? 'bg-foreground w-4 md:w-6' : 'bg-border w-1.5 md:w-2'
                 }`}
               />
             ))}

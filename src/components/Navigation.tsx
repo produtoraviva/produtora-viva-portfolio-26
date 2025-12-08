@@ -6,6 +6,7 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isHomePage = location.pathname === '/';
@@ -19,6 +20,16 @@ const Navigation = () => {
     { label: "Depoimentos", href: "#depoimentos", route: "/" },
     { label: "Contato", href: "#contact", route: "/" },
   ];
+
+  // Track scroll for blur effect
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleNavClick = (item: typeof navItems[0]) => {
     if (item.route === "/portfolio") {
@@ -64,7 +75,11 @@ const Navigation = () => {
   }, [isOpen]);
 
   return (
-    <nav className="fixed top-0 w-full z-50 mix-blend-difference text-foreground">
+    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
+      isScrolled 
+        ? 'backdrop-blur-md bg-background/70' 
+        : 'mix-blend-difference'
+    } text-foreground`}>
       {/* Regular header for desktop */}
       <div className="hidden lg:flex justify-between items-center p-6 md:p-10">
         {/* Logo */}

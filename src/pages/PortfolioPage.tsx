@@ -20,8 +20,8 @@ const PortfolioPage = () => {
       />
       <Navigation />
       
-      {/* Breadcrumb */}
-      <div className="bg-muted/20 border-b border-border mt-16 lg:mt-20">
+      {/* Breadcrumb - with proper top spacing for tablets */}
+      <div className="bg-muted/20 border-b border-border mt-24 md:mt-28 lg:mt-20">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2 text-sm">

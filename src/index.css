@@ -404,6 +404,19 @@
   animation: infiniteScroll 60s linear infinite;
 }
 
+@keyframes bounceHorizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-bounce-horizontal {
+  animation: bounceHorizontal 1s ease-in-out infinite;
+}
+
 /* Mobile viewport fixes */
 @supports (-webkit-touch-callout: none) {
   .mobile-menu {
