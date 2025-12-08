@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { X, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 
@@ -17,6 +17,19 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
       currency: 'BRL'
     }).format(cents / 100);
   };
+
+  // Group items by event
+  const groupedItems = items.reduce((acc, item) => {
+    const key = item.eventId;
+    if (!acc[key]) {
+      acc[key] = {
+        eventTitle: item.eventTitle,
+        items: []
+      };
+    }
+    acc[key].items.push(item);
+    return acc;
+  }, {} as Record<string, { eventTitle: string; items: typeof items }>);
 
   return (
     <>
@@ -63,58 +76,79 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Carrinho vazio</h3>
                 <p className="text-gray-500 mb-6">Adicione algumas fotos para continuar</p>
-                <Button onClick={onClose} variant="outline" className="rounded-lg">
+                <Button onClick={onClose} variant="outline" className="rounded-xl">
                   Continuar comprando
                 </Button>
               </div>
             ) : (
-              <div className="space-y-3">
-                {items.map(item => (
-                  <div 
-                    key={item.photoId}
-                    className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 group"
-                  >
-                    <img 
-                      src={item.thumbUrl}
-                      alt={item.title}
-                      className="w-16 h-16 object-cover rounded-lg"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">{item.title}</p>
-                      <p className="text-emerald-600 font-semibold">{formatPrice(item.priceCents)}</p>
+              <div className="space-y-6">
+                {Object.entries(groupedItems).map(([eventId, group]) => (
+                  <div key={eventId}>
+                    {/* Event Header */}
+                    <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                      <Package className="w-4 h-4 text-emerald-600" />
+                      <span className="text-sm font-semibold text-gray-700">{group.eventTitle}</span>
+                      <span className="text-xs text-gray-400">({group.items.length} foto{group.items.length > 1 ? 's' : ''})</span>
                     </div>
-                    <button
-                      onClick={() => removeItem(item.photoId)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    
+                    {/* Event Items */}
+                    <div className="space-y-2">
+                      {group.items.map(item => (
+                        <div 
+                          key={item.photoId}
+                          className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 group"
+                        >
+                          <img 
+                            src={item.thumbUrl}
+                            alt={item.title}
+                            className="w-14 h-14 object-cover rounded-lg"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 truncate text-sm">{item.title}</p>
+                            <p className="text-xs text-gray-400">ID: {item.photoId.slice(0, 8)}</p>
+                            <p className="text-emerald-600 font-semibold text-sm">{formatPrice(item.priceCents)}</p>
+                          </div>
+                          <button
+                            onClick={() => removeItem(item.photoId)}
+                            className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer - Modernized */}
           {items.length > 0 && (
-            <div className="border-t border-gray-100 p-4 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="text-xl font-bold text-gray-900">{formatPrice(totalCents)}</span>
+            <div className="border-t border-gray-100 p-4 bg-gray-50">
+              {/* Subtotal */}
+              <div className="flex justify-between items-center mb-4 p-3 bg-white rounded-xl">
+                <div>
+                  <span className="text-sm text-gray-500">Subtotal</span>
+                  <p className="text-xs text-gray-400">{itemCount} foto{itemCount > 1 ? 's' : ''}</p>
+                </div>
+                <span className="text-2xl font-bold text-gray-900">{formatPrice(totalCents)}</span>
               </div>
               
+              {/* Go to Cart Button */}
               <Link to="/fotofacil/carrinho" onClick={onClose}>
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" size="lg">
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl h-12 text-base font-semibold" size="lg">
                   Ir ao Carrinho
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </Link>
               
+              {/* Continue Shopping */}
               <button 
                 onClick={onClose}
-                className="w-full text-center text-gray-500 hover:text-gray-700 text-sm transition-colors"
+                className="w-full text-center text-gray-600 hover:text-gray-900 text-sm transition-colors mt-3 py-2"
               >
-                Continuar comprando
+                ← Continuar comprando
               </button>
             </div>
           )}

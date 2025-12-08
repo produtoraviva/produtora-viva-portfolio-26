@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, ShoppingBag, CreditCard, Shield, Lock, Tag, X, Check, Copy, Clock, QrCode } from 'lucide-react';
+import { ArrowLeft, Trash2, ShoppingBag, CreditCard, Shield, Lock, Tag, X, Check, Copy, Clock, QrCode, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import FotoFacilFooter from '@/components/fotofacil/FotoFacilFooter';
 
 const FotoFacilCart = () => {
   const { items, removeItem, clearCart, totalCents } = useFotoFacilCart();
@@ -41,6 +42,19 @@ const FotoFacilCart = () => {
       : appliedCoupon.discountValue
     : 0;
   const finalTotalCents = Math.max(0, totalCents - discountCents);
+
+  // Group items by event
+  const groupedItems = items.reduce((acc, item) => {
+    const key = item.eventId;
+    if (!acc[key]) {
+      acc[key] = {
+        eventTitle: item.eventTitle,
+        items: []
+      };
+    }
+    acc[key].items.push(item);
+    return acc;
+  }, {} as Record<string, { eventTitle: string; items: typeof items }>);
 
   useEffect(() => {
     return () => {
@@ -245,26 +259,34 @@ const FotoFacilCart = () => {
   // Payment Screen
   if (step === 'payment' && paymentData) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-2xl mx-auto px-4 py-4">
             <h1 className="text-xl font-bold tracking-tight text-center text-gray-900">Pagamento PIX</h1>
           </div>
         </header>
 
-        <main className="max-w-lg mx-auto px-4 py-8">
+        <main className="flex-1 max-w-lg mx-auto px-4 py-8">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            {/* Header */}
             <div className="text-center mb-6">
               <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
                 <QrCode className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pedido Criado!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pedido Criado</h2>
               <p className="text-gray-600">Escaneie o QR Code ou copie o código PIX</p>
             </div>
 
-            <div className="bg-emerald-50 rounded-xl p-4 mb-6 text-center">
-              <span className="text-sm text-emerald-700">Total a pagar</span>
-              <p className="text-3xl font-bold text-emerald-600">{formatPrice(finalTotalCents)}</p>
+            {/* Order Info */}
+            <div className="bg-emerald-50 rounded-xl p-4 mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm text-emerald-700">Valor total</span>
+                <span className="text-2xl font-bold text-emerald-600">{formatPrice(finalTotalCents)}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm text-emerald-600">
+                <span>{items.length} foto{items.length > 1 ? 's' : ''}</span>
+                <span>Pedido #{paymentData.orderId.slice(0, 8)}</span>
+              </div>
             </div>
 
             {paymentData.qrCodeBase64 && (
@@ -281,15 +303,19 @@ const FotoFacilCart = () => {
 
             {paymentData.pixCopiaCola && (
               <div className="mb-6">
-                <p className="text-sm text-gray-600 mb-2 font-medium">PIX Copia e Cola:</p>
+                <p className="text-sm text-gray-700 mb-2 font-bold">PIX Copia e Cola:</p>
                 <div className="flex gap-2">
                   <Input 
                     value={paymentData.pixCopiaCola} 
                     readOnly 
-                    className="font-mono text-xs bg-gray-50"
+                    className="font-mono text-xs bg-gray-50 text-gray-800 border-gray-300 rounded-xl"
                   />
-                  <Button onClick={() => copyToClipboard(paymentData.pixCopiaCola)} variant="outline">
-                    <Copy className="w-4 h-4" />
+                  <Button 
+                    onClick={() => copyToClipboard(paymentData.pixCopiaCola)} 
+                    variant="outline"
+                    className="shrink-0 rounded-xl border-gray-300"
+                  >
+                    <Copy className="w-4 h-4 text-gray-700" />
                   </Button>
                 </div>
               </div>
@@ -313,12 +339,14 @@ const FotoFacilCart = () => {
 
           <div className="text-center">
             <Link to="/fotofacil">
-              <Button variant="ghost" className="text-gray-600">
+              <Button variant="ghost" className="text-gray-600 rounded-xl">
                 Continuar Navegando
               </Button>
             </Link>
           </div>
         </main>
+
+        <FotoFacilFooter />
       </div>
     );
   }
@@ -326,7 +354,7 @@ const FotoFacilCart = () => {
   // Checkout Screen
   if (step === 'checkout') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-4xl mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
@@ -338,7 +366,7 @@ const FotoFacilCart = () => {
           </div>
         </header>
 
-        <main className="max-w-4xl mx-auto px-4 py-8">
+        <main className="flex-1 max-w-4xl mx-auto px-4 py-8">
           <div className="grid lg:grid-cols-5 gap-8">
             {/* Form */}
             <div className="lg:col-span-3">
@@ -353,7 +381,7 @@ const FotoFacilCart = () => {
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Seu nome completo"
-                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400 text-gray-900 rounded-xl"
                     />
                   </div>
 
@@ -365,7 +393,7 @@ const FotoFacilCart = () => {
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                       placeholder="seu@email.com"
-                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400 text-gray-900 rounded-xl"
                     />
                     <p className="text-xs text-gray-500 mt-1.5">
                       Use este e-mail para baixar suas fotos posteriormente
@@ -379,7 +407,7 @@ const FotoFacilCart = () => {
                       value={formData.cpf}
                       onChange={(e) => setFormData(prev => ({ ...prev, cpf: formatCPF(e.target.value) }))}
                       placeholder="000.000.000-00"
-                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400"
+                      className="mt-1.5 bg-white border-gray-200 focus:border-gray-400 text-gray-900 rounded-xl"
                     />
                   </div>
                 </div>
@@ -415,6 +443,7 @@ const FotoFacilCart = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                        <p className="text-xs text-gray-400">{item.eventTitle}</p>
                         <p className="text-sm text-gray-500">{formatPrice(item.priceCents)}</p>
                       </div>
                     </div>
@@ -443,7 +472,7 @@ const FotoFacilCart = () => {
                 <Button 
                   onClick={handlePayment} 
                   disabled={loading}
-                  className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white h-12"
+                  className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-xl"
                 >
                   {loading ? (
                     <>
@@ -461,13 +490,15 @@ const FotoFacilCart = () => {
             </div>
           </div>
         </main>
+
+        <FotoFacilFooter />
       </div>
     );
   }
 
   // Cart Screen
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
@@ -479,7 +510,7 @@ const FotoFacilCart = () => {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-8">
         {items.length === 0 ? (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
@@ -488,12 +519,12 @@ const FotoFacilCart = () => {
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Seu carrinho está vazio</h2>
             <p className="text-gray-500 mb-6">Adicione algumas fotos para continuar</p>
             <Link to="/fotofacil">
-              <Button className="bg-gray-900 hover:bg-gray-800 text-white">Ver Fotos</Button>
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl">Ver Fotos</Button>
             </Link>
           </div>
         ) : (
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* Products */}
+            {/* Products - Grouped by Event */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -508,27 +539,42 @@ const FotoFacilCart = () => {
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  {items.map(item => (
-                    <div 
-                      key={item.photoId}
-                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
-                    >
-                      <img 
-                        src={item.thumbUrl}
-                        alt={item.title}
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{item.title}</p>
-                        <p className="text-lg font-bold text-emerald-600">{formatPrice(item.priceCents)}</p>
+                <div className="space-y-6">
+                  {Object.entries(groupedItems).map(([eventId, group]) => (
+                    <div key={eventId}>
+                      {/* Event Header */}
+                      <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
+                        <Package className="w-4 h-4 text-emerald-600" />
+                        <span className="font-semibold text-gray-800">{group.eventTitle}</span>
+                        <span className="text-sm text-gray-400">({group.items.length} foto{group.items.length > 1 ? 's' : ''})</span>
                       </div>
-                      <button
-                        onClick={() => removeItem(item.photoId)}
-                        className="text-gray-400 hover:text-red-500 p-2 transition-colors"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
+                      
+                      {/* Event Items */}
+                      <div className="space-y-3">
+                        {group.items.map(item => (
+                          <div 
+                            key={item.photoId}
+                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
+                          >
+                            <img 
+                              src={item.thumbUrl}
+                              alt={item.title}
+                              className="w-20 h-20 object-cover rounded-lg"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{item.title}</p>
+                              <p className="text-xs text-gray-400">ID: {item.photoId.slice(0, 8)}</p>
+                              <p className="text-lg font-bold text-emerald-600">{formatPrice(item.priceCents)}</p>
+                            </div>
+                            <button
+                              onClick={() => removeItem(item.photoId)}
+                              className="text-gray-400 hover:text-red-500 p-2 transition-colors rounded-full"
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -543,7 +589,7 @@ const FotoFacilCart = () => {
                 {/* Coupon */}
                 <div className="mb-6">
                   {appliedCoupon ? (
-                    <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+                    <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
                       <div className="flex items-center gap-2">
                         <Tag className="w-4 h-4 text-emerald-600" />
                         <span className="text-sm font-medium text-emerald-700">{appliedCoupon.code}</span>
@@ -558,13 +604,13 @@ const FotoFacilCart = () => {
                         placeholder="Código do cupom"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        className="bg-white border-gray-200"
+                        className="bg-white border-gray-200 text-gray-900 rounded-xl"
                       />
                       <Button 
                         variant="outline" 
                         onClick={handleApplyCoupon}
                         disabled={couponLoading}
-                        className="shrink-0"
+                        className="shrink-0 rounded-xl text-gray-700 border-gray-300"
                       >
                         {couponLoading ? '...' : 'Aplicar'}
                       </Button>
@@ -593,7 +639,7 @@ const FotoFacilCart = () => {
 
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-12"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-xl"
                   size="lg"
                 >
                   Continuar
@@ -617,6 +663,8 @@ const FotoFacilCart = () => {
           </div>
         )}
       </main>
+
+      <FotoFacilFooter />
     </div>
   );
 };
