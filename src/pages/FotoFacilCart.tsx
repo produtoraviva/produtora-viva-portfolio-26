@@ -262,7 +262,12 @@ const FotoFacilCart = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-2xl mx-auto px-4 py-4">
-            <h1 className="text-xl font-bold tracking-tight text-center text-gray-900">Pagamento PIX</h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">Pagamento PIX</h1>
+              <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                FOTOFÁCIL
+              </Link>
+            </div>
           </div>
         </header>
 
@@ -357,11 +362,16 @@ const FotoFacilCart = () => {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
           <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-5 h-5" />
-              </button>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900">Finalizar Compra</h1>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900 transition-colors rounded-lg">
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+                <h1 className="text-xl font-bold tracking-tight text-gray-900">Finalizar Compra</h1>
+              </div>
+              <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                FOTOFÁCIL
+              </Link>
             </div>
           </div>
         </header>
@@ -481,7 +491,7 @@ const FotoFacilCart = () => {
                     </>
                   ) : (
                     <>
-                      <CreditCard className="w-5 h-5 mr-2" />
+                      <QrCode className="w-5 h-5 mr-2" />
                       Pagar com PIX
                     </>
                   )}
@@ -501,11 +511,16 @@ const FotoFacilCart = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-4">
-            <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900 transition-colors">
-              <ArrowLeft className="w-5 h-5" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900 transition-colors rounded-lg">
+                <ArrowLeft className="w-5 h-5" />
+              </Link>
+              <h1 className="text-xl font-bold tracking-tight text-gray-900">Carrinho</h1>
+            </div>
+            <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              FOTOFÁCIL
             </Link>
-            <h1 className="text-xl font-bold tracking-tight text-gray-900">Carrinho</h1>
           </div>
         </div>
       </header>

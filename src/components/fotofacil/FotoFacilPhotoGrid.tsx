@@ -4,7 +4,7 @@ import { Check, ShoppingCart, Share2, X, ChevronLeft, ChevronRight } from 'lucid
 import { Button } from '@/components/ui/button';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import { toast } from 'sonner';
-import WatermarkedImage from './WatermarkedImage';
+import FotoFacilFloatingCartButton from './FotoFacilFloatingCartButton';
 
 interface Photo {
   id: string;
@@ -141,13 +141,15 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
               key={photo.id}
               className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
             >
-              {/* Photo with Watermark */}
-              <div className="aspect-square bg-gray-100 overflow-hidden">
-                <WatermarkedImage 
+              {/* Photo */}
+              <div 
+                className="aspect-square bg-gray-100 overflow-hidden cursor-pointer"
+                onClick={() => setSelectedPhotoIndex(index)}
+              >
+                <img 
                   src={photo.thumb_url || photo.url}
                   alt={photo.title || 'Foto'}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  onClick={() => setSelectedPhotoIndex(index)}
                 />
               </div>
 
@@ -192,6 +194,9 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
           className="fixed inset-0 z-50 bg-black/95 flex flex-col"
           onClick={() => setSelectedPhotoIndex(null)}
         >
+          {/* Floating Cart Button - Light mode when modal is open */}
+          <FotoFacilFloatingCartButton lightMode />
+
           {/* Close Button */}
           <button
             onClick={() => setSelectedPhotoIndex(null)}
@@ -224,11 +229,10 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
             onClick={e => e.stopPropagation()}
           >
             <div className="relative max-w-full max-h-[calc(100vh-120px)] flex flex-col items-center">
-              <WatermarkedImage 
+              <img 
                 src={selectedPhoto.url}
                 alt={selectedPhoto.title || 'Foto'}
                 className="max-w-full max-h-[calc(100vh-180px)] object-contain rounded-t-xl"
-                watermarkOpacity={0.35}
               />
               
               {/* Bottom Info Bar - Attached to image */}
@@ -250,7 +254,7 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
                       className="border-gray-300 text-gray-700 hover:text-gray-900 rounded-xl"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
-                      Compartilhar
+                      <span className="text-gray-700">Compartilhar</span>
                     </Button>
                     
                     <Button

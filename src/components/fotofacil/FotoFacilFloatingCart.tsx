@@ -91,7 +91,7 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
               </div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">Carrinho vazio</h3>
               <p className="text-gray-500 mb-6">Adicione fotos para continuar</p>
-              <Button onClick={onClose} variant="outline" className="rounded-xl">
+              <Button onClick={onClose} variant="outline" className="rounded-xl border-gray-300 text-gray-700 hover:text-gray-900">
                 Continuar Navegando
               </Button>
             </div>

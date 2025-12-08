@@ -9,9 +9,9 @@ import { FotoFacilSalesManager } from '@/components/admin/FotoFacilSalesManager'
 import { FotoFacilBannersManager } from '@/components/admin/FotoFacilBannersManager';
 import { FotoFacilCouponsManager } from '@/components/admin/FotoFacilCouponsManager';
 import { FotoFacilFooterManager } from '@/components/admin/FotoFacilFooterManager';
-import { FotoFacilWatermarkManager } from '@/components/admin/FotoFacilWatermarkManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket, FileText, Droplet } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket, FileText, Settings, Camera } from 'lucide-react';
 
 export default function AdminFotoFacil() {
   const { user, logout, isAuthenticated } = useAdmin();
@@ -33,8 +33,18 @@ export default function AdminFotoFacil() {
     return null;
   }
 
+  const tabs = [
+    { id: 'categories', label: 'Categorias', icon: Folder, description: 'Gerencie as categorias de eventos' },
+    { id: 'events', label: 'Eventos', icon: Calendar, description: 'Crie e edite eventos de fotos' },
+    { id: 'photos', label: 'Fotos', icon: Image, description: 'Upload e gestão de fotos' },
+    { id: 'banners', label: 'Banners', icon: ImageIcon, description: 'Banners da página inicial' },
+    { id: 'coupons', label: 'Cupons', icon: Ticket, description: 'Cupons de desconto' },
+    { id: 'footer', label: 'Configurações', icon: Settings, description: 'Rodapé e configurações gerais' },
+    { id: 'sales', label: 'Vendas', icon: ShoppingCart, description: 'Histórico de vendas' },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <AdminSidebar 
         activeTab="fotofacil" 
         onTabChange={(tab) => {
@@ -51,71 +61,62 @@ export default function AdminFotoFacil() {
 
       <main className="transition-all duration-300 p-4 md:p-6 lg:p-8 lg:ml-56 pt-20 lg:pt-8">
         <div className="max-w-[1600px] mx-auto">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold">FOTOFÁCIL</h1>
-            <p className="text-muted-foreground">Gerencie sua loja de fotos</p>
+          {/* Modern Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+                <Camera className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                  FOTOFÁCIL
+                </h1>
+                <p className="text-muted-foreground">Painel de Gestão da Loja de Fotos</p>
+              </div>
+            </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="flex flex-wrap gap-1 w-full max-w-5xl h-auto p-1">
-              <TabsTrigger value="categories" className="flex items-center gap-2 rounded-lg">
-                <Folder className="h-4 w-4" />
-                <span className="hidden sm:inline">Categorias</span>
-              </TabsTrigger>
-              <TabsTrigger value="events" className="flex items-center gap-2 rounded-lg">
-                <Calendar className="h-4 w-4" />
-                <span className="hidden sm:inline">Eventos</span>
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center gap-2 rounded-lg">
-                <Image className="h-4 w-4" />
-                <span className="hidden sm:inline">Fotos</span>
-              </TabsTrigger>
-              <TabsTrigger value="banners" className="flex items-center gap-2 rounded-lg">
-                <ImageIcon className="h-4 w-4" />
-                <span className="hidden sm:inline">Banners</span>
-              </TabsTrigger>
-              <TabsTrigger value="watermark" className="flex items-center gap-2 rounded-lg">
-                <Droplet className="h-4 w-4" />
-                <span className="hidden sm:inline">Marca d'Água</span>
-              </TabsTrigger>
-              <TabsTrigger value="coupons" className="flex items-center gap-2 rounded-lg">
-                <Ticket className="h-4 w-4" />
-                <span className="hidden sm:inline">Cupons</span>
-              </TabsTrigger>
-              <TabsTrigger value="footer" className="flex items-center gap-2 rounded-lg">
-                <FileText className="h-4 w-4" />
-                <span className="hidden sm:inline">Rodapé</span>
-              </TabsTrigger>
-              <TabsTrigger value="sales" className="flex items-center gap-2 rounded-lg">
-                <ShoppingCart className="h-4 w-4" />
-                <span className="hidden sm:inline">Vendas</span>
-              </TabsTrigger>
-            </TabsList>
+            {/* Modern Tab Navigation */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2">
+              <TabsList className="flex flex-wrap gap-1 w-full h-auto bg-transparent p-0">
+                {tabs.map(tab => (
+                  <TabsTrigger 
+                    key={tab.id}
+                    value={tab.id} 
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-all duration-200 hover:bg-gray-100 data-[state=active]:hover:bg-emerald-500"
+                  >
+                    <tab.icon className="h-4 w-4" />
+                    <span className="hidden sm:inline font-medium">{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-            <TabsContent value="categories">
-              <FotoFacilCategoriesManager />
-            </TabsContent>
-            <TabsContent value="events">
-              <FotoFacilEventsManager />
-            </TabsContent>
-            <TabsContent value="photos">
-              <FotoFacilPhotosManager />
-            </TabsContent>
-            <TabsContent value="banners">
-              <FotoFacilBannersManager />
-            </TabsContent>
-            <TabsContent value="watermark">
-              <FotoFacilWatermarkManager />
-            </TabsContent>
-            <TabsContent value="coupons">
-              <FotoFacilCouponsManager />
-            </TabsContent>
-            <TabsContent value="footer">
-              <FotoFacilFooterManager />
-            </TabsContent>
-            <TabsContent value="sales">
-              <FotoFacilSalesManager />
-            </TabsContent>
+            {/* Tab Content */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <TabsContent value="categories" className="m-0">
+                <FotoFacilCategoriesManager />
+              </TabsContent>
+              <TabsContent value="events" className="m-0">
+                <FotoFacilEventsManager />
+              </TabsContent>
+              <TabsContent value="photos" className="m-0">
+                <FotoFacilPhotosManager />
+              </TabsContent>
+              <TabsContent value="banners" className="m-0">
+                <FotoFacilBannersManager />
+              </TabsContent>
+              <TabsContent value="coupons" className="m-0">
+                <FotoFacilCouponsManager />
+              </TabsContent>
+              <TabsContent value="footer" className="m-0">
+                <FotoFacilFooterManager />
+              </TabsContent>
+              <TabsContent value="sales" className="m-0">
+                <FotoFacilSalesManager />
+              </TabsContent>
+            </div>
           </Tabs>
         </div>
       </main>

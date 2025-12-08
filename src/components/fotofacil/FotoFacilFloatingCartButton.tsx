@@ -4,7 +4,11 @@ import { ShoppingCart } from 'lucide-react';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import FotoFacilFloatingCart from './FotoFacilFloatingCart';
 
-const FotoFacilFloatingCartButton = () => {
+interface FotoFacilFloatingCartButtonProps {
+  lightMode?: boolean;
+}
+
+const FotoFacilFloatingCartButton = ({ lightMode = false }: FotoFacilFloatingCartButtonProps) => {
   const { itemCount, totalCents } = useFotoFacilCart();
   const [showCart, setShowCart] = useState(false);
   const location = useLocation();
@@ -25,16 +29,27 @@ const FotoFacilFloatingCartButton = () => {
   return (
     <>
       <button
-        onClick={() => setShowCart(true)}
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 bg-gray-800 hover:bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowCart(true);
+        }}
+        className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+          lightMode 
+            ? 'bg-white hover:bg-gray-50 text-gray-800' 
+            : 'bg-gray-800 hover:bg-gray-900 text-white'
+        }`}
       >
         <div className="relative">
           <ShoppingCart className="w-5 h-5" />
-          <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          <span className={`absolute -top-2 -right-2 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${
+            lightMode ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
+          }`}>
             {itemCount}
           </span>
         </div>
-        <span className="font-semibold text-white">{formatPrice(totalCents)}</span>
+        <span className={`font-semibold ${lightMode ? 'text-gray-800' : 'text-white'}`}>
+          {formatPrice(totalCents)}
+        </span>
       </button>
 
       <FotoFacilFloatingCart isOpen={showCart} onClose={() => setShowCart(false)} />
