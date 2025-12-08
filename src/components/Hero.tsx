@@ -72,13 +72,14 @@ const Hero = () => {
       id="hero" 
       className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden bg-background"
     >
-      {/* Background Image with Parallax - Highest z-index to ensure visibility */}
+      {/* Background Image with Parallax */}
       {heroImage && (
         <div 
-          className="absolute inset-0 z-0"
+          className="absolute inset-0"
           style={{ 
             transform: `translateY(${parallaxOffset}px) scale(1.1)`,
-            transition: 'transform 0.1s ease-out'
+            transition: 'transform 0.1s ease-out',
+            zIndex: 1
           }}
         >
           <img 
@@ -86,12 +87,16 @@ const Hero = () => {
             className="w-full h-full object-cover" 
             alt="Hero Background"
             style={{ opacity: heroOpacity / 100 }}
+            onLoad={() => console.log('Hero image loaded, opacity:', heroOpacity)}
           />
         </div>
       )}
+      
+      {/* Dark overlay to ensure text readability if needed */}
+      <div className="absolute inset-0 bg-background/30" style={{ zIndex: 2 }} />
 
       {/* Main Content */}
-      <div className="z-10 text-center space-y-4 px-4 reveal-text">
+      <div className="relative text-center space-y-4 px-4 reveal-text" style={{ zIndex: 10 }}>
         <p className="text-xs md:text-sm font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2 animate-fade-in-delayed">
           Fotografia & Cinema
         </p>
@@ -102,7 +107,7 @@ const Hero = () => {
       </div>
 
       {/* Bottom Left Text */}
-      <div className="absolute bottom-10 left-6 md:left-10 z-10 hidden md:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
+      <div className="absolute bottom-10 left-6 md:left-10 hidden md:block animate-fade-in" style={{ animationDelay: '0.6s', zIndex: 10 }}>
         <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
           Capturando a essência através de lentes. 
           <br />Especializado em casamentos, eventos e ensaios.
@@ -112,8 +117,8 @@ const Hero = () => {
       {/* Scroll Indicator with bouncing arrow */}
       <button 
         onClick={scrollToContent}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 group cursor-pointer animate-fade-in"
-        style={{ animationDelay: '0.8s' }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 group cursor-pointer animate-fade-in"
+        style={{ animationDelay: '0.8s', zIndex: 10 }}
         aria-label="Scroll para baixo"
       >
         <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground group-hover:text-foreground transition-colors">

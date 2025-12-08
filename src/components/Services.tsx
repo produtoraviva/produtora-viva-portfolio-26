@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Camera, Users, Heart, Briefcase, Star, ChevronRight } from 'lucide-react';
+import { Camera, Users, Heart, Briefcase, Star, ChevronRight, ArrowRight } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 
 interface Service {
@@ -159,9 +159,11 @@ export default function Services() {
 
   if (loading) {
     return (
-      <section id="servicos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-6 w-6 border-b border-foreground"></div>
+      <section id="servicos" className="py-24 border-t border-border bg-secondary/30">
+        <div className="max-w-[1600px] mx-auto px-4">
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-spin rounded-full h-6 w-6 border-b border-foreground"></div>
+          </div>
         </div>
       </section>
     );
@@ -173,81 +175,91 @@ export default function Services() {
 
   const ServiceCard = ({ service }: { service: Service }) => {
     const IconComponent = getIconComponent(service.icon);
-    const cardWidth = visibleCount === 1 ? 'w-full' : visibleCount === 2 ? 'w-[calc(50%-0.5rem)]' : 'w-[calc(33.333%-0.67rem)]';
+    const cardWidth = visibleCount === 1 ? 'w-full' : visibleCount === 2 ? 'w-[calc(50%-0.75rem)]' : 'w-[calc(33.333%-1rem)]';
     
     return (
       <div 
-        className={`bg-background p-6 md:p-8 lg:p-12 group transition-all duration-500 border border-border relative flex-shrink-0 ${cardWidth} ${
+        className={`group relative flex-shrink-0 ${cardWidth} ${
           service.is_highlighted 
-            ? 'bg-foreground/5 scale-[1.02] shadow-lg' 
-            : 'hover:bg-secondary/50'
-        }`}
+            ? 'bg-foreground text-background' 
+            : 'bg-background hover:bg-secondary/50'
+        } transition-all duration-500`}
       >
-        {/* Icon and Popular Badge on the same line */}
-        <div className="flex items-center justify-between mb-6">
-          <div className={`w-12 h-12 border flex items-center justify-center transition-colors duration-300 ${
-            service.is_highlighted 
-              ? 'border-foreground bg-foreground text-background' 
-              : 'border-border group-hover:border-foreground'
-          }`}>
-            <IconComponent className="h-6 w-6" />
-          </div>
-          
-          {service.is_highlighted && (
-            <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
-              ★ Popular
-            </span>
-          )}
-        </div>
-        
-        <div className="space-y-6">
-          {/* Title & Description */}
-          <div>
-            <h3 className={`text-xl font-bold uppercase tracking-tight mb-2 ${
-              service.is_highlighted ? 'text-foreground' : ''
+        {/* Card Content */}
+        <div className="p-8 lg:p-10 h-full flex flex-col">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
+            <div className={`w-14 h-14 flex items-center justify-center transition-all duration-300 ${
+              service.is_highlighted 
+                ? 'bg-background text-foreground' 
+                : 'bg-foreground/5 group-hover:bg-foreground group-hover:text-background'
             }`}>
+              <IconComponent className="h-7 w-7" />
+            </div>
+            
+            {service.is_highlighted && (
+              <span className="bg-background text-foreground text-[10px] font-mono uppercase tracking-wider px-3 py-1.5 font-bold">
+                Popular
+              </span>
+            )}
+          </div>
+
+          {/* Title & Description */}
+          <div className="mb-8 flex-grow">
+            <h3 className="text-2xl font-bold uppercase tracking-tight mb-3">
               {service.title}
             </h3>
             {service.subtitle && (
-              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">
+              <p className={`text-xs uppercase tracking-wider mb-4 ${
+                service.is_highlighted ? 'text-background/70' : 'text-muted-foreground'
+              }`}>
                 {service.subtitle}
               </p>
             )}
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className={`text-sm leading-relaxed ${
+              service.is_highlighted ? 'text-background/80' : 'text-muted-foreground'
+            }`}>
               {service.description}
             </p>
           </div>
 
           {/* Features */}
-          <div className="space-y-2 pt-4 border-t border-border">
+          <div className={`space-y-3 py-6 border-y mb-8 ${
+            service.is_highlighted ? 'border-background/20' : 'border-border'
+          }`}>
             {service.features.slice(0, 4).map((feature, featureIndex) => (
-              <div key={featureIndex} className="flex items-start gap-2">
-                <span className={`text-xs ${service.is_highlighted ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {service.is_highlighted ? '★' : '—'}
+              <div key={featureIndex} className="flex items-start gap-3">
+                <span className={`text-xs mt-0.5 ${
+                  service.is_highlighted ? 'text-background' : 'text-foreground'
+                }`}>
+                  ✓
                 </span>
-                <span className="text-xs text-muted-foreground">{feature}</span>
+                <span className={`text-sm ${
+                  service.is_highlighted ? 'text-background/80' : 'text-muted-foreground'
+                }`}>
+                  {feature}
+                </span>
               </div>
             ))}
           </div>
 
           {/* Price & CTA */}
-          <div className="pt-6">
+          <div className="mt-auto">
             {service.price && (
-              <div className={`text-2xl font-bold tracking-tight mb-4 ${
-                service.is_highlighted ? 'text-foreground' : ''
-              }`}>
+              <div className="text-3xl font-bold tracking-tight mb-6">
                 {service.price}
               </div>
             )}
             <button 
               onClick={scrollToContact}
-              className={`text-xs uppercase tracking-[0.15em] transition-colors duration-300 border-b pb-1 ${
+              className={`w-full py-4 text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
                 service.is_highlighted 
-                  ? 'text-foreground border-foreground hover:opacity-70' 
-                  : 'text-muted-foreground hover:text-foreground border-muted-foreground hover:border-foreground'
+                  ? 'bg-background text-foreground hover:bg-background/90' 
+                  : 'bg-foreground text-background hover:bg-foreground/90'
               }`}
             >
               Solicitar Orçamento
+              <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -260,92 +272,97 @@ export default function Services() {
     : 'translateX(0)';
 
   return (
-    <section id="servicos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border" ref={containerRef}>
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
-        <div>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
-            Serviços
-          </p>
-          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
-            Nossos Serviços
-          </h2>
-          <p className="text-muted-foreground max-w-md mt-4">
-            Serviços personalizados para capturar seus momentos especiais.
+    <section id="servicos" className="py-24 border-t border-border bg-secondary/30" ref={containerRef}>
+      <div className="max-w-[1600px] mx-auto px-4">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16">
+          <div>
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+              Serviços
+            </p>
+            <h2 className="text-4xl md:text-6xl font-bold uppercase tracking-tighter">
+              Nossos
+              <br />
+              <span className="text-muted-foreground font-light">Serviços</span>
+            </h2>
+          </div>
+          <p className="text-muted-foreground max-w-sm mt-6 md:mt-0 text-right hidden md:block">
+            Serviços personalizados para<br />capturar seus momentos especiais.
           </p>
         </div>
-      </div>
 
-      {/* Services Grid/Carousel */}
-      {useCarousel ? (
-        <div className="relative">
-          {/* Scroll Hint Arrow Animation - Right side */}
-          {currentIndex < maxIndex && (
-            <div className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <div className="flex items-center gap-1 text-muted-foreground animate-pulse">
-                <span className="text-[10px] uppercase tracking-wider hidden md:block">Scroll</span>
-                <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
+        {/* Services Grid/Carousel */}
+        {useCarousel ? (
+          <div className="relative">
+            {/* Scroll Hint Arrow Animation - Right side */}
+            {currentIndex < maxIndex && (
+              <div className="absolute -right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <span className="text-[10px] uppercase tracking-wider hidden md:block opacity-60">Scroll</span>
+                  <ChevronRight className="h-5 w-5 animate-bounce-horizontal opacity-60" />
+                </div>
+              </div>
+            )}
+
+            <div 
+              className="overflow-hidden cursor-grab active:cursor-grabbing"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseLeave}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div 
+                ref={carouselRef}
+                className={`flex gap-6 ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
+                style={{ transform: translateValue }}
+              >
+                {services.map((service) => (
+                  <ServiceCard key={service.id} service={service} />
+                ))}
               </div>
             </div>
-          )}
-
-          <div 
-            className="overflow-hidden cursor-grab active:cursor-grabbing"
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div 
-              ref={carouselRef}
-              className={`flex gap-4 ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
-              style={{ transform: translateValue }}
-            >
-              {services.map((service) => (
-                <ServiceCard key={service.id} service={service} />
+            
+            {/* Carousel Indicators - smaller on mobile */}
+            <div className="flex justify-center gap-1.5 md:gap-2 mt-8">
+              {Array.from({ length: maxIndex + 1 }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`h-1 transition-all duration-300 ${
+                    currentIndex === index ? 'bg-foreground w-6' : 'bg-border w-2'
+                  }`}
+                />
               ))}
             </div>
           </div>
-          
-          {/* Carousel Indicators - smaller on mobile */}
-          <div className="flex justify-center gap-1.5 md:gap-2 mt-6 md:mt-8">
-            {Array.from({ length: maxIndex + 1 }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`h-1.5 md:h-2 transition-all duration-300 ${
-                  currentIndex === index ? 'bg-foreground w-4 md:w-6' : 'bg-border w-1.5 md:w-2'
-                }`}
-              />
+        ) : (
+          <div className={`grid gap-6 ${
+            services.length === 1 ? 'grid-cols-1' : 
+            services.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 
+            'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+          }`}>
+            {services.map((service) => (
+              <ServiceCard key={service.id} service={service} />
             ))}
           </div>
-        </div>
-      ) : (
-        <div className={`grid gap-4 ${
-          services.length === 1 ? 'grid-cols-1' : 
-          services.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 
-          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
-        }`}>
-          {services.map((service) => (
-            <ServiceCard key={service.id} service={service} />
-          ))}
-        </div>
-      )}
+        )}
 
-      {/* CTA */}
-      <div className="text-center mt-16 pt-16 border-t border-border">
-        <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-          Precisa de algo personalizado? Criamos pacotes sob medida para suas necessidades.
-        </p>
-        <button 
-          onClick={scrollToContact}
-          className="bg-foreground text-background px-8 py-4 text-xs uppercase tracking-[0.2em] font-bold hover:bg-foreground/90 transition-colors duration-300"
-        >
-          Falar com Especialista
-        </button>
+        {/* CTA */}
+        <div className="text-center mt-20 pt-16 border-t border-border">
+          <p className="text-muted-foreground mb-8 max-w-md mx-auto">
+            Precisa de algo personalizado? Criamos pacotes sob medida para suas necessidades.
+          </p>
+          <button 
+            onClick={scrollToContact}
+            className="bg-foreground text-background px-10 py-5 text-xs uppercase tracking-[0.2em] font-bold hover:bg-foreground/90 transition-all duration-300 inline-flex items-center gap-3"
+          >
+            Falar com Especialista
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </section>
   );

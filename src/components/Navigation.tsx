@@ -75,11 +75,7 @@ const Navigation = () => {
   }, [isOpen]);
 
   return (
-    <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-      isScrolled 
-        ? 'backdrop-blur-sm bg-white/5' 
-        : 'mix-blend-difference'
-    } text-foreground`}>
+    <nav className="fixed top-0 w-full z-50 transition-all duration-300 mix-blend-difference text-foreground">
       {/* Regular header for desktop */}
       <div className="hidden lg:flex justify-between items-center p-6 md:p-10">
         {/* Logo */}

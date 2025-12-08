@@ -149,8 +149,8 @@ const Testimonials = () => {
 
   if (isLoading || testimonials.length === 0) {
     return (
-      <section id="depoimentos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
-        <div className="flex items-center justify-center py-20">
+      <section id="depoimentos" className="max-w-[1600px] mx-auto px-4 py-16 border-t border-border">
+        <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-6 w-6 border-b border-foreground"></div>
         </div>
       </section>
@@ -162,36 +162,34 @@ const Testimonials = () => {
   return (
     <section 
       id="depoimentos" 
-      className="py-16 md:py-24 border-t border-border" 
-      style={{ background: 'linear-gradient(180deg, hsl(0 0% 6%) 0%, hsl(0 0% 2%) 100%)' }}
+      className="py-16 border-t border-border bg-background"
     >
-      <div className="max-w-[1600px] mx-auto px-4">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 pb-4">
+      <div className="max-w-[1200px] mx-auto px-4">
+        {/* Header - More compact */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10">
           <div>
-            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
               Depoimentos
             </p>
-            <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
-              O que dizem
-              <br />
-              <span className="text-muted-foreground">nossos clientes</span>
+            <h2 className="text-2xl md:text-4xl font-bold uppercase tracking-tighter">
+              O que dizem nossos clientes
             </h2>
-            <p className="text-muted-foreground max-w-md mt-4">
-              Histórias reais de quem confiou em nosso trabalho.
-            </p>
           </div>
+          {testimonials.length > 1 && (
+            <div className="flex items-center gap-2 mt-4 md:mt-0">
+              <span className="text-xs text-muted-foreground font-mono">
+                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Carousel */}
+        {/* Carousel - More compact */}
         <div className="relative">
-          {/* Scroll Hint Arrow Animation */}
+          {/* Scroll Hint */}
           {testimonials.length > 1 && currentIndex < maxIndex && (
-            <div className="absolute -right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <div className="flex items-center gap-1 text-muted-foreground animate-pulse">
-                <span className="text-[10px] uppercase tracking-wider hidden md:block">Scroll</span>
-                <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
-              </div>
+            <div className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+              <ChevronRight className="h-5 w-5 text-muted-foreground/40 animate-bounce-horizontal" />
             </div>
           )}
 
@@ -213,28 +211,25 @@ const Testimonials = () => {
               {testimonials.map((testimonial) => (
                 <div 
                   key={testimonial.id}
-                  className="w-full flex-shrink-0 px-4 md:px-8"
+                  className="w-full flex-shrink-0"
                 >
-                  <div className="max-w-4xl mx-auto select-none">
-                    {/* Quote Icon */}
-                    <Quote className="h-8 md:h-12 w-8 md:w-12 text-muted-foreground/20 mb-6 md:mb-8" />
-
+                  <div className="max-w-3xl mx-auto select-none py-6">
                     {/* Stars */}
-                    <div className="flex gap-1 mb-4 md:mb-6">
+                    <div className="flex gap-0.5 mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-3 w-3 md:h-4 md:w-4 text-foreground fill-current" />
+                        <Star key={i} className="h-4 w-4 text-foreground fill-current" />
                       ))}
                     </div>
 
-                    {/* Text - Smaller on mobile */}
-                    <blockquote className="text-lg md:text-2xl lg:text-4xl font-light leading-relaxed mb-6 md:mb-8 tracking-tight">
+                    {/* Text - More compact */}
+                    <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed mb-6 tracking-tight">
                       "{testimonial.text}"
                     </blockquote>
 
-                    {/* Author */}
-                    <div className="flex items-center gap-4 pt-6 md:pt-8 border-t border-border">
+                    {/* Author - More compact */}
+                    <div className="flex items-center gap-3 pt-4 border-t border-border">
                       {testimonial.image && (
-                        <div className="w-10 h-10 md:w-12 md:h-12 overflow-hidden grayscale">
+                        <div className="w-10 h-10 overflow-hidden grayscale">
                           <img
                             src={testimonial.image}
                             alt={testimonial.name}
@@ -243,10 +238,10 @@ const Testimonials = () => {
                         </div>
                       )}
                       <div>
-                        <div className="font-bold uppercase tracking-wide text-xs md:text-sm">
+                        <div className="font-bold uppercase tracking-wide text-sm">
                           {testimonial.name}
                         </div>
-                        <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">
                           {testimonial.event}
                         </div>
                       </div>
@@ -257,23 +252,18 @@ const Testimonials = () => {
             </div>
           </div>
 
-          {/* Indicators - smaller on mobile */}
+          {/* Indicators - Minimal */}
           {testimonials.length > 1 && (
-            <div className="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-12">
-              <span className="text-[10px] md:text-xs text-muted-foreground font-mono">
-                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
-              </span>
-              <div className="flex gap-1 md:gap-2">
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setCurrentIndex(index)}
-                    className={`h-0.5 md:h-px transition-all duration-300 ${
-                      index === currentIndex ? "bg-foreground w-4 md:w-8" : "bg-muted-foreground/30 hover:bg-muted-foreground w-2 md:w-4"
-                    }`}
-                  />
-                ))}
-              </div>
+            <div className="flex justify-center gap-1 mt-6">
+              {testimonials.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`h-px transition-all duration-300 ${
+                    index === currentIndex ? "bg-foreground w-6" : "bg-muted-foreground/30 w-3"
+                  }`}
+                />
+              ))}
             </div>
           )}
         </div>
