@@ -253,14 +253,14 @@ const FotoFacil = () => {
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {filteredEvents.map(event => (
                   <button
                     key={event.id}
                     onClick={() => handleEventClick(event.slug)}
-                    className="group text-left bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300"
+                    className="group text-left bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:border-gray-200 transition-all duration-300"
                   >
-                    <div className="aspect-square bg-gray-100 overflow-hidden">
+                    <div className="aspect-[4/3] bg-gray-100 overflow-hidden">
                       {event.cover_url ? (
                         <img 
                           src={event.cover_url} 
@@ -269,30 +269,30 @@ const FotoFacil = () => {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
-                          <Calendar className="w-10 h-10 text-gray-400" />
+                          <Calendar className="w-12 h-12 text-gray-400" />
                         </div>
                       )}
                     </div>
-                    <div className="p-3">
-                      <h3 className="font-semibold text-sm mb-1 text-gray-900 group-hover:text-gray-700 transition-colors line-clamp-2">
+                    <div className="p-4 md:p-5">
+                      <h3 className="font-bold text-base md:text-lg mb-2 text-gray-900 group-hover:text-gray-700 transition-colors line-clamp-2">
                         {event.title}
                       </h3>
-                      <div className="flex flex-wrap gap-1.5 text-xs text-gray-500 mb-2">
+                      <div className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-500 mb-3">
                         {event.event_date && (
-                          <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full">
+                            <Calendar className="w-3.5 h-3.5" />
                             {new Date(event.event_date).toLocaleDateString('pt-BR')}
                           </span>
                         )}
                         {event.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
+                          <span className="flex items-center gap-1.5 bg-gray-50 px-2 py-1 rounded-full">
+                            <MapPin className="w-3.5 h-3.5" />
                             {event.location}
                           </span>
                         )}
                       </div>
-                      <p className="text-emerald-600 font-semibold text-sm">
-                        {formatPrice(event.default_price_cents)}
+                      <p className="text-emerald-600 font-bold text-base md:text-lg">
+                        A partir de {formatPrice(event.default_price_cents)}
                       </p>
                     </div>
                   </button>
