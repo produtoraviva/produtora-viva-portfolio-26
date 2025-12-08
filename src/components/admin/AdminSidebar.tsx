@@ -12,7 +12,8 @@ import {
   HelpCircle, 
   Users,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -24,18 +25,18 @@ interface AdminSidebarProps {
 }
 
 const menuItems = [
-  { id: 'portfolio', label: 'Portfólio', icon: Image },
-  { id: 'upload', label: 'Upload', icon: Upload },
-  { id: 'categories', label: 'Categorias', icon: Folder },
-  { id: 'homepage-bg', label: 'Fundo Home', icon: Home },
-  { id: 'visualizer', label: 'Métricas', icon: BarChart3 },
-  { id: 'testimonials', label: 'Depoimentos', icon: MessageSquare },
-  { id: 'services', label: 'Serviços', icon: Briefcase },
-  { id: 'faq', label: 'FAQ', icon: HelpCircle },
+  { id: 'portfolio', label: 'Portfólio', icon: Image, description: 'Gerenciar itens' },
+  { id: 'upload', label: 'Upload', icon: Upload, description: 'Enviar mídia' },
+  { id: 'categories', label: 'Categorias', icon: Folder, description: 'Organizar' },
+  { id: 'homepage-bg', label: 'Fundo Home', icon: Home, description: 'Background' },
+  { id: 'visualizer', label: 'Métricas', icon: BarChart3, description: 'Estatísticas' },
+  { id: 'testimonials', label: 'Depoimentos', icon: MessageSquare, description: 'Avaliações' },
+  { id: 'services', label: 'Serviços', icon: Briefcase, description: 'Ofertas' },
+  { id: 'faq', label: 'FAQ', icon: HelpCircle, description: 'Perguntas' },
 ];
 
 const adminOnlyItems = [
-  { id: 'accounts', label: 'Contas', icon: Users },
+  { id: 'accounts', label: 'Contas', icon: Users, description: 'Usuários' },
 ];
 
 export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarProps) {
@@ -52,7 +53,7 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       <Button
         variant="outline"
         size="icon"
-        className="fixed top-20 left-4 z-50 lg:hidden"
+        className="fixed top-[72px] left-4 z-50 lg:hidden shadow-lg bg-card"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -61,7 +62,7 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -69,7 +70,7 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-[73px] left-0 h-[calc(100vh-73px)] bg-card border-r border-border z-30 transition-all duration-300",
+          "fixed top-[57px] left-0 h-[calc(100vh-57px)] bg-card border-r border-border z-40 transition-all duration-300 shadow-sm",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0",
           isCollapsed ? "lg:w-16" : "lg:w-56"
@@ -77,9 +78,9 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       >
         {/* Collapse Toggle (Desktop only) */}
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
-          className="absolute -right-3 top-4 h-6 w-6 rounded-full border bg-card hidden lg:flex"
+          className="absolute -right-3 top-6 h-6 w-6 rounded-full border shadow-md bg-card hidden lg:flex z-50"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -90,9 +91,11 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
         </Button>
 
         {/* Menu Items */}
-        <nav className="p-4 space-y-1">
+        <nav className="p-3 space-y-1 overflow-y-auto h-full">
           {allItems.map((item) => {
             const Icon = item.icon;
+            const isActive = activeTab === item.id;
+            
             return (
               <button
                 key={item.id}
@@ -101,15 +104,27 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
                   setIsOpen(false);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                  activeTab === item.id
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/80",
+                  isCollapsed && "lg:justify-center lg:px-2"
                 )}
+                title={isCollapsed ? item.label : undefined}
               >
-                <Icon className="h-4 w-4 flex-shrink-0" />
+                <Icon className={cn(
+                  "flex-shrink-0 transition-transform",
+                  isActive ? "h-4.5 w-4.5" : "h-4 w-4"
+                )} />
                 {!isCollapsed && (
-                  <span className="truncate">{item.label}</span>
+                  <div className="flex-1 text-left">
+                    <span className="font-medium">{item.label}</span>
+                    {!isActive && (
+                      <p className="text-xs text-muted-foreground/70 hidden lg:block">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
                 )}
               </button>
             );
