@@ -399,79 +399,99 @@ export function FotoFacilPhotosManager() {
         </Button>
       </div>
 
-      {/* GCS Upload Zone */}
-      {selectedEventId && selectedEventId !== 'all' && (
-        <Card className="rounded-xl">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Upload className="h-5 w-5" />
-              Upload de Fotos para Google Cloud Storage
-            </CardTitle>
-            <CardDescription>
-              Arraste fotos ou clique para selecionar. As fotos serão enviadas para o GCS com marca d'água automática.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div
-              {...getRootProps()}
-              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
-                isDragActive 
-                  ? 'border-emerald-500 bg-emerald-50' 
-                  : 'border-gray-300 hover:border-gray-400'
-              } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <input {...getInputProps()} />
-              {uploading ? (
-                <div className="space-y-3">
-                  <Loader2 className="h-8 w-8 mx-auto animate-spin text-emerald-600" />
-                  <div>
-                    <p className="font-medium">Enviando fotos para GCS...</p>
-                    <p className="text-sm text-muted-foreground">
-                      {uploadProgress.completed} de {uploadProgress.total} - {uploadProgress.currentFile}
-                    </p>
-                  </div>
-                  <Progress value={(uploadProgress.completed / uploadProgress.total) * 100} className="h-2" />
+      {/* GCS Upload Zone - Always visible */}
+      <Card className="rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50/30">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Upload className="h-5 w-5 text-emerald-600" />
+            Upload de Fotos para Google Cloud Storage
+          </CardTitle>
+          <CardDescription>
+            Arraste fotos ou clique para selecionar. As fotos serão enviadas para o GCS com marca d'água automática e qualidade reduzida.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Event selector for upload */}
+          {selectedEventId === 'all' && (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-amber-800 text-sm">
+              <strong>Selecione um evento acima</strong> para habilitar o upload de fotos.
+            </div>
+          )}
+          
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
+              isDragActive 
+                ? 'border-emerald-500 bg-emerald-100' 
+                : selectedEventId === 'all'
+                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                  : 'border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50'
+            } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <input {...getInputProps()} />
+            {uploading ? (
+              <div className="space-y-3">
+                <Loader2 className="h-10 w-10 mx-auto animate-spin text-emerald-600" />
+                <div>
+                  <p className="font-medium text-lg">Enviando fotos para GCS...</p>
+                  <p className="text-sm text-muted-foreground">
+                    {uploadProgress.completed} de {uploadProgress.total} - {uploadProgress.currentFile}
+                  </p>
                 </div>
-              ) : (
-                <div className="space-y-2">
-                  <Cloud className="h-8 w-8 mx-auto text-gray-400" />
-                  <p className="font-medium">
+                <Progress value={(uploadProgress.completed / uploadProgress.total) * 100} className="h-3 max-w-md mx-auto" />
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="w-16 h-16 mx-auto bg-emerald-100 rounded-full flex items-center justify-center">
+                  <Cloud className="h-8 w-8 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-lg">
                     {isDragActive ? 'Solte as fotos aqui' : 'Arraste fotos ou clique para selecionar'}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Suporta JPG, PNG, WebP, GIF e vídeos MP4, MOV
                   </p>
                 </div>
-              )}
-            </div>
-
-            {/* Upload Results */}
-            {uploadResults.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <p className="font-medium text-sm">Resultados do upload:</p>
-                <div className="max-h-32 overflow-y-auto space-y-1">
-                  {uploadResults.map((result, index) => (
-                    <div 
-                      key={index}
-                      className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
-                        result.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
-                      }`}
-                    >
-                      {result.success ? (
-                        <Check className="h-4 w-4" />
-                      ) : (
-                        <X className="h-4 w-4" />
-                      )}
-                      <span className="truncate">{result.fileName || `Arquivo ${index + 1}`}</span>
-                      {!result.success && <span className="text-xs">- {result.error}</span>}
-                    </div>
-                  ))}
-                </div>
+                {selectedEventId !== 'all' && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-emerald-700 bg-emerald-100 rounded-lg py-2 px-4 max-w-fit mx-auto">
+                    <Check className="h-4 w-4" />
+                    <span>Evento selecionado: <strong>{events.find(e => e.id === selectedEventId)?.title}</strong></span>
+                  </div>
+                )}
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {/* Upload Results */}
+          {uploadResults.length > 0 && (
+            <div className="space-y-2">
+              <p className="font-medium text-sm">Resultados do upload:</p>
+              <div className="max-h-40 overflow-y-auto space-y-1">
+                {uploadResults.map((result, index) => (
+                  <div 
+                    key={index}
+                    className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
+                      result.success ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    }`}
+                  >
+                    {result.success ? (
+                      <Check className="h-4 w-4 flex-shrink-0" />
+                    ) : (
+                      <X className="h-4 w-4 flex-shrink-0" />
+                    )}
+                    <span className="truncate">{result.fileName || `Arquivo ${index + 1}`}</span>
+                    {result.success && (
+                      <span className="text-xs opacity-70">• Com marca d'água</span>
+                    )}
+                    {!result.success && <span className="text-xs">- {result.error}</span>}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Photos Grid */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
