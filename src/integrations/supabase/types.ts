@@ -44,6 +44,36 @@ export type Database = {
         }
         Relationships: []
       }
+      fotofacil_banners: {
+        Row: {
+          created_at: string | null
+          display_order: number | null
+          id: string
+          image_url: string
+          is_active: boolean | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url: string
+          is_active?: boolean | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string
+          is_active?: boolean | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       fotofacil_categories: {
         Row: {
           created_at: string | null
@@ -77,6 +107,54 @@ export type Database = {
           name?: string
           slug?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fotofacil_coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_order_cents: number | null
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_order_cents?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_order_cents?: number | null
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
         }
         Relationships: []
       }
@@ -207,15 +285,18 @@ export type Database = {
       }
       fotofacil_orders: {
         Row: {
+          coupon_id: string | null
           created_at: string | null
           currency: string
           customer_id: string | null
           delivered_at: string | null
           delivery_expires_at: string | null
           delivery_token: string | null
+          discount_cents: number | null
           id: string
           mercadopago_order_id: string | null
           mercadopago_payment_id: string | null
+          original_total_cents: number | null
           pix_copia_cola: string | null
           qr_code: string | null
           qr_code_base64: string | null
@@ -224,15 +305,18 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          coupon_id?: string | null
           created_at?: string | null
           currency?: string
           customer_id?: string | null
           delivered_at?: string | null
           delivery_expires_at?: string | null
           delivery_token?: string | null
+          discount_cents?: number | null
           id?: string
           mercadopago_order_id?: string | null
           mercadopago_payment_id?: string | null
+          original_total_cents?: number | null
           pix_copia_cola?: string | null
           qr_code?: string | null
           qr_code_base64?: string | null
@@ -241,15 +325,18 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          coupon_id?: string | null
           created_at?: string | null
           currency?: string
           customer_id?: string | null
           delivered_at?: string | null
           delivery_expires_at?: string | null
           delivery_token?: string | null
+          discount_cents?: number | null
           id?: string
           mercadopago_order_id?: string | null
           mercadopago_payment_id?: string | null
+          original_total_cents?: number | null
           pix_copia_cola?: string | null
           qr_code?: string | null
           qr_code_base64?: string | null
@@ -258,6 +345,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fotofacil_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "fotofacil_orders_customer_id_fkey"
             columns: ["customer_id"]

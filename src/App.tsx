@@ -16,6 +16,7 @@ import SubmitTestimonial from "./pages/SubmitTestimonial";
 import FotoFacil from "./pages/FotoFacil";
 import FotoFacilCart from "./pages/FotoFacilCart";
 import FotoFacilDelivery from "./pages/FotoFacilDelivery";
+import FotoFacilMyPhotos from "./pages/FotoFacilMyPhotos";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
                 <Route path="/depoimento" element={<SubmitTestimonial />} />
                 <Route path="/fotofacil" element={<FotoFacil />} />
                 <Route path="/fotofacil/carrinho" element={<FotoFacilCart />} />
+                <Route path="/fotofacil/minhas-fotos" element={<FotoFacilMyPhotos />} />
                 <Route path="/fotofacil/entrega/:orderId/:token" element={<FotoFacilDelivery />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminDashboard />} />

@@ -6,8 +6,10 @@ import { FotoFacilCategoriesManager } from '@/components/admin/FotoFacilCategori
 import { FotoFacilEventsManager } from '@/components/admin/FotoFacilEventsManager';
 import { FotoFacilPhotosManager } from '@/components/admin/FotoFacilPhotosManager';
 import { FotoFacilSalesManager } from '@/components/admin/FotoFacilSalesManager';
+import { FotoFacilBannersManager } from '@/components/admin/FotoFacilBannersManager';
+import { FotoFacilCouponsManager } from '@/components/admin/FotoFacilCouponsManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Folder, Calendar, Image, ShoppingCart } from 'lucide-react';
+import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket } from 'lucide-react';
 
 export default function AdminFotoFacil() {
   const { user, logout, isAuthenticated } = useAdmin();
@@ -53,7 +55,7 @@ export default function AdminFotoFacil() {
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid grid-cols-4 w-full max-w-xl">
+            <TabsList className="grid grid-cols-6 w-full max-w-3xl">
               <TabsTrigger value="categories" className="flex items-center gap-2">
                 <Folder className="h-4 w-4" />
                 <span className="hidden sm:inline">Categorias</span>
@@ -65,6 +67,14 @@ export default function AdminFotoFacil() {
               <TabsTrigger value="photos" className="flex items-center gap-2">
                 <Image className="h-4 w-4" />
                 <span className="hidden sm:inline">Fotos</span>
+              </TabsTrigger>
+              <TabsTrigger value="banners" className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                <span className="hidden sm:inline">Banners</span>
+              </TabsTrigger>
+              <TabsTrigger value="coupons" className="flex items-center gap-2">
+                <Ticket className="h-4 w-4" />
+                <span className="hidden sm:inline">Cupons</span>
               </TabsTrigger>
               <TabsTrigger value="sales" className="flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4" />
@@ -80,6 +90,12 @@ export default function AdminFotoFacil() {
             </TabsContent>
             <TabsContent value="photos">
               <FotoFacilPhotosManager />
+            </TabsContent>
+            <TabsContent value="banners">
+              <FotoFacilBannersManager />
+            </TabsContent>
+            <TabsContent value="coupons">
+              <FotoFacilCouponsManager />
             </TabsContent>
             <TabsContent value="sales">
               <FotoFacilSalesManager />

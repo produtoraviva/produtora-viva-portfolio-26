@@ -1,5 +1,11 @@
 project_id = "ihthnipyfppatlmaajvm"
 
+[functions.fotofacil-lookup-orders]
+verify_jwt = false
+
+[functions.fotofacil-check-payment]
+verify_jwt = false
+
 [functions.create-admin-user]
 verify_jwt = false
 
