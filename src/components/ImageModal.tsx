@@ -79,6 +79,9 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
 
   if (!currentImage) return null;
 
+  const hasCategory = currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '';
+  const hasSubcategory = currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && currentImage.subcategory.trim() !== '';
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
@@ -150,22 +153,18 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 )}
                 
                 <div>
-                  <h3 className="text-lg md:text-xl font-semibold mb-1">{currentImage.title}</h3>
-                  {currentImage.description && (
-                    <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
+                  {/* Category and subcategory above title */}
+                  {(hasCategory || hasSubcategory) && (
+                    <div className="flex flex-wrap gap-2 mb-1">
+                      <span className="text-xs font-light font-mono text-muted-foreground uppercase tracking-wider">
+                        {currentImage.category}{hasCategory && hasSubcategory ? ' · ' : ''}{currentImage.subcategory}
+                      </span>
+                    </div>
                   )}
-                  <div className="flex flex-wrap gap-2">
-                    {currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '' && (
-                      <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
-                        {currentImage.category}
-                      </span>
-                    )}
-                    {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && currentImage.subcategory.trim() !== '' && (
-                      <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
-                        {currentImage.subcategory}
-                      </span>
-                    )}
-                  </div>
+                  <h3 className="text-lg md:text-xl font-light mb-1">{currentImage.title}</h3>
+                  {currentImage.description && (
+                    <p className="text-sm font-light text-muted-foreground">{currentImage.description}</p>
+                  )}
                 </div>
                 
                 {/* Next Arrow */}
@@ -194,7 +193,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 )}
                 
                 {images.length > 1 && (
-                  <span className="text-muted-foreground text-sm">
+                  <span className="text-muted-foreground text-sm font-light">
                     {currentIndex + 1} de {images.length}
                   </span>
                 )}

@@ -79,8 +79,11 @@ const Hero = () => {
     }
   };
 
-  // Zoom effect - smooth with CSS transition
-  const zoomScale = 1 + Math.min(scrollY * 0.0003, 0.2);
+  // Zoom effect - stronger on mobile for better visibility
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const zoomMultiplier = isMobile ? 0.0008 : 0.0003; // Stronger zoom on mobile
+  const maxZoom = isMobile ? 0.4 : 0.2;
+  const zoomScale = 1 + Math.min(scrollY * zoomMultiplier, maxZoom);
 
   return (
     <header 

@@ -11,9 +11,29 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceRoleKey,
+      urlStart: supabaseUrl?.substring(0, 30)
+    });
+
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      console.error('Missing environment variables');
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing environment variables' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
     const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      supabaseUrl,
+      supabaseServiceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
@@ -22,11 +42,15 @@ Deno.serve(async (req) => {
       }
     )
 
-    const { email, password, full_name, role = 'admin' } = await req.json()
+    const body = await req.json();
+    console.log('Request body received:', { email: body.email, full_name: body.full_name, role: body.role });
+
+    const { email, password, full_name, role = 'admin' } = body;
 
     if (!email || !password || !full_name) {
+      console.error('Missing required fields:', { hasEmail: !!email, hasPassword: !!password, hasFullName: !!full_name });
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: email, password, and full_name are required' }),
+        JSON.stringify({ error: 'Campos obrigatórios: email, senha e nome completo são necessários' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -35,11 +59,24 @@ Deno.serve(async (req) => {
     }
 
     // Check if user already exists
-    const { data: existingUsers } = await supabaseClient.auth.admin.listUsers()
-    const userExists = existingUsers?.users.some(u => u.email === email)
+    console.log('Checking if user exists...');
+    const { data: existingUsers, error: listError } = await supabaseClient.auth.admin.listUsers();
+    
+    if (listError) {
+      console.error('Error listing users:', listError);
+      return new Response(
+        JSON.stringify({ error: `Erro ao verificar usuários existentes: ${listError.message}` }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    const userExists = existingUsers?.users.some(u => u.email === email);
     
     if (userExists) {
-      console.log('User already exists:', email)
+      console.log('User already exists:', email);
       return new Response(
         JSON.stringify({ error: 'Um usuário com este email já está registrado' }),
         { 
@@ -50,6 +87,7 @@ Deno.serve(async (req) => {
     }
 
     // Create user in Supabase Auth
+    console.log('Creating auth user...');
     const { data: authData, error: authError } = await supabaseClient.auth.admin.createUser({
       email,
       password,
@@ -60,7 +98,7 @@ Deno.serve(async (req) => {
     })
 
     if (authError) {
-      console.error('Error creating auth user:', authError)
+      console.error('Error creating auth user:', authError);
       return new Response(
         JSON.stringify({ error: `Falha ao criar usuário: ${authError.message}` }),
         { 
@@ -71,8 +109,9 @@ Deno.serve(async (req) => {
     }
 
     if (!authData.user) {
+      console.error('No user data returned');
       return new Response(
-        JSON.stringify({ error: 'User creation failed - no user data returned' }),
+        JSON.stringify({ error: 'Falha na criação do usuário - nenhum dado retornado' }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -80,7 +119,10 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log('Auth user created:', authData.user.id);
+
     // Create profile
+    console.log('Creating profile...');
     const { error: profileError } = await supabaseClient
       .from('profiles')
       .insert({
@@ -91,11 +133,11 @@ Deno.serve(async (req) => {
       })
 
     if (profileError) {
-      console.error('Error creating profile:', profileError)
+      console.error('Error creating profile:', profileError);
       // Clean up auth user if profile creation fails
-      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      await supabaseClient.auth.admin.deleteUser(authData.user.id);
       return new Response(
-        JSON.stringify({ error: `Failed to create profile: ${profileError.message}` }),
+        JSON.stringify({ error: `Falha ao criar perfil: ${profileError.message}` }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -103,7 +145,10 @@ Deno.serve(async (req) => {
       )
     }
 
+    console.log('Profile created');
+
     // Assign role
+    console.log('Assigning role:', role);
     const { error: roleError } = await supabaseClient
       .from('user_roles')
       .insert({
@@ -112,11 +157,12 @@ Deno.serve(async (req) => {
       })
 
     if (roleError) {
-      console.error('Error assigning role:', roleError)
+      console.error('Error assigning role:', roleError);
       // Clean up auth user and profile if role assignment fails
-      await supabaseClient.auth.admin.deleteUser(authData.user.id)
+      await supabaseClient.from('profiles').delete().eq('id', authData.user.id);
+      await supabaseClient.auth.admin.deleteUser(authData.user.id);
       return new Response(
-        JSON.stringify({ error: `Failed to assign role: ${roleError.message}` }),
+        JSON.stringify({ error: `Falha ao atribuir função: ${roleError.message}` }),
         { 
           status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
@@ -124,7 +170,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Successfully created ${role} user:`, email)
+    console.log(`Successfully created ${role} user:`, email);
 
     return new Response(
       JSON.stringify({ 
@@ -142,9 +188,9 @@ Deno.serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in create-admin-user function:', error)
+    console.error('Error in create-admin-user function:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: `Erro interno do servidor: ${error.message || 'Unknown error'}` }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 

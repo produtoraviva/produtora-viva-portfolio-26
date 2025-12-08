@@ -36,24 +36,27 @@ const PortfolioPreview = () => {
     loadFeaturedItems();
   }, []);
 
-  // Randomly select 6 items when featuredItems changes
+  // Randomly select items when featuredItems changes
   useEffect(() => {
-    if (featuredItems.length <= 6) {
+    // Desktop: 6 items, Mobile: 5 items
+    const isMobile = window.innerWidth < 768;
+    const targetCount = isMobile ? 5 : 6;
+    
+    if (featuredItems.length <= targetCount) {
       setDisplayItems(featuredItems);
     } else {
-      // Shuffle and pick 6 random items - use a seeded approach based on session
+      // Shuffle and pick random items
       const sessionSeed = sessionStorage.getItem('portfolio_seed') || String(Date.now());
       if (!sessionStorage.getItem('portfolio_seed')) {
         sessionStorage.setItem('portfolio_seed', sessionSeed);
       }
       
-      // Simple shuffle using the seed
       const shuffled = [...featuredItems].sort(() => {
         const random = Math.sin(parseInt(sessionSeed) * featuredItems.length) * 10000;
         return random - Math.floor(random);
       });
       
-      setDisplayItems(shuffled.slice(0, 6));
+      setDisplayItems(shuffled.slice(0, targetCount));
     }
   }, [featuredItems]);
 
@@ -113,122 +116,186 @@ const PortfolioPreview = () => {
     return itemsToFilter.filter((item) => item.media_type === activeCategory);
   })();
 
-  // Get aspect ratio class based on item count and position
-  const getItemAspectClass = (index: number) => {
+  const handleImageClick = (index: number) => {
+    setCurrentImageIndex(index);
+    setModalOpen(true);
+  };
+
+  // Render item with category/subcategory above title
+  const renderItem = (item: PortfolioItem, index: number, aspectClass: string, extraClass: string = '') => {
+    const hasCategory = item.category && item.category.trim() !== '';
+    const hasSubcategory = item.subcategory && item.subcategory.trim() !== '';
+
+    return (
+      <div 
+        key={item.id} 
+        className={`image-card group relative overflow-hidden bg-secondary cursor-pointer ${aspectClass} ${extraClass}`}
+        onClick={() => handleImageClick(index)}
+      >
+        {/* Use thumbnail for videos if available */}
+        {item.media_type === "video" && item.thumbnail_url ? (
+          <img
+            src={item.thumbnail_url}
+            alt={item.title}
+            className="w-full h-full object-cover transition-all duration-700"
+          />
+        ) : (
+          <LazyImage
+            src={item.image}
+            alt={item.title}
+            className="w-full h-full object-cover transition-all duration-700"
+          />
+        )}
+        
+        {/* Play Icon for Video */}
+        {item.media_type === "video" && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
+            <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+          </div>
+        )}
+        
+        {/* Overlay - Category above, then title */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {(hasCategory || hasSubcategory) && (
+            <span className="text-[8px] md:text-[10px] font-light font-mono text-white/80 uppercase tracking-wider mb-1 block">
+              {item.category}{hasCategory && hasSubcategory ? ' · ' : ''}{item.subcategory || ''}
+            </span>
+          )}
+          <h3 className="text-sm md:text-lg font-light uppercase text-white">{item.title}</h3>
+        </div>
+      </div>
+    );
+  };
+
+  // Desktop grid (6 items)
+  const renderDesktopGrid = () => {
     const count = filteredItems.length;
+    
+    if (count === 0) return null;
     
     if (count === 1) {
-      // 1 item: horizontal (16:9)
-      return 'aspect-video';
+      return (
+        <div className="grid grid-cols-1">
+          {renderItem(filteredItems[0], 0, 'aspect-video')}
+        </div>
+      );
     }
-    if (count === 2) {
-      // 2 items: both square
-      return 'aspect-square';
-    }
-    if (count === 3) {
-      // 3 items: normal portrait
-      return 'aspect-[3/4]';
-    }
-    if (count === 4) {
-      // 4 items: first 3 normal, 4th horizontal spanning 3 cols
-      return index === 3 ? 'aspect-video md:col-span-3' : 'aspect-[3/4]';
-    }
-    if (count === 5) {
-      // 5 items: first 3 normal, last 2 square but spanning 1.5 cols each (full width)
-      return index >= 3 ? 'aspect-square' : 'aspect-[3/4]';
-    }
-    // 6 items: all normal portrait
-    return 'aspect-[3/4]';
-  };
-
-  // Get special width class for 5-item layout (last 2 items fill the row)
-  const getItemWidthClass = (index: number) => {
-    const count = filteredItems.length;
-    if (count === 5 && index >= 3) {
-      return 'md:col-span-1'; // Each takes half of remaining 2 cols in a 2-col grid
-    }
-    return '';
-  };
-
-  // Dynamic grid based on item count
-  const getGridClass = () => {
-    const count = filteredItems.length;
-    if (count === 1) return 'grid-cols-1';
-    if (count === 2) return 'grid-cols-2';
-    if (count === 3) return 'grid-cols-3';
-    if (count === 4) return 'grid-cols-3';
-    if (count === 5) return 'grid-cols-3'; // First row 3, second row will have 2 spanning equally
-    return 'grid-cols-3';
-  };
-
-  // Wrapper for 5 items - special handling for bottom row
-  const renderGridItems = () => {
-    const count = filteredItems.length;
     
-    if (count === 5) {
-      // Split into two grids: 3 on top, 2 on bottom (each taking 50% width)
+    if (count === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-4">
+          {filteredItems.map((item, index) => renderItem(item, index, 'aspect-square'))}
+        </div>
+      );
+    }
+    
+    if (count === 3) {
+      return (
+        <div className="grid grid-cols-3 gap-4">
+          {filteredItems.map((item, index) => renderItem(item, index, 'aspect-[3/4]'))}
+        </div>
+      );
+    }
+    
+    if (count === 4) {
       return (
         <>
           <div className="grid grid-cols-3 gap-4">
-            {filteredItems.slice(0, 3).map((item, index) => renderItem(item, index))}
+            {filteredItems.slice(0, 3).map((item, index) => renderItem(item, index, 'aspect-[3/4]'))}
           </div>
-          <div className="grid grid-cols-2 gap-4 mt-4">
-            {filteredItems.slice(3).map((item, index) => renderItem(item, index + 3))}
+          <div className="grid grid-cols-1 gap-4 mt-4">
+            {renderItem(filteredItems[3], 3, 'aspect-video')}
           </div>
         </>
       );
     }
     
+    if (count === 5) {
+      return (
+        <>
+          <div className="grid grid-cols-3 gap-4">
+            {filteredItems.slice(0, 3).map((item, index) => renderItem(item, index, 'aspect-[3/4]'))}
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {filteredItems.slice(3).map((item, index) => renderItem(item, index + 3, 'aspect-square'))}
+          </div>
+        </>
+      );
+    }
+    
+    // 6 items: 2 rows of 3
     return (
-      <div className={`grid gap-4 ${getGridClass()}`}>
-        {filteredItems.map((item, index) => renderItem(item, index))}
+      <div className="grid grid-cols-3 gap-4">
+        {filteredItems.map((item, index) => renderItem(item, index, 'aspect-[3/4]'))}
       </div>
     );
   };
 
-  const renderItem = (item: PortfolioItem, index: number) => (
-    <div 
-      key={item.id} 
-      className={`image-card group relative overflow-hidden bg-secondary cursor-pointer ${getItemAspectClass(index)}`}
-      onClick={() => handleImageClick(index)}
-    >
-      {/* Use thumbnail for videos if available */}
-      {item.media_type === "video" && item.thumbnail_url ? (
-        <img
-          src={item.thumbnail_url}
-          alt={item.title}
-          className="w-full h-full object-cover transition-all duration-700"
-        />
-      ) : (
-        <LazyImage
-          src={item.image}
-          alt={item.title}
-          className="w-full h-full object-cover transition-all duration-700"
-        />
-      )}
-      
-      {/* Play Icon for Video */}
-      {item.media_type === "video" && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
-          <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+  // Mobile grid (5 items): 2 squares, 1 horizontal, 2 squares
+  const renderMobileGrid = () => {
+    const count = filteredItems.length;
+    
+    if (count === 0) return null;
+    
+    if (count === 1) {
+      return (
+        <div className="grid grid-cols-1">
+          {renderItem(filteredItems[0], 0, 'aspect-video')}
         </div>
-      )}
-      
-      {/* Overlay - Bottom info only, no darkening */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-        {(item.subcategory || (item.category && item.category.trim() !== '')) && (
-          <span className="text-[8px] md:text-[10px] font-mono text-white/80 uppercase tracking-wider mb-1 block">
-            {item.subcategory || item.category}
-          </span>
-        )}
-        <h3 className="text-sm md:text-lg font-light uppercase text-white">{item.title}</h3>
-      </div>
-    </div>
-  );
-
-  const handleImageClick = (index: number) => {
-    setCurrentImageIndex(index);
-    setModalOpen(true);
+      );
+    }
+    
+    if (count === 2) {
+      return (
+        <div className="grid grid-cols-2 gap-2">
+          {filteredItems.map((item, index) => renderItem(item, index, 'aspect-square'))}
+        </div>
+      );
+    }
+    
+    if (count === 3) {
+      return (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            {filteredItems.slice(0, 2).map((item, index) => renderItem(item, index, 'aspect-square'))}
+          </div>
+          <div className="grid grid-cols-1 gap-2 mt-2">
+            {renderItem(filteredItems[2], 2, 'aspect-video')}
+          </div>
+        </>
+      );
+    }
+    
+    if (count === 4) {
+      return (
+        <>
+          <div className="grid grid-cols-2 gap-2">
+            {filteredItems.slice(0, 2).map((item, index) => renderItem(item, index, 'aspect-square'))}
+          </div>
+          <div className="grid grid-cols-1 gap-2 mt-2">
+            {renderItem(filteredItems[2], 2, 'aspect-video')}
+          </div>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {renderItem(filteredItems[3], 3, 'aspect-square')}
+          </div>
+        </>
+      );
+    }
+    
+    // 5 items: Row 1: 2 squares, Row 2: 1 horizontal, Row 3: 2 squares
+    return (
+      <>
+        <div className="grid grid-cols-2 gap-2">
+          {filteredItems.slice(0, 2).map((item, index) => renderItem(item, index, 'aspect-square'))}
+        </div>
+        <div className="grid grid-cols-1 gap-2 mt-2">
+          {renderItem(filteredItems[2], 2, 'aspect-video')}
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {filteredItems.slice(3, 5).map((item, index) => renderItem(item, index + 3, 'aspect-square'))}
+        </div>
+      </>
+    );
   };
 
   return (
@@ -257,14 +324,19 @@ const PortfolioPreview = () => {
         </div>
       </div>
 
-      {/* Portfolio Grid - Dynamic based on count */}
-      {renderGridItems()}
+      {/* Portfolio Grid - Different for mobile and desktop */}
+      <div className="hidden md:block">
+        {renderDesktopGrid()}
+      </div>
+      <div className="block md:hidden">
+        {renderMobileGrid()}
+      </div>
 
       {/* CTA */}
       <div className="text-center mt-20">
         <Link 
           to="/portfolio"
-          className="text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-8 py-4 font-bold inline-block"
+          className="text-sm uppercase tracking-[0.15em] bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 px-8 py-4 font-bold inline-block"
         >
           Ver Portfolio Completo
         </Link>

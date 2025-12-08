@@ -21,30 +21,34 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.country) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, selecione seu país antes de enviar.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setIsSubmitting(true);
 
+    // Determine phone number based on country
     const isBrazil = formData.country.toLowerCase() === 'brasil' || formData.country.toLowerCase() === 'brazil';
-    const phoneNumber = isBrazil 
-      ? (settings.whatsapp_number || '5545999887766')
-      : (settings.whatsapp_international || settings.whatsapp_number || '5545999887766');
+    const isParaguay = formData.country.toLowerCase() === 'paraguay';
     
-    const whatsappMessage = `🎥 *ORÇAMENTO - RUBENS PHOTOFILM* 📸
+    let phoneNumber = settings.whatsapp_number || '5545999887766';
+    if (!isBrazil && formData.country) {
+      phoneNumber = settings.whatsapp_international || settings.whatsapp_number || '5545999887766';
+    }
+    
+    // Build message - use default if nothing provided
+    const hasAnyData = formData.name || formData.email || formData.eventType || formData.clientType || formData.message;
+    
+    const whatsappMessage = hasAnyData 
+      ? `🎥 *ORÇAMENTO - RUBENS PHOTOFILM* 📸
 
-*Nome:* ${formData.name}
-*Email:* ${formData.email}
-*País:* ${formData.country}
+*Nome:* ${formData.name || 'Não informado'}
+*Email:* ${formData.email || 'Não informado'}
+*País:* ${formData.country || 'Não informado'}
 *Tipo de Cliente:* ${formData.clientType || 'Não informado'}
 *Tipo de Evento:* ${formData.eventType || 'Não especificado'}
-*Mensagem:* ${formData.message}
+*Mensagem:* ${formData.message || 'Não informado'}
+
+Aguardo retorno. Obrigado!`
+      : `🎥 *ORÇAMENTO - RUBENS PHOTOFILM* 📸
+
+Olá! Preciso de um orçamento.
 
 Aguardo retorno. Obrigado!`;
     
@@ -176,7 +180,6 @@ Aguardo retorno. Obrigado!`;
                   value={formData.name} 
                   onChange={handleChange} 
                   placeholder="Seu nome" 
-                  required 
                   className="bg-background border-border focus:border-foreground rounded-none text-base" 
                 />
               </div>
@@ -190,7 +193,6 @@ Aguardo retorno. Obrigado!`;
                   value={formData.email} 
                   onChange={handleChange} 
                   placeholder="seu@email.com" 
-                  required 
                   className="bg-background border-border focus:border-foreground rounded-none text-base" 
                 />
               </div>
@@ -231,7 +233,7 @@ Aguardo retorno. Obrigado!`;
 
             <div>
               <label className="text-xs uppercase tracking-[0.15em] text-muted-foreground mb-2 block">
-                País <span className="text-destructive">*</span>
+                País
               </label>
               <Select 
                 value={formData.country} 
@@ -258,7 +260,6 @@ Aguardo retorno. Obrigado!`;
                 onChange={handleChange} 
                 placeholder="Conte-nos sobre seu evento..." 
                 rows={4} 
-                required 
                 className="bg-background border-border focus:border-foreground rounded-none text-base resize-none" 
               />
             </div>
@@ -272,7 +273,7 @@ Aguardo retorno. Obrigado!`;
             </button>
 
             <p className="text-[10px] text-muted-foreground text-center uppercase tracking-wider">
-              Resposta garantida em até 24 horas
+              Resposta garantida
             </p>
           </form>
         </div>

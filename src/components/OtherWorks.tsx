@@ -123,52 +123,57 @@ const OtherWorks = () => {
 
       {/* Grid - Max 2 items, 1 item takes full width */}
       <div className={`grid gap-6 ${displayItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-        {displayItems.map((item, index) => (
-          <div 
-            key={item.id} 
-            className="image-card group relative aspect-[4/3] overflow-hidden bg-secondary cursor-pointer"
-            onClick={() => handleImageClick(index)}
-          >
-            {/* Use thumbnail for videos if available */}
-            {item.media_type === "video" && item.thumbnail_url ? (
-              <img
-                src={item.thumbnail_url}
-                alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700"
-              />
-            ) : (
-              <LazyImage
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700"
-              />
-            )}
-            
-            {/* Play Icon for Video */}
-            {item.media_type === "video" && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
-                <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
-              </div>
-            )}
-            
-            {/* Overlay - Bottom info only */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {(item.subcategory || (item.category && item.category.trim() !== '')) && (
-                <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider mb-1 block">
-                  {item.subcategory || item.category}
-                </span>
+        {displayItems.map((item, index) => {
+          const hasCategory = item.category && item.category.trim() !== '';
+          const hasSubcategory = item.subcategory && item.subcategory.trim() !== '';
+          
+          return (
+            <div 
+              key={item.id} 
+              className="image-card group relative aspect-[4/3] overflow-hidden bg-secondary cursor-pointer"
+              onClick={() => handleImageClick(index)}
+            >
+              {/* Use thumbnail for videos if available */}
+              {item.media_type === "video" && item.thumbnail_url ? (
+                <img
+                  src={item.thumbnail_url}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-all duration-700"
+                />
+              ) : (
+                <LazyImage
+                  src={item.image}
+                  alt={item.title}
+                  className="w-full h-full object-cover transition-all duration-700"
+                />
               )}
-              <h3 className="text-lg font-light uppercase text-white">{item.title}</h3>
+              
+              {/* Play Icon for Video */}
+              {item.media_type === "video" && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
+                  <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+                </div>
+              )}
+              
+              {/* Overlay - Category/subcategory above, then title */}
+              <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                {(hasCategory || hasSubcategory) && (
+                  <span className="text-[10px] font-light font-mono text-white/80 uppercase tracking-wider mb-1 block">
+                    {item.category}{hasCategory && hasSubcategory ? ' · ' : ''}{item.subcategory || ''}
+                  </span>
+                )}
+                <h3 className="text-lg font-light uppercase text-white">{item.title}</h3>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* CTA - Bottom like Projetos Recentes */}
       <div className="text-center mt-20">
         <Link 
           to="/portfolio"
-          className="text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-8 py-4 font-bold inline-block"
+          className="text-sm uppercase tracking-[0.15em] bg-foreground text-background hover:bg-foreground/90 transition-colors duration-300 px-8 py-4 font-bold inline-block"
         >
           Ver Portfolio Completo
         </Link>
