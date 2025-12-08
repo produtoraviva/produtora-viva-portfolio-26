@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import { toast } from 'sonner';
 import FotoFacilFloatingCartButton from './FotoFacilFloatingCartButton';
-import WatermarkedImage from './WatermarkedImage';
 
 interface Photo {
   id: string;
@@ -111,6 +110,11 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
     }
   };
 
+  // Get display URL - use thumb_url which is the watermarked version
+  const getDisplayUrl = (photo: Photo) => {
+    return photo.thumb_url || photo.url;
+  };
+
   const selectedPhoto = selectedPhotoIndex !== null ? photos[selectedPhotoIndex] : null;
 
   if (loading) {
@@ -142,16 +146,17 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
               key={photo.id}
               className="group relative bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all duration-300"
             >
-              {/* Photo with Watermark */}
+              {/* Photo - uses server-generated watermarked image */}
               <div 
                 className="aspect-square bg-gray-100 overflow-hidden cursor-pointer"
                 onClick={() => setSelectedPhotoIndex(index)}
+                onContextMenu={(e) => e.preventDefault()}
               >
-                <WatermarkedImage 
-                  src={photo.thumb_url || photo.url}
+                <img 
+                  src={getDisplayUrl(photo)}
                   alt={photo.title || 'Foto'}
-                  className="w-full h-full group-hover:scale-105 transition-transform duration-500"
-                  watermarkOpacity={0.35}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 select-none pointer-events-none"
+                  draggable={false}
                 />
               </div>
 
@@ -244,12 +249,15 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
             className="flex-1 flex items-center justify-center p-4" 
             onClick={e => e.stopPropagation()}
           >
-            <div className="relative max-w-full max-h-[calc(100vh-120px)] flex flex-col items-center">
-              <WatermarkedImage 
-                src={selectedPhoto.url}
+            <div 
+              className="relative max-w-full max-h-[calc(100vh-120px)] flex flex-col items-center"
+              onContextMenu={(e) => e.preventDefault()}
+            >
+              <img 
+                src={getDisplayUrl(selectedPhoto)}
                 alt={selectedPhoto.title || 'Foto'}
-                className="max-w-full max-h-[calc(100vh-180px)] rounded-t-xl"
-                watermarkOpacity={0.35}
+                className="max-w-full max-h-[calc(100vh-180px)] rounded-t-xl select-none pointer-events-none"
+                draggable={false}
               />
               
               {/* Bottom Info Bar - Attached to image */}
