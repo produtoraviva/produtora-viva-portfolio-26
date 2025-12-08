@@ -13,8 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X, Image, Video, CheckCircle, AlertCircle, Link, Plus, ChevronDown, Settings, FolderOpen, ToggleLeft } from 'lucide-react';
+import { Upload, X, Image, Video, CheckCircle, AlertCircle, Link, Plus, ChevronDown, Settings, FolderOpen, ToggleLeft, Cloud } from 'lucide-react';
 import { MediaSelector } from './MediaSelector';
+import { uploadToGCS, type GCSUploadResult } from '@/lib/gcs';
 
 interface FileWithPreview extends File {
   preview: string;
@@ -127,32 +128,22 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
       setUploadStatus(prev => ({ ...prev, [file.id]: 'uploading' }));
       setUploadProgress(prev => ({ ...prev, [file.id]: 0 }));
 
-      const fileExtension = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}.${fileExtension}`;
-      const filePath = `uploads/${fileName}`;
-
       const progressInterval = setInterval(() => {
         setUploadProgress(prev => ({
           ...prev,
-          [file.id]: Math.min((prev[file.id] || 0) + Math.random() * 15, 90)
+          [file.id]: Math.min((prev[file.id] || 0) + Math.random() * 15, 85)
         }));
-      }, 200);
+      }, 300);
 
       try {
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('portfolio-media')
-          .upload(filePath, file);
+        // Upload to Google Cloud Storage
+        const gcsResult = await uploadToGCS(file, 'portfolio', undefined, false);
 
-        if (uploadError) {
-          console.error('Storage upload error:', uploadError);
-          throw uploadError;
+        if (!gcsResult.success) {
+          throw new Error(gcsResult.error || 'Upload failed');
         }
 
-        setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('portfolio-media')
-          .getPublicUrl(filePath);
+        setUploadProgress(prev => ({ ...prev, [file.id]: 90 }));
 
         let dimensions = null;
         if (file.type.startsWith('image/')) {
@@ -170,6 +161,8 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
             video.src = file.preview;
           });
         }
+
+        setUploadProgress(prev => ({ ...prev, [file.id]: 95 }));
 
         const { data: maxOrderData } = await supabase
           .from('portfolio_items')
@@ -193,7 +186,8 @@ export function MediaUploader({ onUploadComplete, onMediaUploaded }: MediaUpload
             location: defaultSettings.location || null,
             date_taken: defaultSettings.date_taken || null,
             media_type: mediaType,
-            file_url: publicUrl,
+            file_url: gcsResult.originalUrl,
+            thumbnail_url: gcsResult.watermarkedUrl,
             category: category || null,
             subcategory: subcategory || null,
             item_status: 'uploaded',

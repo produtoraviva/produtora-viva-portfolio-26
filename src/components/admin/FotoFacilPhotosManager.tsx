@@ -239,13 +239,30 @@ export function FotoFacilPhotosManager() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    // First check if the photo is referenced by any order items
+    const { data: orderItems } = await supabase
+      .from('fotofacil_order_items')
+      .select('id')
+      .eq('photo_id', deleteId)
+      .limit(1);
+
+    if (orderItems && orderItems.length > 0) {
+      toast({ 
+        title: 'Não é possível excluir', 
+        description: 'Esta foto está associada a um ou mais pedidos. Você pode desativá-la ao invés de excluí-la.',
+        variant: 'destructive' 
+      });
+      setDeleteId(null);
+      return;
+    }
+
     const { error } = await supabase
       .from('fotofacil_photos')
       .delete()
       .eq('id', deleteId);
 
     if (error) {
-      toast({ title: 'Erro ao excluir foto', variant: 'destructive' });
+      toast({ title: 'Erro ao excluir foto', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Foto excluída!' });
       loadPhotos();

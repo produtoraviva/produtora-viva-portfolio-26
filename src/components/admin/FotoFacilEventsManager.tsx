@@ -206,13 +206,50 @@ export function FotoFacilEventsManager() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    // First check if any photos from this event are referenced by orders
+    const { data: photos } = await supabase
+      .from('fotofacil_photos')
+      .select('id')
+      .eq('event_id', deleteId);
+
+    if (photos && photos.length > 0) {
+      const photoIds = photos.map(p => p.id);
+      const { data: orderItems } = await supabase
+        .from('fotofacil_order_items')
+        .select('id')
+        .in('photo_id', photoIds)
+        .limit(1);
+
+      if (orderItems && orderItems.length > 0) {
+        toast({ 
+          title: 'Não é possível excluir', 
+          description: 'Este evento possui fotos associadas a pedidos. Exclua primeiro as fotos ou desative o evento.',
+          variant: 'destructive' 
+        });
+        setDeleteId(null);
+        return;
+      }
+
+      // Delete all photos first
+      const { error: photosError } = await supabase
+        .from('fotofacil_photos')
+        .delete()
+        .eq('event_id', deleteId);
+
+      if (photosError) {
+        toast({ title: 'Erro ao excluir fotos do evento', description: photosError.message, variant: 'destructive' });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from('fotofacil_events')
       .delete()
       .eq('id', deleteId);
 
     if (error) {
-      toast({ title: 'Erro ao excluir evento', variant: 'destructive' });
+      toast({ title: 'Erro ao excluir evento', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Evento excluído!' });
       loadData();
