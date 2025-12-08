@@ -902,6 +902,11 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                             <HomeIcon className="w-3 h-3" />
                           </Badge>
                         )}
+                        {(item as any).other_works_featured && (
+                          <Badge className="absolute top-8 left-2 text-xs bg-purple-500 backdrop-blur-sm">
+                            <Briefcase className="w-3 h-3" />
+                          </Badge>
+                        )}
                       </div>
                     )}
                     <CardContent className={localViewMode === 'grid' ? 'p-3' : 'p-3 flex items-center gap-4'}>
