@@ -114,6 +114,96 @@ async function uploadToGCS(
   return `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${objectPath}`;
 }
 
+// Fetch watermark from GCS
+async function fetchWatermark(accessToken: string): Promise<Uint8Array | null> {
+  try {
+    const watermarkPath = 'watermarks/selo.png';
+    const url = `https://storage.googleapis.com/storage/v1/b/${GCS_BUCKET_NAME}/o/${encodeURIComponent(watermarkPath)}?alt=media`;
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    
+    if (!response.ok) {
+      console.log('Watermark not found, status:', response.status);
+      return null;
+    }
+    
+    const buffer = await response.arrayBuffer();
+    return new Uint8Array(buffer);
+  } catch (error) {
+    console.error('Error fetching watermark:', error);
+    return null;
+  }
+}
+
+// Simple image watermarking using ImageMagick-like approach via external service
+// Since Deno Edge Functions have memory limits, we use a simple approach:
+// We'll store both original and a copy for watermarking, 
+// then use a lighter canvas approach with chunked processing
+async function createWatermarkedImage(
+  originalData: Uint8Array,
+  watermarkData: Uint8Array,
+  contentType: string
+): Promise<Uint8Array> {
+  // For memory efficiency, we'll use the ImageScript library which is lighter
+  // Import dynamically to reduce initial load
+  const { Image } = await import("https://deno.land/x/imagescript@1.2.15/mod.ts");
+  
+  try {
+    console.log('Decoding original image...');
+    const originalImage = await Image.decode(originalData);
+    const width = originalImage.width;
+    const height = originalImage.height;
+    console.log(`Original image size: ${width}x${height}`);
+    
+    console.log('Decoding watermark...');
+    const watermark = await Image.decode(watermarkData);
+    
+    // Scale watermark to 12% of the smaller image dimension
+    const targetWatermarkSize = Math.floor(Math.min(width, height) * 0.12);
+    const watermarkScale = targetWatermarkSize / Math.min(watermark.width, watermark.height);
+    const scaledWatermarkWidth = Math.floor(watermark.width * watermarkScale);
+    const scaledWatermarkHeight = Math.floor(watermark.height * watermarkScale);
+    
+    console.log(`Scaling watermark to ${scaledWatermarkWidth}x${scaledWatermarkHeight}`);
+    const scaledWatermark = watermark.resize(scaledWatermarkWidth, scaledWatermarkHeight);
+    
+    // Apply opacity to watermark (40% opacity)
+    for (let i = 0; i < scaledWatermark.width * scaledWatermark.height; i++) {
+      const pixel = scaledWatermark.getPixelAt((i % scaledWatermark.width) + 1, Math.floor(i / scaledWatermark.width) + 1);
+      const alpha = (pixel >> 24) & 0xff;
+      const newAlpha = Math.floor(alpha * 0.4);
+      scaledWatermark.setPixelAt(
+        (i % scaledWatermark.width) + 1, 
+        Math.floor(i / scaledWatermark.width) + 1,
+        (pixel & 0x00FFFFFF) | (newAlpha << 24)
+      );
+    }
+    
+    // Tile the watermark across the image
+    const spacingX = scaledWatermarkWidth + 40;
+    const spacingY = scaledWatermarkHeight + 40;
+    
+    console.log('Applying tiled watermark...');
+    for (let y = 20; y < height; y += spacingY) {
+      for (let x = 20; x < width; x += spacingX) {
+        originalImage.composite(scaledWatermark, x, y);
+      }
+    }
+    
+    // Encode to JPEG at 75% quality
+    console.log('Encoding watermarked image...');
+    const watermarkedData = await originalImage.encodeJPEG(75);
+    
+    console.log(`Watermarked image size: ${watermarkedData.length} bytes`);
+    return watermarkedData;
+  } catch (error) {
+    console.error('Error creating watermarked image:', error);
+    throw error;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -129,6 +219,7 @@ serve(async (req) => {
     const type = formData.get('type') as string;
     const eventId = formData.get('eventId') as string | null;
     const fileName = formData.get('fileName') as string | null;
+    const generateWatermark = formData.get('generateWatermark') !== 'false';
 
     if (!file) {
       throw new Error('No file provided');
@@ -138,7 +229,7 @@ serve(async (req) => {
       throw new Error('Invalid type. Must be "fotofacil" or "portfolio"');
     }
 
-    console.log(`Processing upload: type=${type}, fileName=${file.name}, size=${file.size}`);
+    console.log(`Processing upload: type=${type}, fileName=${file.name}, size=${file.size}, generateWatermark=${generateWatermark}`);
 
     const accessToken = await getAccessToken();
     
@@ -159,23 +250,46 @@ serve(async (req) => {
     
     if (type === 'fotofacil' && eventId) {
       originalPath = `originals/fotofacil/${eventId}/${finalFileName}.${extension}`;
-      watermarkedPath = `watermarked/fotofacil/${eventId}/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/fotofacil/${eventId}/${finalFileName}.jpg`;
     } else if (type === 'fotofacil') {
       originalPath = `originals/fotofacil/${finalFileName}.${extension}`;
-      watermarkedPath = `watermarked/fotofacil/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/fotofacil/${finalFileName}.jpg`;
     } else {
       originalPath = `originals/portfolio/${finalFileName}.${extension}`;
-      watermarkedPath = `watermarked/portfolio/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/portfolio/${finalFileName}.jpg`;
     }
 
     // Upload original (for download after purchase)
     const originalUrl = await uploadToGCS(accessToken, originalPath, fileData, file.type);
     console.log(`Original uploaded: ${originalUrl}`);
 
-    // Upload to watermarked path as well - the frontend will handle watermark overlay
-    // This avoids memory-intensive server-side image processing
-    const watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
-    console.log(`Public version uploaded: ${watermarkedUrl}`);
+    let watermarkedUrl = originalUrl;
+    
+    // Generate watermarked version if requested
+    if (generateWatermark && type === 'fotofacil') {
+      console.log('Fetching watermark...');
+      const watermarkData = await fetchWatermark(accessToken);
+      
+      if (watermarkData) {
+        console.log('Creating watermarked image...');
+        try {
+          const watermarkedData = await createWatermarkedImage(fileData, watermarkData, file.type);
+          watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, watermarkedData, 'image/jpeg');
+          console.log(`Watermarked version uploaded: ${watermarkedUrl}`);
+        } catch (error) {
+          console.error('Failed to create watermark, using original:', error);
+          // Fallback: upload original as watermarked version
+          watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
+        }
+      } else {
+        console.log('No watermark found, uploading original as watermarked version');
+        watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
+      }
+    } else {
+      // For portfolio or when watermark is disabled, just copy original
+      watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
+      console.log(`Public version uploaded: ${watermarkedUrl}`);
+    }
 
     return new Response(
       JSON.stringify({
