@@ -73,6 +73,7 @@ async function getAccessToken(): Promise<string> {
 
   const tokenData = await tokenResponse.json();
   if (!tokenData.access_token) {
+    console.error('Token exchange failed:', tokenData);
     throw new Error('Failed to get access token');
   }
   
@@ -87,20 +88,26 @@ async function uploadToGCS(
 ): Promise<string> {
   const uploadUrl = `https://storage.googleapis.com/upload/storage/v1/b/${GCS_BUCKET_NAME}/o?uploadType=media&name=${encodeURIComponent(objectPath)}`;
 
+  console.log(`Uploading watermark to GCS: ${objectPath} (${data.length} bytes)`);
+
   const response = await fetch(uploadUrl, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
       'Content-Type': contentType,
-      'Cache-Control': 'public, max-age=31536000',
+      'Cache-Control': 'no-cache, max-age=0', // Don't cache watermark so updates are immediate
     },
     body: data,
   });
 
   if (!response.ok) {
     const error = await response.text();
+    console.error('GCS upload failed:', error);
     throw new Error(`GCS upload failed: ${error}`);
   }
+
+  const result = await response.json();
+  console.log(`Watermark upload successful: ${result.name}`);
 
   return `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${objectPath}`;
 }
@@ -111,22 +118,47 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Watermark upload request received');
+    
     if (!GCS_PROJECT_ID || !GCS_CLIENT_EMAIL || !GCS_PRIVATE_KEY) {
+      console.error('GCS credentials not configured');
       throw new Error('GCS credentials not configured');
     }
 
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
+    // Parse the request body - handle both FormData and raw body
+    let fileData: Uint8Array;
+    let contentType = 'image/png';
+    
+    const reqContentType = req.headers.get('content-type') || '';
+    
+    if (reqContentType.includes('multipart/form-data')) {
+      console.log('Processing as FormData');
+      const formData = await req.formData();
+      const file = formData.get('file') as File;
 
-    if (!file) {
-      throw new Error('No file provided');
+      if (!file) {
+        throw new Error('No file provided in FormData');
+      }
+
+      console.log(`File received: ${file.name}, size: ${file.size}, type: ${file.type}`);
+      
+      const fileBuffer = await file.arrayBuffer();
+      fileData = new Uint8Array(fileBuffer);
+      contentType = file.type || 'image/png';
+    } else {
+      console.log('Processing as raw body');
+      const arrayBuffer = await req.arrayBuffer();
+      fileData = new Uint8Array(arrayBuffer);
     }
 
-    console.log('Uploading watermark image to GCS');
+    if (fileData.length === 0) {
+      throw new Error('Empty file received');
+    }
+
+    console.log(`Processing watermark: ${fileData.length} bytes`);
 
     const accessToken = await getAccessToken();
-    const fileBuffer = await file.arrayBuffer();
-    const fileData = new Uint8Array(fileBuffer);
+    console.log('GCS access token obtained');
 
     // Upload watermark to fixed location
     const watermarkPath = 'watermarks/selo.png';
@@ -134,10 +166,10 @@ serve(async (req) => {
       accessToken,
       watermarkPath,
       fileData,
-      'image/png'
+      contentType
     );
 
-    console.log(`Watermark uploaded: ${watermarkUrl}`);
+    console.log(`Watermark uploaded successfully: ${watermarkUrl}`);
 
     return new Response(
       JSON.stringify({
