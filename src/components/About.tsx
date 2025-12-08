@@ -1,6 +1,56 @@
+import { useState, useEffect, useRef } from 'react';
+
+const useCountUp = (end: number, duration: number = 2000, startCounting: boolean = false) => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    if (!startCounting) return;
+    
+    let startTime: number | null = null;
+    const animate = (currentTime: number) => {
+      if (startTime === null) startTime = currentTime;
+      const progress = Math.min((currentTime - startTime) / duration, 1);
+      // Ease out cubic
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.floor(easeOut * end));
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    requestAnimationFrame(animate);
+  }, [end, duration, startCounting]);
+  
+  return count;
+};
+
 const About = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  const eventsCount = useCountUp(500, 2000, isVisible);
+  const yearsCount = useCountUp(5, 1500, isVisible);
+  const satisfactionCount = useCountUp(98, 1800, isVisible);
+  const responseCount = useCountUp(24, 1200, isVisible);
+
   return (
-    <section id="sobre" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
+    <section ref={sectionRef} id="sobre" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
       <div className="grid lg:grid-cols-2 gap-16 lg:gap-24">
         {/* Content */}
         <div className="space-y-8">
@@ -32,19 +82,19 @@ const About = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-8">
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">500+</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{eventsCount}+</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Eventos</div>
           </div>
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">5</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{yearsCount}</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Anos</div>
           </div>
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">98%</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{satisfactionCount}%</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Satisfação</div>
           </div>
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">24h</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{responseCount}h</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Resposta</div>
           </div>
         </div>

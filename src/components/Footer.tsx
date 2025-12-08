@@ -16,7 +16,7 @@ const Footer = () => {
   }
 
   return (
-    <footer id="contact" className="bg-secondary py-20 px-4 text-center border-t border-border">
+    <footer id="contact" className="bg-[hsl(0,0%,8%)] py-20 px-4 text-center border-t border-border">
       <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold uppercase mb-8 tracking-tighter">
         Vamos Criar?
       </h2>

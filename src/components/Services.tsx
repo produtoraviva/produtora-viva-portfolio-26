@@ -285,10 +285,10 @@ export default function Services() {
               <br />
               <span className="text-muted-foreground font-light">Serviços</span>
             </h2>
+            <p className="text-muted-foreground mt-4 max-w-md">
+              Serviços personalizados para capturar seus momentos especiais.
+            </p>
           </div>
-          <p className="text-muted-foreground max-w-sm mt-6 md:mt-0 text-right hidden md:block">
-            Serviços personalizados para<br />capturar seus momentos especiais.
-          </p>
         </div>
 
         {/* Services Grid/Carousel */}

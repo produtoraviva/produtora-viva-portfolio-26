@@ -184,12 +184,13 @@ const Testimonials = () => {
           )}
         </div>
 
-        {/* Carousel - More compact */}
-        <div className="relative">
-          {/* Scroll Hint */}
+        {/* Testimonial Card with gray background */}
+        <div className="relative bg-secondary/50 p-6 md:p-10">
+          {/* Scroll Hint Arrow */}
           {testimonials.length > 1 && currentIndex < maxIndex && (
-            <div className="absolute -right-2 md:right-0 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-              <ChevronRight className="h-5 w-5 text-muted-foreground/40 animate-bounce-horizontal" />
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none flex flex-col items-center">
+              <span className="text-[8px] uppercase tracking-wider text-muted-foreground mb-1 hidden md:block">Scroll</span>
+              <ChevronRight className="h-5 w-5 text-muted-foreground/60 animate-bounce-horizontal" />
             </div>
           )}
 
@@ -213,7 +214,7 @@ const Testimonials = () => {
                   key={testimonial.id}
                   className="w-full flex-shrink-0"
                 >
-                  <div className="max-w-3xl mx-auto select-none py-6">
+                  <div className="max-w-3xl mx-auto select-none py-4">
                     {/* Stars */}
                     <div className="flex gap-0.5 mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
@@ -222,12 +223,12 @@ const Testimonials = () => {
                     </div>
 
                     {/* Text - More compact */}
-                    <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed mb-6 tracking-tight">
+                    <blockquote className="text-lg md:text-xl lg:text-2xl font-light leading-relaxed mb-6 tracking-tight">
                       "{testimonial.text}"
                     </blockquote>
 
                     {/* Author - More compact */}
-                    <div className="flex items-center gap-3 pt-4 border-t border-border">
+                    <div className="flex items-center gap-3 pt-4 border-t border-border/50">
                       {testimonial.image && (
                         <div className="w-10 h-10 overflow-hidden grayscale">
                           <img
@@ -254,7 +255,7 @@ const Testimonials = () => {
 
           {/* Indicators - Minimal */}
           {testimonials.length > 1 && (
-            <div className="flex justify-center gap-1 mt-6">
+            <div className="flex justify-center gap-1 mt-4">
               {testimonials.map((_, index) => (
                 <button
                   key={index}

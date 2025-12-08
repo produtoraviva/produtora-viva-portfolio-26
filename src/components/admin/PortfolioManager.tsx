@@ -70,7 +70,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('all');
   const [homepageFilter, setHomepageFilter] = useState<string>('all');
   const [otherWorksFilter, setOtherWorksFilter] = useState<string>('all');
-  const [searchFilter, setSearchFilter] = useState<string>('all');
+  const [searchFilter, setSearchFilter] = useState<string>('');
   
   const { toast } = useToast();
 
@@ -144,7 +144,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     }
     
     // Filtro por pesquisa
-    if (searchFilter && searchFilter !== 'all') {
+    if (searchFilter && searchFilter.trim() !== '') {
       filtered = filtered.filter(item => 
         item.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchFilter.toLowerCase()))
@@ -160,7 +160,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     setSubcategoryFilter('all');
     setHomepageFilter('all');
     setOtherWorksFilter('all');
-    setSearchFilter('all');
+    setSearchFilter('');
   };
 
   // Group items by category for category view
@@ -520,7 +520,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           </Button>
           <Button onClick={() => setIsBatchEditing(true)} size="sm" variant="secondary">
             <Plus className="h-4 w-4 mr-1" />
-            <span className="hidden sm:inline">Ensaio</span>
+            <span className="hidden sm:inline">Alteração em Massa</span>
           </Button>
         </div>
       </div>
@@ -548,6 +548,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                 placeholder="Título ou descrição..."
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
+                className="h-10"
               />
             </div>
             
@@ -689,24 +690,68 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                         <CardContent>
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {catItems.map((item) => (
-                              <div key={item.id} className="relative group aspect-square overflow-hidden rounded-lg">
-                                <img
-                                  src={item.thumbnail_url || item.file_url}
-                                  alt={item.title}
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)}>
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)}>
-                                    {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                                  </Button>
+                              <Card key={item.id} className={`overflow-hidden transition-shadow hover:shadow-lg ${item.is_featured ? 'ring-2 ring-yellow-400' : ''}`}>
+                                <div className="aspect-square relative overflow-hidden bg-muted">
+                                  <img
+                                    src={item.thumbnail_url || item.file_url}
+                                    alt={item.title}
+                                    className="w-full h-full object-cover"
+                                  />
+                                  <div className="absolute top-2 right-2 flex gap-1">
+                                    <Badge className={`text-xs text-white backdrop-blur-sm ${getStatusColor(item.publish_status)}`}>
+                                      {getStatusText(item.publish_status)}
+                                    </Badge>
+                                  </div>
+                                  {item.homepage_featured && (
+                                    <Badge className="absolute top-2 left-2 text-xs bg-blue-500 backdrop-blur-sm">
+                                      <HomeIcon className="w-3 h-3" />
+                                    </Badge>
+                                  )}
+                                  {(item as any).other_works_featured && (
+                                    <Badge className="absolute top-8 left-2 text-xs bg-purple-500 backdrop-blur-sm">
+                                      <Briefcase className="w-3 h-3" />
+                                    </Badge>
+                                  )}
                                 </div>
-                                {item.homepage_featured && (
-                                  <Badge className="absolute top-1 right-1 text-xs bg-blue-500">HP</Badge>
-                                )}
-                              </div>
+                                <CardContent className="p-2">
+                                  <h3 className="font-medium text-xs truncate mb-2">{item.title}</h3>
+                                  <div className="flex gap-1 flex-wrap">
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)} title="Editar">
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)} title={item.publish_status === 'published' ? 'Ocultar' : 'Publicar'}>
+                                      {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleHomepage(item)} title={item.homepage_featured ? 'Remover de Projetos Recentes' : 'Adicionar a Projetos Recentes'}>
+                                      <HomeIcon className={`h-3 w-3 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleOtherWorks(item)} title={(item as any).other_works_featured ? 'Remover de Outros Trabalhos' : 'Adicionar a Outros Trabalhos'}>
+                                      <Briefcase className={`h-3 w-3 ${(item as any).other_works_featured ? 'text-purple-500' : ''}`} />
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" title="Excluir">
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Excluir Item</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Tem certeza que deseja excluir "{item.title}"? Esta ação não pode ser desfeita.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                            Excluir
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </CardContent>
+                              </Card>
                             ))}
                           </div>
                         </CardContent>
@@ -730,24 +775,71 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                         <CardContent>
                           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                             {catItems.map((item) => (
-                              <div key={item.id} className="relative group aspect-video overflow-hidden rounded-lg">
-                                <video
-                                  src={item.file_url}
-                                  className="w-full h-full object-cover"
-                                  poster={item.thumbnail_url}
-                                />
-                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
-                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)}>
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)}>
-                                    {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                                  </Button>
+                              <Card key={item.id} className={`overflow-hidden transition-shadow hover:shadow-lg ${item.is_featured ? 'ring-2 ring-yellow-400' : ''}`}>
+                                <div className="aspect-video relative overflow-hidden bg-muted">
+                                  {item.thumbnail_url ? (
+                                    <img src={item.thumbnail_url} alt={item.title} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <video src={item.file_url} className="w-full h-full object-cover" poster={item.thumbnail_url} />
+                                  )}
+                                  <div className="absolute top-2 right-2 flex gap-1">
+                                    <Badge variant="secondary" className="text-xs flex items-center gap-1 backdrop-blur-sm bg-background/80">
+                                      <Video className="w-3 h-3" />
+                                    </Badge>
+                                    <Badge className={`text-xs text-white backdrop-blur-sm ${getStatusColor(item.publish_status)}`}>
+                                      {getStatusText(item.publish_status)}
+                                    </Badge>
+                                  </div>
+                                  {item.homepage_featured && (
+                                    <Badge className="absolute top-2 left-2 text-xs bg-blue-500 backdrop-blur-sm">
+                                      <HomeIcon className="w-3 h-3" />
+                                    </Badge>
+                                  )}
+                                  {(item as any).other_works_featured && (
+                                    <Badge className="absolute top-8 left-2 text-xs bg-purple-500 backdrop-blur-sm">
+                                      <Briefcase className="w-3 h-3" />
+                                    </Badge>
+                                  )}
                                 </div>
-                                {item.homepage_featured && (
-                                  <Badge className="absolute top-1 right-1 text-xs bg-blue-500">HP</Badge>
-                                )}
-                              </div>
+                                <CardContent className="p-2">
+                                  <h3 className="font-medium text-xs truncate mb-2">{item.title}</h3>
+                                  <div className="flex gap-1 flex-wrap">
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)} title="Editar">
+                                      <Edit className="h-3 w-3" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)} title={item.publish_status === 'published' ? 'Ocultar' : 'Publicar'}>
+                                      {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleHomepage(item)} title={item.homepage_featured ? 'Remover de Projetos Recentes' : 'Adicionar a Projetos Recentes'}>
+                                      <HomeIcon className={`h-3 w-3 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleToggleOtherWorks(item)} title={(item as any).other_works_featured ? 'Remover de Outros Trabalhos' : 'Adicionar a Outros Trabalhos'}>
+                                      <Briefcase className={`h-3 w-3 ${(item as any).other_works_featured ? 'text-purple-500' : ''}`} />
+                                    </Button>
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" title="Excluir">
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>Excluir Item</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            Tem certeza que deseja excluir "{item.title}"? Esta ação não pode ser desfeita.
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(item.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                            Excluir
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
+                                  </div>
+                                </CardContent>
+                              </Card>
                             ))}
                           </div>
                         </CardContent>

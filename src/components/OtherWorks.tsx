@@ -20,10 +20,32 @@ const OtherWorks = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [otherWorksItems, setOtherWorksItems] = useState<PortfolioItem[]>([]);
+  const [displayItems, setDisplayItems] = useState<PortfolioItem[]>([]);
 
   useEffect(() => {
     loadOtherWorksItems();
   }, []);
+
+  // Randomly select 2 items when otherWorksItems changes
+  useEffect(() => {
+    if (otherWorksItems.length <= 2) {
+      setDisplayItems(otherWorksItems);
+    } else {
+      // Use session-based seed for consistency during session
+      const sessionSeed = sessionStorage.getItem('other_works_seed') || String(Date.now());
+      if (!sessionStorage.getItem('other_works_seed')) {
+        sessionStorage.setItem('other_works_seed', sessionSeed);
+      }
+      
+      // Simple shuffle
+      const shuffled = [...otherWorksItems].sort(() => {
+        const random = Math.sin(parseInt(sessionSeed) * otherWorksItems.length) * 10000;
+        return random - Math.floor(random);
+      });
+      
+      setDisplayItems(shuffled.slice(0, 2));
+    }
+  }, [otherWorksItems]);
 
   const loadOtherWorksItems = async () => {
     try {
@@ -32,8 +54,7 @@ const OtherWorks = () => {
         .select('*')
         .eq('other_works_featured', true)
         .eq('publish_status', 'published')
-        .order('display_order')
-        .limit(2);
+        .order('display_order');
 
       if (itemsError) throw itemsError;
 
@@ -79,7 +100,7 @@ const OtherWorks = () => {
     setModalOpen(true);
   };
 
-  if (otherWorksItems.length === 0) {
+  if (displayItems.length === 0) {
     return null;
   }
 
@@ -100,8 +121,8 @@ const OtherWorks = () => {
       </div>
 
       {/* Grid - Max 2 items, 1 item takes full width */}
-      <div className={`grid gap-6 ${otherWorksItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
-        {otherWorksItems.map((item, index) => (
+      <div className={`grid gap-6 ${displayItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
+        {displayItems.map((item, index) => (
           <div 
             key={item.id} 
             className="image-card group relative aspect-[4/3] overflow-hidden bg-secondary cursor-pointer"
@@ -146,7 +167,7 @@ const OtherWorks = () => {
       <ImageModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        images={otherWorksItems.map(item => ({
+        images={displayItems.map(item => ({
           id: item.id,
           image: item.media_type === 'video' ? item.file_url : item.image,
           title: item.title,
