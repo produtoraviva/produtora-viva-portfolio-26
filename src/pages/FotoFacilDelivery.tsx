@@ -249,7 +249,7 @@ const FotoFacilDelivery = () => {
               Dúvidas sobre seu pedido? Entre em contato com nosso suporte.
             </p>
             <Link to="/fotofacil">
-              <Button variant="outline" className="rounded-xl text-gray-700 border-gray-300">
+              <Button variant="outline" className="rounded-xl text-gray-900 border-gray-300 hover:bg-gray-100">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar para FOTOFÁCIL
               </Button>
