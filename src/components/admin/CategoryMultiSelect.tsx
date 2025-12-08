@@ -81,7 +81,7 @@ export function CategoryMultiSelect({
         variant="outline"
         role="combobox"
         aria-expanded={isOpen}
-        className="w-full justify-between font-normal"
+        className="w-full h-10 justify-between font-normal"
         onClick={() => setIsOpen(!isOpen)}
       >
         <span className="truncate">{getSelectedText()}</span>
