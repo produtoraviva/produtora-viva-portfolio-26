@@ -186,27 +186,27 @@ export default function Services() {
         } transition-all duration-500`}
       >
         {/* Card Content */}
-        <div className="p-8 lg:p-10 h-full flex flex-col">
+        <div className="p-4 sm:p-6 lg:p-10 h-full flex flex-col">
           {/* Header */}
-          <div className="flex items-start justify-between mb-8">
-            <div className={`w-14 h-14 flex items-center justify-center transition-all duration-300 ${
+          <div className="flex items-start justify-between mb-4 sm:mb-6 lg:mb-8">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 flex items-center justify-center transition-all duration-300 ${
               service.is_highlighted 
                 ? 'bg-background text-foreground' 
                 : 'bg-foreground/5 group-hover:bg-foreground group-hover:text-background'
             }`}>
-              <IconComponent className="h-7 w-7" />
+              <IconComponent className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7" />
             </div>
             
             {service.is_highlighted && (
-              <span className="bg-background text-foreground text-[10px] font-mono uppercase tracking-wider px-3 py-1.5 font-bold">
+              <span className="bg-background text-foreground text-[8px] sm:text-[9px] lg:text-[10px] font-mono uppercase tracking-wider px-2 py-1 sm:px-3 sm:py-1.5 font-bold">
                 Popular
               </span>
             )}
           </div>
 
           {/* Title & Description */}
-          <div className="mb-8 flex-grow">
-            <h3 className="text-2xl font-bold uppercase tracking-tight mb-3">
+          <div className="mb-4 sm:mb-6 lg:mb-8 flex-grow">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold uppercase tracking-tight mb-2 sm:mb-3">
               {service.title}
             </h3>
             {service.subtitle && (
@@ -224,17 +224,17 @@ export default function Services() {
           </div>
 
           {/* Features */}
-          <div className={`space-y-3 py-6 border-y mb-8 ${
+          <div className={`space-y-2 sm:space-y-3 py-3 sm:py-4 lg:py-6 border-y mb-4 sm:mb-6 lg:mb-8 ${
             service.is_highlighted ? 'border-background/20' : 'border-border'
           }`}>
             {service.features.slice(0, 4).map((feature, featureIndex) => (
-              <div key={featureIndex} className="flex items-start gap-3">
-                <span className={`text-xs mt-0.5 ${
+              <div key={featureIndex} className="flex items-start gap-2 sm:gap-3">
+                <span className={`text-[10px] sm:text-xs mt-0.5 ${
                   service.is_highlighted ? 'text-background' : 'text-foreground'
                 }`}>
                   ✓
                 </span>
-                <span className={`text-sm ${
+                <span className={`text-xs sm:text-sm ${
                   service.is_highlighted ? 'text-background/80' : 'text-muted-foreground'
                 }`}>
                   {feature}
@@ -246,20 +246,20 @@ export default function Services() {
           {/* Price & CTA */}
           <div className="mt-auto">
             {service.price && (
-              <div className="text-3xl font-bold tracking-tight mb-6">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight mb-3 sm:mb-4 lg:mb-6">
                 {service.price}
               </div>
             )}
             <button 
               onClick={scrollToContact}
-              className={`w-full py-4 text-xs uppercase tracking-[0.2em] font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
+              className={`w-full py-2.5 sm:py-3 lg:py-4 text-[10px] sm:text-xs uppercase tracking-[0.15em] sm:tracking-[0.2em] font-bold flex items-center justify-center gap-2 transition-all duration-300 ${
                 service.is_highlighted 
                   ? 'bg-background text-foreground hover:bg-background/90' 
                   : 'bg-foreground text-background hover:bg-foreground/90'
               }`}
             >
               Solicitar Orçamento
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
         </div>
