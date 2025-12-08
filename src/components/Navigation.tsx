@@ -171,20 +171,25 @@ const Navigation = () => {
       {/* Mobile Menu with animated blur background - fixed position with proper centering */}
       {isOpen && (
         <>
-          {/* Blurred background layer - covers everything behind */}
+          {/* Blurred background layer - covers everything behind using backdrop-filter */}
           <div 
             className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${
-              isAnimating ? 'backdrop-blur-lg' : 'backdrop-blur-0'
+              isAnimating ? 'backdrop-blur-sm bg-black/70' : 'bg-transparent'
             }`}
             onClick={handleClose}
-            style={{ backgroundColor: isAnimating ? 'rgba(0,0,0,0.85)' : 'transparent' }}
           />
           
-          {/* Menu content layer - NOT blurred */}
+          {/* Menu content layer - NOT blurred, white text */}
           <div 
             className={`md:hidden fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-300 ${
               isAnimating ? 'opacity-100' : 'opacity-0'
             }`}
+            onClick={(e) => {
+              // Close if clicking on the background (not on menu items)
+              if (e.target === e.currentTarget) {
+                handleClose();
+              }
+            }}
           >
             <div className="flex flex-col items-center space-y-8">
               {navItems.map((item, index) => (

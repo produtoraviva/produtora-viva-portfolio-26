@@ -26,14 +26,11 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
 
   const currentImage = images[currentIndex];
 
-  // Handle smooth open/close animation
+  // Handle smooth open/close animation - fix displacement issue
   useEffect(() => {
     if (isOpen) {
-      // Small delay before showing to allow mounting, prevents displacement
-      const timeout = setTimeout(() => {
-        setIsVisible(true);
-      }, 50);
-      return () => clearTimeout(timeout);
+      // Immediately set visible to prevent displacement
+      setIsVisible(true);
     } else {
       setIsVisible(false);
     }
@@ -89,9 +86,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
         hideClose
       >
         <div 
-          className={`relative w-full h-full flex flex-col bg-background transition-all duration-300 ease-out ${
-            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-          }`}
+          className="relative w-full h-full flex flex-col bg-background"
         >
           {/* Close Button */}
           <Button

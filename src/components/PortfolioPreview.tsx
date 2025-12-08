@@ -24,6 +24,7 @@ const PortfolioPreview = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
+  const [displayItems, setDisplayItems] = useState<PortfolioItem[]>([]);
 
   const categories = [
     { id: "all", label: "Todos" },
@@ -34,6 +35,27 @@ const PortfolioPreview = () => {
   useEffect(() => {
     loadFeaturedItems();
   }, []);
+
+  // Randomly select 6 items when featuredItems changes
+  useEffect(() => {
+    if (featuredItems.length <= 6) {
+      setDisplayItems(featuredItems);
+    } else {
+      // Shuffle and pick 6 random items - use a seeded approach based on session
+      const sessionSeed = sessionStorage.getItem('portfolio_seed') || String(Date.now());
+      if (!sessionStorage.getItem('portfolio_seed')) {
+        sessionStorage.setItem('portfolio_seed', sessionSeed);
+      }
+      
+      // Simple shuffle using the seed
+      const shuffled = [...featuredItems].sort(() => {
+        const random = Math.sin(parseInt(sessionSeed) * featuredItems.length) * 10000;
+        return random - Math.floor(random);
+      });
+      
+      setDisplayItems(shuffled.slice(0, 6));
+    }
+  }, [featuredItems]);
 
   const loadFeaturedItems = async () => {
     try {
@@ -84,13 +106,23 @@ const PortfolioPreview = () => {
   };
 
   const filteredItems = (() => {
+    const itemsToFilter = displayItems;
     if (activeCategory === "all") {
-      // Show up to 6 items, mixed photos and videos
-      return featuredItems.slice(0, 6);
+      return itemsToFilter;
     }
-    
-    return featuredItems.filter((item) => item.media_type === activeCategory).slice(0, 6);
+    return itemsToFilter.filter((item) => item.media_type === activeCategory);
   })();
+
+  // Dynamic grid based on item count
+  const getGridClass = () => {
+    const count = filteredItems.length;
+    if (count === 1) return 'grid-cols-1';
+    if (count === 2) return 'grid-cols-1 md:grid-cols-2';
+    if (count === 3) return 'grid-cols-1 md:grid-cols-3';
+    if (count === 4) return 'grid-cols-2 md:grid-cols-2 lg:grid-cols-4';
+    if (count === 5) return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-3';
+    return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3';
+  };
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);
@@ -123,8 +155,8 @@ const PortfolioPreview = () => {
         </div>
       </div>
 
-      {/* Portfolio Grid - Now showing 6 items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Portfolio Grid - Dynamic based on count */}
+      <div className={`grid gap-4 ${getGridClass()}`}>
         {filteredItems.map((item, index) => (
           <div 
             key={item.id} 
@@ -170,7 +202,7 @@ const PortfolioPreview = () => {
       <div className="text-center mt-20">
         <Link 
           to="/portfolio"
-          className="text-sm uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors duration-300 border-b border-muted-foreground hover:border-foreground pb-1"
+          className="text-sm uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors duration-300 border-b border-muted-foreground hover:border-foreground pb-1 font-bold"
         >
           Ver Portfolio Completo
         </Link>

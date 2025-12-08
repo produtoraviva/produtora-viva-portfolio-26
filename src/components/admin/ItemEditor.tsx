@@ -134,10 +134,11 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !formData.category || !formData.media_type) {
+    // Only title is required now - category and subcategory are optional
+    if (!formData.title.trim()) {
       toast({
         title: 'Erro',
-        description: 'Título, tipo de mídia e categoria são obrigatórios.',
+        description: 'Título é obrigatório.',
         variant: 'destructive',
       });
       return;
