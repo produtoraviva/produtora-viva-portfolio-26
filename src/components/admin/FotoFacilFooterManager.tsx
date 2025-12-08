@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Save, FileText, Mail, Phone, Instagram, MessageCircle, Shield } from 'lucide-react';
 
 interface FooterSettings {
+  logo_url: string;
   brand_name: string;
   brand_description: string;
   contact_email: string;
@@ -21,6 +22,7 @@ interface FooterSettings {
 
 export function FotoFacilFooterManager() {
   const [settings, setSettings] = useState<FooterSettings>({
+    logo_url: '',
     brand_name: 'FOTOFÁCIL',
     brand_description: '',
     contact_email: '',
@@ -51,6 +53,7 @@ export function FotoFacilFooterManager() {
         });
         
         setSettings({
+          logo_url: settingsMap.logo_url || '',
           brand_name: settingsMap.brand_name || 'FOTOFÁCIL',
           brand_description: settingsMap.brand_description || '',
           contact_email: settingsMap.contact_email || '',
@@ -111,9 +114,34 @@ export function FotoFacilFooterManager() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Brand Section */}
+          {/* Logo & Brand Section */}
           <div className="space-y-4">
-            <h4 className="font-medium text-lg">Marca</h4>
+            <h4 className="font-medium text-lg">Logo & Marca</h4>
+            <div>
+              <Label>URL da Logo (opcional)</Label>
+              <Input
+                value={settings.logo_url}
+                onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
+                placeholder="https://exemplo.com/logo.png"
+                className="rounded-lg"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Se configurada, a logo substituirá o nome nas páginas
+              </p>
+            </div>
+            {settings.logo_url && (
+              <div className="p-4 bg-muted/50 rounded-xl">
+                <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                <img 
+                  src={settings.logo_url} 
+                  alt="Logo preview" 
+                  className="max-h-16 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
                 <Label>Nome da Marca</Label>
