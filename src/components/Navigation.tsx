@@ -14,6 +14,7 @@ const Navigation = () => {
   
   const navItems = [
     { label: "Portfolio", href: "/portfolio", route: "/portfolio", highlight: true },
+    { label: "Comprar Fotos", href: "/fotofacil", route: "/fotofacil", highlight: true },
     { label: "Trabalhos", href: "#portfolio", route: "/" },
     { label: "Sobre", href: "#sobre", route: "/" },
     { label: "Serviços", href: "#servicos", route: "/" },
@@ -32,8 +33,8 @@ const Navigation = () => {
   }, []);
 
   const handleNavClick = (item: typeof navItems[0]) => {
-    if (item.route === "/portfolio") {
-      navigate("/portfolio");
+    if (item.route === "/portfolio" || item.route === "/fotofacil") {
+      navigate(item.route);
       handleClose();
     } else if (item.route === "/" && !isHomePage) {
       navigate("/");

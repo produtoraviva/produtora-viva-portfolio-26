@@ -8,3 +8,12 @@ verify_jwt = false
 
 [functions.update-last-login]
 verify_jwt = false
+
+[functions.fotofacil-create-order]
+verify_jwt = false
+
+[functions.fotofacil-webhook]
+verify_jwt = false
+
+[functions.fotofacil-validate-delivery]
+verify_jwt = false

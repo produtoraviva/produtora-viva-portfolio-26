@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   Menu, 
   X, 
@@ -14,7 +15,8 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Edit
+  Edit,
+  ShoppingBag
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -35,6 +37,7 @@ const menuItems = [
   { id: 'testimonials', label: 'Depoimentos', icon: MessageSquare, description: 'Avaliações' },
   { id: 'services', label: 'Serviços', icon: Briefcase, description: 'Ofertas' },
   { id: 'faq', label: 'FAQ', icon: HelpCircle, description: 'Perguntas' },
+  { id: 'fotofacil', label: 'FOTOFÁCIL', icon: ShoppingBag, description: 'Loja de fotos', isRoute: true, route: '/admin/fotofacil' },
 ];
 
 const adminOnlyItems = [
@@ -44,10 +47,31 @@ const adminOnlyItems = [
 export function AdminSidebar({ activeTab, onTabChange, userRole, onLogout }: AdminSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const allItems = userRole === 'admin' 
     ? [...menuItems, ...adminOnlyItems] 
     : menuItems;
+
+  const handleItemClick = (item: typeof menuItems[0]) => {
+    if ('isRoute' in item && item.isRoute && 'route' in item) {
+      navigate(item.route as string);
+    } else {
+      if (location.pathname !== '/admin') {
+        navigate('/admin');
+      }
+      onTabChange(item.id);
+    }
+    setIsOpen(false);
+  };
+
+  const isItemActive = (item: typeof menuItems[0]) => {
+    if ('isRoute' in item && item.isRoute && 'route' in item) {
+      return location.pathname === item.route;
+    }
+    return activeTab === item.id && location.pathname === '/admin';
+  };
 
   return (
     <>
@@ -115,15 +139,12 @@ export function AdminSidebar({ activeTab, onTabChange, userRole, onLogout }: Adm
         <nav className="p-3 space-y-1 overflow-y-auto flex-1">
           {allItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = isItemActive(item);
             
             return (
               <button
                 key={item.id}
-                onClick={() => {
-                  onTabChange(item.id);
-                  setIsOpen(false);
-                }}
+                onClick={() => handleItemClick(item)}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
                   isActive
