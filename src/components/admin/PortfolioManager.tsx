@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X, Camera, Video, LayoutGrid, List } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X, Camera, Video, LayoutGrid, List, Briefcase } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -69,7 +69,8 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('all');
   const [homepageFilter, setHomepageFilter] = useState<string>('all');
-  const [searchFilter, setSearchFilter] = useState<string>('');
+  const [otherWorksFilter, setOtherWorksFilter] = useState<string>('all');
+  const [searchFilter, setSearchFilter] = useState<string>('all');
   
   const { toast } = useToast();
 
@@ -136,8 +137,14 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       filtered = filtered.filter(item => item.homepage_featured === isHomepage);
     }
     
+    // Filtro por outros trabalhos
+    if (otherWorksFilter !== 'all') {
+      const isOtherWorks = otherWorksFilter === 'yes';
+      filtered = filtered.filter(item => (item as any).other_works_featured === isOtherWorks);
+    }
+    
     // Filtro por pesquisa
-    if (searchFilter) {
+    if (searchFilter && searchFilter !== 'all') {
       filtered = filtered.filter(item => 
         item.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
         (item.description && item.description.toLowerCase().includes(searchFilter.toLowerCase()))
@@ -145,14 +152,15 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     }
     
     setFilteredItems(filtered);
-  }, [items, mediaTypeFilter, selectedCategories, subcategoryFilter, homepageFilter, searchFilter]);
+  }, [items, mediaTypeFilter, selectedCategories, subcategoryFilter, homepageFilter, otherWorksFilter, searchFilter]);
 
   const clearFilters = () => {
     setMediaTypeFilter('all');
     setSelectedCategories([]);
     setSubcategoryFilter('all');
     setHomepageFilter('all');
-    setSearchFilter('');
+    setOtherWorksFilter('all');
+    setSearchFilter('all');
   };
 
   // Group items by category for category view
@@ -332,6 +340,53 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       toast({
         title: 'Erro',
         description: 'Erro ao atualizar destaque da homepage.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleToggleOtherWorks = async (item: PortfolioItem) => {
+    try {
+      const currentValue = (item as any).other_works_featured || false;
+      
+      if (!currentValue) {
+        // Check limit - max 2 items
+        const { data: otherWorksItems, error: countError } = await supabase
+          .from('portfolio_items')
+          .select('id')
+          .eq('other_works_featured', true)
+          .neq('id', item.id);
+
+        if (countError) throw countError;
+
+        if ((otherWorksItems?.length || 0) >= 2) {
+          toast({
+            title: 'Limite atingido',
+            description: 'Máximo de 2 itens podem ser exibidos em "Outros Trabalhos".',
+            variant: 'destructive',
+          });
+          return;
+        }
+      }
+
+      const { error } = await supabase
+        .from('portfolio_items')
+        .update({ other_works_featured: !currentValue })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      toast({
+        title: 'Sucesso',
+        description: `Item ${!currentValue ? 'adicionado a' : 'removido de'} Outros Trabalhos!`,
+      });
+
+      onItemsChange();
+    } catch (error) {
+      console.error('Error updating other works:', error);
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar.',
         variant: 'destructive',
       });
     }
@@ -542,7 +597,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             
             {/* Homepage */}
             <div>
-              <label className="text-sm font-medium">Na Homepage</label>
+              <label className="text-sm font-medium">Projetos Recentes</label>
               <Select value={homepageFilter} onValueChange={setHomepageFilter}>
                 <SelectTrigger>
                   <SelectValue />
@@ -551,6 +606,21 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                   <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="yes">🏠 Na Homepage</SelectItem>
                   <SelectItem value="no">Não na Homepage</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Outros Trabalhos */}
+            <div>
+              <label className="text-sm font-medium">Outros Trabalhos</label>
+              <Select value={otherWorksFilter} onValueChange={setOtherWorksFilter}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="yes">📂 Em Outros Trabalhos</SelectItem>
+                  <SelectItem value="no">Não em Outros Trabalhos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -810,10 +880,19 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           size="sm"
                           variant="ghost"
                           onClick={() => handleToggleHomepage(item)}
-                          title={item.homepage_featured ? 'Remover da Homepage' : 'Adicionar à Homepage'}
+                          title={item.homepage_featured ? 'Remover de Projetos Recentes' : 'Adicionar a Projetos Recentes'}
                           className="h-8 w-8 p-0"
                         >
                           <HomeIcon className={`h-3.5 w-3.5 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleToggleOtherWorks(item)}
+                          title={(item as any).other_works_featured ? 'Remover de Outros Trabalhos' : 'Adicionar a Outros Trabalhos'}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Briefcase className={`h-3.5 w-3.5 ${(item as any).other_works_featured ? 'text-purple-500' : ''}`} />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>

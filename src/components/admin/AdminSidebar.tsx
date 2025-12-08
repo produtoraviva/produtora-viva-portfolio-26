@@ -13,7 +13,8 @@ import {
   Users,
   ChevronLeft,
   ChevronRight,
-  Settings
+  LogOut,
+  Edit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,7 @@ interface AdminSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   userRole?: 'admin' | 'collaborator';
+  onLogout?: () => void;
 }
 
 const menuItems = [
@@ -39,7 +41,7 @@ const adminOnlyItems = [
   { id: 'accounts', label: 'Contas', icon: Users, description: 'Usuários' },
 ];
 
-export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarProps) {
+export function AdminSidebar({ activeTab, onTabChange, userRole, onLogout }: AdminSidebarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
@@ -53,7 +55,7 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       <Button
         variant="outline"
         size="icon"
-        className="fixed top-[72px] left-4 z-50 lg:hidden shadow-lg bg-card"
+        className="fixed top-4 left-4 z-50 lg:hidden shadow-lg bg-card"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -70,17 +72,33 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-[57px] left-0 h-[calc(100vh-57px)] bg-card border-r border-border z-40 transition-all duration-300 shadow-sm",
+          "fixed top-0 left-0 h-full bg-card border-r border-border z-40 transition-all duration-300 shadow-sm flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0",
           isCollapsed ? "lg:w-16" : "lg:w-56"
         )}
       >
+        {/* Header */}
+        <div className={cn(
+          "p-4 border-b border-border flex items-center gap-3",
+          isCollapsed && "lg:justify-center"
+        )}>
+          <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl">
+            <Edit className="h-5 w-5 text-primary" />
+          </div>
+          {!isCollapsed && (
+            <div className="hidden lg:block">
+              <h1 className="font-bold text-sm">Admin</h1>
+              <p className="text-xs text-muted-foreground">Painel</p>
+            </div>
+          )}
+        </div>
+
         {/* Collapse Toggle (Desktop only) */}
         <Button
           variant="outline"
           size="icon"
-          className="absolute -right-3 top-6 h-6 w-6 rounded-full border shadow-md bg-card hidden lg:flex z-50"
+          className="absolute -right-3 top-20 h-6 w-6 rounded-full border shadow-md bg-card hidden lg:flex z-50"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
@@ -91,7 +109,7 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
         </Button>
 
         {/* Menu Items */}
-        <nav className="p-3 space-y-1 overflow-y-auto h-full">
+        <nav className="p-3 space-y-1 overflow-y-auto flex-1">
           {allItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -130,6 +148,24 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
             );
           })}
         </nav>
+
+        {/* Logout Button at Bottom */}
+        {onLogout && (
+          <div className="p-3 border-t border-border">
+            <button
+              onClick={onLogout}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200",
+                "text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                isCollapsed && "lg:justify-center lg:px-2"
+              )}
+              title={isCollapsed ? "Sair" : undefined}
+            >
+              <LogOut className="h-4 w-4 flex-shrink-0" />
+              {!isCollapsed && <span className="font-medium">Sair</span>}
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

@@ -103,29 +103,6 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             <X className="h-6 w-6" />
           </Button>
 
-          {/* Navigation Buttons */}
-          {images.length > 1 && (
-            <>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handlePrevious}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-40 bg-background/80 hover:bg-background text-foreground"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleNext}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-40 bg-background/80 hover:bg-background text-foreground"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </Button>
-            </>
-          )}
-
           {/* Media Content - in foreground with proper z-index */}
           <div className="relative flex-1 flex items-center justify-center p-4 md:p-8 z-30">
             {!imageLoaded && (
@@ -161,26 +138,52 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             )}
           </div>
 
-          {/* Image Info - no gradient, simple background */}
+          {/* Image Info with navigation arrows */}
           <div className="relative z-20 bg-background p-4 md:p-6 border-t border-border">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-foreground">
-              <div>
-                <h3 className="text-lg md:text-xl font-semibold mb-1">{currentImage.title}</h3>
-                {currentImage.description && (
-                  <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
+              <div className="flex items-center gap-3">
+                {/* Navigation Arrows - Now in the info bar */}
+                {images.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handlePrevious}
+                    className="bg-foreground/10 hover:bg-foreground/20 text-foreground h-9 w-9"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
                 )}
-                <div className="flex flex-wrap gap-2">
-                  {currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '' && (
-                    <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
-                      {currentImage.category}
-                    </span>
+                
+                <div>
+                  <h3 className="text-lg md:text-xl font-semibold mb-1">{currentImage.title}</h3>
+                  {currentImage.description && (
+                    <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
                   )}
-                  {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && currentImage.subcategory.trim() !== '' && (
-                    <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
-                      {currentImage.subcategory}
-                    </span>
-                  )}
+                  <div className="flex flex-wrap gap-2">
+                    {currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '' && (
+                      <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
+                        {currentImage.category}
+                      </span>
+                    )}
+                    {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && currentImage.subcategory.trim() !== '' && (
+                      <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
+                        {currentImage.subcategory}
+                      </span>
+                    )}
+                  </div>
                 </div>
+                
+                {/* Next Arrow */}
+                {images.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleNext}
+                    className="bg-foreground/10 hover:bg-foreground/20 text-foreground h-9 w-9"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                )}
               </div>
               
               <div className="flex items-center gap-4">

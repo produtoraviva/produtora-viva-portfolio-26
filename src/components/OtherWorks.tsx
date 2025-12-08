@@ -1,11 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import ImageModal from "./ImageModal";
 import { LazyImage } from "./LazyImage";
 import { Play } from "lucide-react";
-
-type CategoryType = "all" | "photo" | "video";
 
 interface PortfolioItem {
   id: string;
@@ -19,30 +16,24 @@ interface PortfolioItem {
   thumbnail_url?: string;
 }
 
-const PortfolioPreview = () => {
-  const [activeCategory, setActiveCategory] = useState<CategoryType>("all");
+const OtherWorks = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [featuredItems, setFeaturedItems] = useState<PortfolioItem[]>([]);
-
-  const categories = [
-    { id: "all", label: "Todos" },
-    { id: "photo", label: "Foto" },
-    { id: "video", label: "Vídeo" },
-  ];
+  const [otherWorksItems, setOtherWorksItems] = useState<PortfolioItem[]>([]);
 
   useEffect(() => {
-    loadFeaturedItems();
+    loadOtherWorksItems();
   }, []);
 
-  const loadFeaturedItems = async () => {
+  const loadOtherWorksItems = async () => {
     try {
       const { data: items, error: itemsError } = await supabase
         .from('portfolio_items')
         .select('*')
-        .eq('homepage_featured', true)
+        .eq('other_works_featured', true)
         .eq('publish_status', 'published')
-        .order('display_order');
+        .order('display_order')
+        .limit(2);
 
       if (itemsError) throw itemsError;
 
@@ -77,58 +68,43 @@ const PortfolioPreview = () => {
         };
       }) || [];
 
-      setFeaturedItems(processedItems);
+      setOtherWorksItems(processedItems);
     } catch (error) {
-      console.error('Error loading featured items:', error);
+      console.error('Error loading other works items:', error);
     }
   };
-
-  const filteredItems = (() => {
-    if (activeCategory === "all") {
-      // Show up to 6 items, mixed photos and videos
-      return featuredItems.slice(0, 6);
-    }
-    
-    return featuredItems.filter((item) => item.media_type === activeCategory).slice(0, 6);
-  })();
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);
     setModalOpen(true);
   };
 
+  if (otherWorksItems.length === 0) {
+    return null;
+  }
+
   return (
-    <section id="portfolio" className="max-w-[1600px] mx-auto px-4 py-24">
+    <section className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 border-b border-border pb-4">
-        <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter mb-4 md:mb-0">
-          Projetos Recentes
-        </h2>
-        
-        {/* Category Filters */}
-        <div className="flex gap-4 text-xs uppercase text-muted-foreground">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              onClick={() => setActiveCategory(category.id as CategoryType)}
-              className={`transition-colors duration-300 ${
-                activeCategory === category.id 
-                  ? "text-foreground underline" 
-                  : "hover:text-foreground"
-              }`}
-            >
-              {category.label}
-            </button>
-          ))}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
+        <div>
+          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+            Explore
+          </p>
+          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
+            Alguns Outros
+            <br />
+            <span className="text-muted-foreground">Trabalhos</span>
+          </h2>
         </div>
       </div>
 
-      {/* Portfolio Grid - Now showing 6 items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredItems.map((item, index) => (
+      {/* Grid - Max 2 items */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {otherWorksItems.map((item, index) => (
           <div 
             key={item.id} 
-            className="image-card group relative aspect-[3/4] overflow-hidden bg-secondary cursor-pointer"
+            className="image-card group relative aspect-[4/3] overflow-hidden bg-secondary cursor-pointer"
             onClick={() => handleImageClick(index)}
           >
             {/* Use thumbnail for videos if available */}
@@ -153,7 +129,7 @@ const PortfolioPreview = () => {
               </div>
             )}
             
-            {/* Overlay - Only show category if it exists and is not empty */}
+            {/* Overlay */}
             <div className="portfolio-overlay">
               {(item.subcategory || (item.category && item.category.trim() !== '')) && (
                 <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
@@ -166,21 +142,11 @@ const PortfolioPreview = () => {
         ))}
       </div>
 
-      {/* CTA */}
-      <div className="text-center mt-20">
-        <Link 
-          to="/portfolio"
-          className="text-sm uppercase tracking-[0.2em] text-muted-foreground hover:text-foreground transition-colors duration-300 border-b border-muted-foreground hover:border-foreground pb-1"
-        >
-          Ver Portfolio Completo
-        </Link>
-      </div>
-
       {/* Image Modal */}
       <ImageModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
-        images={filteredItems.map(item => ({
+        images={otherWorksItems.map(item => ({
           id: item.id,
           image: item.media_type === 'video' ? item.file_url : item.image,
           title: item.title,
@@ -196,4 +162,4 @@ const PortfolioPreview = () => {
   );
 };
 
-export default PortfolioPreview;
+export default OtherWorks;

@@ -70,12 +70,12 @@ const Hero = () => {
     <header 
       ref={heroRef}
       id="hero" 
-      className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden"
+      className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden bg-background"
     >
-      {/* Background Image with Parallax - Higher z-index and proper opacity */}
+      {/* Background Image with Parallax - Highest z-index to ensure visibility */}
       {heroImage && (
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 z-0"
           style={{ 
             transform: `translateY(${parallaxOffset}px) scale(1.1)`,
             transition: 'transform 0.1s ease-out'
