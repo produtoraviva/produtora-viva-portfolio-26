@@ -29,12 +29,11 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
   // Handle smooth open/close animation
   useEffect(() => {
     if (isOpen) {
-      // Delay visibility to allow dialog to mount
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          setIsVisible(true);
-        });
-      });
+      // Small delay before showing to allow mounting, prevents displacement
+      const timeout = setTimeout(() => {
+        setIsVisible(true);
+      }, 50);
+      return () => clearTimeout(timeout);
     } else {
       setIsVisible(false);
     }
@@ -90,7 +89,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
         hideClose
       >
         <div 
-          className={`relative w-full h-full flex items-center justify-center bg-background transition-all duration-300 ease-out ${
+          className={`relative w-full h-full flex flex-col bg-background transition-all duration-300 ease-out ${
             isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
           }`}
         >
@@ -127,8 +126,8 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             </>
           )}
 
-          {/* Media Content */}
-          <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+          {/* Media Content - in foreground with proper z-index */}
+          <div className="relative flex-1 flex items-center justify-center p-4 md:p-8 z-30">
             {!imageLoaded && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-foreground"></div>
@@ -140,7 +139,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 ref={videoRef}
                 key={currentImage.id}
                 src={currentImage.image}
-                className={`max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-300 ${
+                className={`max-w-full max-h-[65vh] w-auto h-auto object-contain transition-opacity duration-300 relative z-30 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 controls
@@ -154,7 +153,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 key={currentImage.id}
                 src={currentImage.image}
                 alt={currentImage.title}
-                className={`max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-300 ${
+                className={`max-w-full max-h-[65vh] w-auto h-auto object-contain transition-opacity duration-300 ${
                   imageLoaded ? 'opacity-100' : 'opacity-0'
                 }`}
                 onLoad={() => setImageLoaded(true)}
@@ -162,13 +161,15 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             )}
           </div>
 
-          {/* Image Info */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-6">
-            <div className="flex items-center justify-between text-foreground">
+          {/* Image Info - no gradient, simple background */}
+          <div className="relative z-20 bg-background p-4 md:p-6 border-t border-border">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-foreground">
               <div>
-                <h3 className="text-xl font-semibold mb-1">{currentImage.title}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
-                <div className="flex space-x-2">
+                <h3 className="text-lg md:text-xl font-semibold mb-1">{currentImage.title}</h3>
+                {currentImage.description && (
+                  <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
+                )}
+                <div className="flex flex-wrap gap-2">
                   {currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '' && (
                     <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
                       {currentImage.category}
@@ -182,8 +183,8 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 </div>
               </div>
               
-              {navigator.share && (
-                <div className="flex space-x-2">
+              <div className="flex items-center gap-4">
+                {navigator.share && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -192,17 +193,15 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                   >
                     <Share2 className="h-5 w-5" />
                   </Button>
-                </div>
-              )}
-            </div>
-            
-            {images.length > 1 && (
-              <div className="flex justify-center mt-4">
-                <span className="text-muted-foreground text-sm">
-                  {currentIndex + 1} de {images.length}
-                </span>
+                )}
+                
+                {images.length > 1 && (
+                  <span className="text-muted-foreground text-sm">
+                    {currentIndex + 1} de {images.length}
+                  </span>
+                )}
               </div>
-            )}
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Star, Quote, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Testimonial {
@@ -185,22 +185,14 @@ const Testimonials = () => {
 
         {/* Carousel */}
         <div className="relative">
-          {/* Navigation Arrows */}
-          {testimonials.length > 1 && (
-            <>
-              <button 
-                onClick={handlePrev}
-                className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button 
-                onClick={handleNext}
-                className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </>
+          {/* Scroll Hint Arrow Animation */}
+          {testimonials.length > 1 && currentIndex < maxIndex && (
+            <div className="absolute -right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+              <div className="flex items-center gap-1 text-muted-foreground animate-pulse">
+                <span className="text-[10px] uppercase tracking-wider hidden md:block">Scroll</span>
+                <ChevronRight className="h-5 w-5 animate-bounce-horizontal" />
+              </div>
+            </div>
           )}
 
           <div 
@@ -265,19 +257,19 @@ const Testimonials = () => {
             </div>
           </div>
 
-          {/* Indicators */}
+          {/* Indicators - smaller on mobile */}
           {testimonials.length > 1 && (
-            <div className="flex items-center justify-center gap-4 mt-8 md:mt-12">
-              <span className="text-xs text-muted-foreground font-mono">
+            <div className="flex items-center justify-center gap-3 md:gap-4 mt-6 md:mt-12">
+              <span className="text-[10px] md:text-xs text-muted-foreground font-mono">
                 {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
               </span>
-              <div className="flex gap-2">
+              <div className="flex gap-1 md:gap-2">
                 {testimonials.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentIndex(index)}
-                    className={`w-8 h-px transition-all duration-300 ${
-                      index === currentIndex ? "bg-foreground" : "bg-muted-foreground/30 hover:bg-muted-foreground"
+                    className={`h-0.5 md:h-px transition-all duration-300 ${
+                      index === currentIndex ? "bg-foreground w-4 md:w-8" : "bg-muted-foreground/30 hover:bg-muted-foreground w-2 md:w-4"
                     }`}
                   />
                 ))}

@@ -340,8 +340,8 @@ const PortfolioFull = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="text-center mb-12 animate-fade-in-up">
-          <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-            Portfolio <span className="bg-gradient-primary bg-clip-text text-transparent">Completo</span>
+          <h1 className="text-4xl lg:text-6xl font-bold mb-6 text-foreground">
+            PORTFOLIO COMPLETO
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto animate-fade-in-delayed">
             Explore nossa galeria completa com mais de {portfolioItems.length} projetos realizados. 
@@ -460,11 +460,28 @@ const PortfolioFull = () => {
             >
               <div className="relative aspect-square overflow-hidden">
                 {item.media_type === 'video' ? (
-                  <video
-                    src={item.file_url}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    poster={item.thumbnail_url}
-                  />
+                  <>
+                    {item.thumbnail_url ? (
+                      <img
+                        src={item.thumbnail_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <video
+                        src={item.file_url}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        muted
+                        playsInline
+                      />
+                    )}
+                    {/* Play icon overlay for videos */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                        <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <img
                     src={item.thumbnail_url || item.file_url}
@@ -492,15 +509,6 @@ const PortfolioFull = () => {
                         </span>
                       )}
                     </div>
-                    {item.description && (
-                      <p className="text-sm opacity-90 max-w-xs mx-auto">{item.description}</p>
-                    )}
-                    {(item.date_taken || item.location) && (
-                      <div className="text-xs opacity-80 space-y-1">
-                        {item.date_taken && <div>{new Date(item.date_taken).toLocaleDateString('pt-BR')}</div>}
-                        {item.location && <div>{item.location}</div>}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -510,20 +518,42 @@ const PortfolioFull = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex justify-center mt-12">
-            <div className="flex space-x-2">
-              {[...Array(totalPages)].map((_, index) => (
-                <Button
-                  key={index}
-                  variant={currentPage === index + 1 ? "default" : "outline"}
-                  size="sm"
-                  className={currentPage === index + 1 ? "bg-gradient-primary" : "border-primary/30 hover:bg-primary/10"}
-                  onClick={() => handlePageChange(index + 1)}
-                >
-                  {index + 1}
-                </Button>
-              ))}
-            </div>
+          <div className="flex justify-center items-center space-x-2 mt-12">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="border-foreground/30 hover:bg-foreground/10"
+            >
+              Anterior
+            </Button>
+            
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={currentPage === page ? "default" : "outline"}
+                size="sm"
+                onClick={() => handlePageChange(page)}
+                className={
+                  currentPage === page 
+                    ? "bg-foreground text-background"
+                    : "border-foreground/30 hover:bg-foreground/10"
+                }
+              >
+                {page}
+              </Button>
+            ))}
+            
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="border-foreground/30 hover:bg-foreground/10"
+            >
+              Próxima
+            </Button>
           </div>
         )}
       </div>
@@ -533,14 +563,12 @@ const PortfolioFull = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         images={filteredItems.map(item => ({
-          id: parseInt(item.id),
+          id: item.id,
+          image: item.file_url,
           title: item.title,
+          description: item.description || '',
           category: item.category ? getCategoryLabel(item.category) : '',
           subcategory: item.subcategory ? getSubcategoryLabel(item.subcategory) : '',
-          image: item.thumbnail_url || item.file_url,
-          description: item.description || '',
-          date: item.date_taken ? new Date(item.date_taken).toLocaleDateString('pt-BR') : '',
-          location: item.location || '',
           media_type: item.media_type
         }))}
         currentIndex={currentImageIndex}

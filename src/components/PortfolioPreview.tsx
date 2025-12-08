@@ -139,11 +139,20 @@ const PortfolioPreview = () => {
             className="image-card group relative aspect-[3/4] overflow-hidden bg-secondary cursor-pointer"
             onClick={() => handleImageClick(index)}
           >
-            <LazyImage
-              src={item.image}
-              alt={item.title}
-              className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
-            />
+            {/* Use thumbnail for videos if available */}
+            {item.media_type === "video" && item.thumbnail_url ? (
+              <img
+                src={item.thumbnail_url}
+                alt={item.title}
+                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
+              />
+            ) : (
+              <LazyImage
+                src={item.image}
+                alt={item.title}
+                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
+              />
+            )}
             
             {/* Play Icon for Video */}
             {item.media_type === "video" && (
