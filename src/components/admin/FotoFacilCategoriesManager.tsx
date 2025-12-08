@@ -159,13 +159,33 @@ export function FotoFacilCategoriesManager() {
   const handleDelete = async () => {
     if (!deleteId) return;
 
+    // First check if there are any events in this category
+    const { data: events } = await supabase
+      .from('fotofacil_events')
+      .select('id')
+      .eq('category_id', deleteId);
+
+    if (events && events.length > 0) {
+      // Unlink events from this category first
+      const { error: unlinkError } = await supabase
+        .from('fotofacil_events')
+        .update({ category_id: null })
+        .eq('category_id', deleteId);
+
+      if (unlinkError) {
+        toast({ title: 'Erro ao desvincular eventos', description: unlinkError.message, variant: 'destructive' });
+        setDeleteId(null);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from('fotofacil_categories')
       .delete()
       .eq('id', deleteId);
 
     if (error) {
-      toast({ title: 'Erro ao excluir categoria', variant: 'destructive' });
+      toast({ title: 'Erro ao excluir categoria', description: error.message, variant: 'destructive' });
     } else {
       toast({ title: 'Categoria excluída!' });
       loadCategories();
