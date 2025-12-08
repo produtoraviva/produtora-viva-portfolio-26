@@ -67,7 +67,7 @@ const PortfolioPreview = () => {
         return {
           id: item.id,
           title: item.title,
-          category: category?.name || 'Sem categoria',
+          category: category?.name || '',
           subcategory: subcategory?.name,
           image: item.thumbnail_url || item.file_url,
           description: item.description,
@@ -91,12 +91,13 @@ const PortfolioPreview = () => {
 
   const filteredItems = (() => {
     if (activeCategory === "all") {
+      // Show 3 photos and 3 videos for a total of 6
       const randomPhotos = getRandomSelection(featuredItems, "photo", 3);
       const randomVideos = getRandomSelection(featuredItems, "video", 3);
       return [...randomPhotos, ...randomVideos].sort(() => Math.random() - 0.5);
     }
     
-    return featuredItems.filter((item) => item.media_type === activeCategory);
+    return featuredItems.filter((item) => item.media_type === activeCategory).slice(0, 6);
   })();
 
   const handleImageClick = (index: number) => {
@@ -130,7 +131,7 @@ const PortfolioPreview = () => {
         </div>
       </div>
 
-      {/* Portfolio Grid */}
+      {/* Portfolio Grid - Now showing 6 items */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems.map((item, index) => (
           <div 
@@ -151,9 +152,9 @@ const PortfolioPreview = () => {
               </div>
             )}
             
-            {/* Overlay */}
+            {/* Overlay - Only show category if it exists and is not empty */}
             <div className="portfolio-overlay">
-              {(item.subcategory || (item.category && item.category !== 'Sem categoria')) && (
+              {(item.subcategory || (item.category && item.category.trim() !== '')) && (
                 <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
                   {item.subcategory || item.category}
                 </span>
@@ -180,11 +181,12 @@ const PortfolioPreview = () => {
         onClose={() => setModalOpen(false)}
         images={filteredItems.map(item => ({
           id: item.id,
-          image: item.image,
+          image: item.media_type === 'video' ? item.file_url : item.image,
           title: item.title,
           description: item.description || '',
           category: item.category,
-          subcategory: item.subcategory || ''
+          subcategory: item.subcategory || '',
+          media_type: item.media_type
         }))}
         currentIndex={currentImageIndex}
         onIndexChange={setCurrentImageIndex}

@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import { ChevronDown } from "lucide-react";
 
 const Hero = () => {
   const [heroImage, setHeroImage] = useState<string>("");
-  const [heroOpacity, setHeroOpacity] = useState<number>(40);
+  const [heroOpacity, setHeroOpacity] = useState<number>(100);
   const [isLoading, setIsLoading] = useState(true);
 
   // Fetch homepage backgrounds from database with direct query for reliability
@@ -25,9 +26,10 @@ const Hero = () => {
         }
         
         if (data && data.length > 0) {
-          console.log('Homepage background loaded:', data[0].file_url);
+          console.log('Homepage background loaded:', data[0].file_url, 'opacity:', data[0].opacity);
           setHeroImage(data[0].file_url);
-          setHeroOpacity(data[0].opacity || 40);
+          // Opacity from DB is 0-100, convert to 0-1 for CSS
+          setHeroOpacity(data[0].opacity ?? 100);
         } else {
           console.log('No active homepage background found');
           setHeroImage("");
@@ -42,50 +44,58 @@ const Hero = () => {
     loadBackground();
   }, []);
 
+  const scrollToContent = () => {
+    const portfolioSection = document.getElementById('portfolio');
+    if (portfolioSection) {
+      portfolioSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header id="hero" className="relative h-screen w-full flex flex-col justify-center items-center overflow-hidden">
-      {/* Background Image */}
+      {/* Background Image - opacity is now applied correctly */}
       {heroImage && (
-        <div 
-          className="absolute inset-0 z-0"
-          style={{ opacity: heroOpacity / 100 }}
-        >
+        <div className="absolute inset-0 z-0">
           <img 
             src={heroImage}
             className="w-full h-full object-cover" 
             alt="Hero Background"
+            style={{ opacity: heroOpacity / 100 }}
           />
         </div>
       )}
 
       {/* Main Content */}
       <div className="z-10 text-center space-y-4 px-4 reveal-text">
-        <p className="text-xs md:text-sm font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2">
+        <p className="text-xs md:text-sm font-mono text-muted-foreground uppercase tracking-[0.3em] mb-2 animate-fade-in-delayed">
           Fotografia & Cinema
         </p>
         <h1 className="text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter uppercase leading-none">
-          Rubens
-          <br />
-          <span className="text-muted-foreground">Photofilm</span>
+          <span className="block animate-fade-in" style={{ animationDelay: '0.2s' }}>Rubens</span>
+          <span className="text-muted-foreground block animate-fade-in" style={{ animationDelay: '0.4s' }}>Photofilm</span>
         </h1>
       </div>
 
       {/* Bottom Left Text */}
-      <div className="absolute bottom-10 left-6 md:left-10 z-10 hidden md:block">
+      <div className="absolute bottom-10 left-6 md:left-10 z-10 hidden md:block animate-fade-in" style={{ animationDelay: '0.6s' }}>
         <p className="text-xs text-muted-foreground max-w-xs leading-relaxed">
           Capturando a essência através de lentes. 
           <br />Especializado em casamentos, eventos e ensaios.
         </p>
       </div>
 
-      {/* Scroll Indicator */}
-      <div className="absolute bottom-10 right-6 md:right-10 z-10">
-        <div className="flex flex-col items-center space-y-2">
-          <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground rotate-90 origin-center translate-y-4">
-            Scroll
-          </span>
-        </div>
-      </div>
+      {/* Scroll Indicator with bouncing arrow */}
+      <button 
+        onClick={scrollToContent}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 group cursor-pointer animate-fade-in"
+        style={{ animationDelay: '0.8s' }}
+        aria-label="Scroll para baixo"
+      >
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground group-hover:text-foreground transition-colors">
+          Scroll
+        </span>
+        <ChevronDown className="h-6 w-6 text-muted-foreground group-hover:text-foreground animate-bounce transition-colors" />
+      </button>
     </header>
   );
 };

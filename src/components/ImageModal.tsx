@@ -1,7 +1,7 @@
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, Share2 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -21,24 +21,28 @@ interface ImageModalProps {
 
 const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: ImageModalProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const currentImage = images[currentIndex];
+
+  // Handle smooth open/close animation
+  useEffect(() => {
+    if (isOpen) {
+      // Delay visibility to allow dialog to mount
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setIsVisible(true);
+        });
+      });
+    } else {
+      setIsVisible(false);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     setImageLoaded(false);
   }, [currentIndex]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsInitialLoad(true);
-      // Small delay to ensure modal is fully rendered before showing content
-      const timer = setTimeout(() => {
-        setIsInitialLoad(false);
-      }, 50);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
 
   const handlePrevious = useCallback(() => {
     const newIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
@@ -85,7 +89,11 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
         className="max-w-[95vw] w-full max-h-[95vh] h-auto p-0 bg-background border-0 overflow-hidden" 
         hideClose
       >
-        <div className={`relative w-full h-full flex items-center justify-center bg-background transition-opacity duration-200 ${isInitialLoad ? 'opacity-0' : 'opacity-100'}`}>
+        <div 
+          className={`relative w-full h-full flex items-center justify-center bg-background transition-all duration-300 ease-out ${
+            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
+        >
           {/* Close Button */}
           <Button
             variant="ghost"
@@ -129,6 +137,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
             
             {currentImage.media_type === 'video' ? (
               <video
+                ref={videoRef}
                 key={currentImage.id}
                 src={currentImage.image}
                 className={`max-w-full max-h-[70vh] w-auto h-auto object-contain transition-opacity duration-300 ${
@@ -138,6 +147,7 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 controlsList="nodownload"
                 onLoadedData={() => setImageLoaded(true)}
                 autoPlay={false}
+                preload="metadata"
               />
             ) : (
               <img
@@ -159,12 +169,12 @@ const ImageModal = ({ isOpen, onClose, images, currentIndex, onIndexChange }: Im
                 <h3 className="text-xl font-semibold mb-1">{currentImage.title}</h3>
                 <p className="text-sm text-muted-foreground mb-2">{currentImage.description}</p>
                 <div className="flex space-x-2">
-                  {currentImage.category && currentImage.category !== currentImage.id?.toString() && (
+                  {currentImage.category && currentImage.category !== currentImage.id?.toString() && currentImage.category.trim() !== '' && (
                     <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
                       {currentImage.category}
                     </span>
                   )}
-                  {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && (
+                  {currentImage.subcategory && currentImage.subcategory !== currentImage.id?.toString() && currentImage.subcategory.trim() !== '' && (
                     <span className="px-2 py-1 bg-foreground/10 text-xs capitalize">
                       {currentImage.subcategory}
                     </span>

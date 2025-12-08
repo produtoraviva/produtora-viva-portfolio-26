@@ -69,10 +69,8 @@ export function AdminSidebar({ activeTab, onTabChange, userRole }: AdminSidebarP
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-[73px] left-0 h-[calc(100vh-73px)] bg-card border-r border-border z-40 transition-all duration-300",
-          // Mobile: slide in/out
+          "fixed top-[73px] left-0 h-[calc(100vh-73px)] bg-card border-r border-border z-30 transition-all duration-300",
           isOpen ? "translate-x-0" : "-translate-x-full",
-          // Desktop: always visible, can be collapsed
           "lg:translate-x-0",
           isCollapsed ? "lg:w-16" : "lg:w-56"
         )}

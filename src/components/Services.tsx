@@ -40,10 +40,30 @@ export default function Services() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const [visibleCount, setVisibleCount] = useState(3);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadServices();
+  }, []);
+
+  // Calculate visible items based on screen width
+  useEffect(() => {
+    const updateVisibleCount = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setVisibleCount(1);
+      } else if (width < 1024) {
+        setVisibleCount(2);
+      } else {
+        setVisibleCount(3);
+      }
+    };
+
+    updateVisibleCount();
+    window.addEventListener('resize', updateVisibleCount);
+    return () => window.removeEventListener('resize', updateVisibleCount);
   }, []);
 
   const loadServices = async () => {
@@ -63,9 +83,8 @@ export default function Services() {
     }
   };
 
-  const useCarousel = services.length > 3;
-  const visibleServices = useCarousel ? 3 : services.length;
-  const maxIndex = Math.max(0, services.length - visibleServices);
+  const useCarousel = services.length > visibleCount;
+  const maxIndex = Math.max(0, services.length - visibleCount);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex(prev => Math.max(0, prev - 1));
@@ -74,6 +93,13 @@ export default function Services() {
   const handleNext = useCallback(() => {
     setCurrentIndex(prev => Math.min(maxIndex, prev + 1));
   }, [maxIndex]);
+
+  // Reset currentIndex when visibleCount changes
+  useEffect(() => {
+    if (currentIndex > maxIndex) {
+      setCurrentIndex(maxIndex);
+    }
+  }, [maxIndex, currentIndex]);
 
   // Drag handlers
   const handleDragStart = (clientX: number) => {
@@ -147,24 +173,18 @@ export default function Services() {
 
   const ServiceCard = ({ service }: { service: Service }) => {
     const IconComponent = getIconComponent(service.icon);
+    const cardWidth = visibleCount === 1 ? 'w-full' : visibleCount === 2 ? 'w-[calc(50%-0.5rem)]' : 'w-[calc(33.333%-0.67rem)]';
+    
     return (
       <div 
-        className={`bg-background p-8 md:p-12 group transition-all duration-500 border border-border relative flex-shrink-0 ${
-          useCarousel ? 'w-[calc(33.333%-1rem)]' : ''
-        } ${
+        className={`bg-background p-6 md:p-8 lg:p-12 group transition-all duration-500 border border-border relative flex-shrink-0 ${cardWidth} ${
           service.is_highlighted 
             ? 'bg-foreground/5 scale-[1.02] shadow-lg' 
             : 'hover:bg-secondary/50'
         }`}
       >
-        {service.is_highlighted && (
-          <span className="absolute top-8 right-8 bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
-            ★ Popular
-          </span>
-        )}
-        
-        <div className="space-y-6">
-          {/* Icon */}
+        {/* Icon and Popular Badge on the same line */}
+        <div className="flex items-center justify-between mb-6">
           <div className={`w-12 h-12 border flex items-center justify-center transition-colors duration-300 ${
             service.is_highlighted 
               ? 'border-foreground bg-foreground text-background' 
@@ -172,7 +192,15 @@ export default function Services() {
           }`}>
             <IconComponent className="h-6 w-6" />
           </div>
-
+          
+          {service.is_highlighted && (
+            <span className="bg-foreground text-background text-[10px] font-mono uppercase tracking-wider px-3 py-1 font-bold whitespace-nowrap">
+              ★ Popular
+            </span>
+          )}
+        </div>
+        
+        <div className="space-y-6">
           {/* Title & Description */}
           <div>
             <h3 className={`text-xl font-bold uppercase tracking-tight mb-2 ${
@@ -228,11 +256,11 @@ export default function Services() {
   };
 
   const translateValue = useCarousel 
-    ? `translateX(calc(-${currentIndex * (100 / visibleServices)}% - ${isDragging ? dragOffset : 0}px))`
+    ? `translateX(calc(-${currentIndex * (100 / visibleCount)}% - ${isDragging ? dragOffset : 0}px))`
     : 'translateX(0)';
 
   return (
-    <section id="servicos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
+    <section id="servicos" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border" ref={containerRef}>
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
         <div>
@@ -302,7 +330,11 @@ export default function Services() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-px bg-border">
+        <div className={`grid gap-4 ${
+          services.length === 1 ? 'grid-cols-1' : 
+          services.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 
+          'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}>
           {services.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}
