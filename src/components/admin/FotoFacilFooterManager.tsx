@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,8 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Save, FileText, Mail, Phone, Instagram, MessageCircle, Shield } from 'lucide-react';
+import { Save, FileText, Mail, Phone, Instagram, MessageCircle, Shield, Upload, Image as ImageIcon, CheckCircle, AlertCircle } from 'lucide-react';
+import { useDropzone } from 'react-dropzone';
 
 interface FooterSettings {
   logo_url: string;
@@ -18,6 +19,7 @@ interface FooterSettings {
   show_trust_badges: string;
   instagram_url: string;
   whatsapp_url: string;
+  watermark_url: string;
 }
 
 export function FotoFacilFooterManager() {
@@ -29,14 +31,30 @@ export function FotoFacilFooterManager() {
     contact_phone: '',
     show_trust_badges: 'true',
     instagram_url: '',
-    whatsapp_url: ''
+    whatsapp_url: '',
+    watermark_url: ''
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingWatermark, setUploadingWatermark] = useState(false);
+  const [watermarkExists, setWatermarkExists] = useState(false);
 
   useEffect(() => {
     loadSettings();
+    checkWatermarkExists();
   }, []);
+
+  const checkWatermarkExists = async () => {
+    try {
+      // Try to fetch the watermark to see if it exists
+      const response = await fetch('https://storage.googleapis.com/rubensphotofilm/watermarks/selo.png', {
+        method: 'HEAD'
+      });
+      setWatermarkExists(response.ok);
+    } catch {
+      setWatermarkExists(false);
+    }
+  };
 
   const loadSettings = async () => {
     try {
@@ -60,7 +78,8 @@ export function FotoFacilFooterManager() {
           contact_phone: settingsMap.contact_phone || '',
           show_trust_badges: settingsMap.show_trust_badges || 'true',
           instagram_url: settingsMap.instagram_url || '',
-          whatsapp_url: settingsMap.whatsapp_url || ''
+          whatsapp_url: settingsMap.whatsapp_url || '',
+          watermark_url: settingsMap.watermark_url || ''
         });
       }
     } catch (error) {
@@ -70,6 +89,62 @@ export function FotoFacilFooterManager() {
       setLoading(false);
     }
   };
+
+  const onWatermarkDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (acceptedFiles.length === 0) return;
+    
+    const file = acceptedFiles[0];
+    
+    if (!file.type.includes('png')) {
+      toast.error('A marca d\'água deve ser um arquivo PNG com transparência');
+      return;
+    }
+    
+    setUploadingWatermark(true);
+    
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Use fetch directly for FormData to work correctly
+      const response = await fetch(
+        'https://ihthnipyfppatlmaajvm.supabase.co/functions/v1/gcs-upload-watermark',
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Erro ao fazer upload');
+      }
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Erro ao fazer upload');
+      }
+      
+      // Save watermark URL to settings
+      setSettings(prev => ({ ...prev, watermark_url: result.watermarkUrl }));
+      setWatermarkExists(true);
+      
+      toast.success('Marca d\'água enviada com sucesso! As próximas fotos terão a marca aplicada.');
+    } catch (error) {
+      console.error('Error uploading watermark:', error);
+      toast.error('Erro ao enviar marca d\'água');
+    } finally {
+      setUploadingWatermark(false);
+    }
+  }, []);
+
+  const { getRootProps: getWatermarkRootProps, getInputProps: getWatermarkInputProps, isDragActive: isWatermarkDragActive } = useDropzone({
+    onDrop: onWatermarkDrop,
+    accept: { 'image/png': ['.png'] },
+    maxFiles: 1,
+    disabled: uploadingWatermark
+  });
 
   const handleSave = async () => {
     setSaving(true);
@@ -106,6 +181,74 @@ export function FotoFacilFooterManager() {
 
   return (
     <div className="space-y-6">
+      {/* Watermark Upload Section - MOST IMPORTANT */}
+      <Card className="border-2 border-amber-500/50 bg-amber-50/10">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-amber-700">
+            <ImageIcon className="w-5 h-5" />
+            Marca D'água (OBRIGATÓRIO)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-start gap-4">
+            {watermarkExists ? (
+              <div className="flex items-center gap-2 text-green-600 bg-green-100 px-3 py-2 rounded-lg">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">Marca d'água configurada</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-red-600 bg-red-100 px-3 py-2 rounded-lg">
+                <AlertCircle className="w-5 h-5" />
+                <span className="font-medium">Nenhuma marca d'água configurada - fotos serão enviadas SEM proteção!</span>
+              </div>
+            )}
+          </div>
+          
+          <div
+            {...getWatermarkRootProps()}
+            className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
+              isWatermarkDragActive 
+                ? 'border-amber-500 bg-amber-50' 
+                : 'border-muted-foreground/30 hover:border-amber-500/50 hover:bg-amber-50/50'
+            } ${uploadingWatermark ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <input {...getWatermarkInputProps()} />
+            {uploadingWatermark ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500/30 border-t-amber-500" />
+                <p className="text-sm text-muted-foreground">Enviando marca d'água...</p>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2">
+                <Upload className="w-8 h-8 text-amber-600" />
+                <p className="font-medium text-amber-700">
+                  {isWatermarkDragActive ? 'Solte aqui...' : 'Clique ou arraste um arquivo PNG'}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Use um PNG com fundo transparente para melhores resultados
+                </p>
+              </div>
+            )}
+          </div>
+
+          {watermarkExists && (
+            <div className="p-4 bg-muted/50 rounded-xl">
+              <p className="text-xs text-muted-foreground mb-2">Preview da marca d'água atual:</p>
+              <div className="bg-gray-200 p-4 rounded-lg inline-block">
+                <img 
+                  src={`https://storage.googleapis.com/rubensphotofilm/watermarks/selo.png?t=${Date.now()}`}
+                  alt="Watermark preview" 
+                  className="max-h-24 object-contain"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
