@@ -206,6 +206,7 @@ export type Database = {
           item_status: string | null
           location: string | null
           media_type: string
+          other_works_featured: boolean
           publish_status: string
           subcategory: string | null
           thumbnail_url: string | null
@@ -227,6 +228,7 @@ export type Database = {
           item_status?: string | null
           location?: string | null
           media_type: string
+          other_works_featured?: boolean
           publish_status?: string
           subcategory?: string | null
           thumbnail_url?: string | null
@@ -248,6 +250,7 @@ export type Database = {
           item_status?: string | null
           location?: string | null
           media_type?: string
+          other_works_featured?: boolean
           publish_status?: string
           subcategory?: string | null
           thumbnail_url?: string | null

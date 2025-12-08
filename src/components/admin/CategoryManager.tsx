@@ -350,13 +350,20 @@ export function CategoryManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Gerenciar Categorias</h2>
           <p className="text-muted-foreground">
             Crie e gerencie categorias e subcategorias do portfólio
           </p>
         </div>
+        <Button
+          onClick={() => setIsCreatingCategory(true)}
+          size="sm"
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Categoria
+        </Button>
       </div>
 
       {/* Categories Section - Split by Type */}
@@ -364,18 +371,9 @@ export function CategoryManager() {
         {/* Photo Categories */}
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Folder className="h-5 w-5" />
-                <CardTitle>Categorias de Foto</CardTitle>
-              </div>
-              <Button
-                onClick={() => setIsCreatingCategory(true)}
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Nova Categoria
-              </Button>
+            <div className="flex items-center gap-2">
+              <Folder className="h-5 w-5" />
+              <CardTitle>Categorias de Foto</CardTitle>
             </div>
             <CardDescription>
               Gerencie as categorias de fotografia

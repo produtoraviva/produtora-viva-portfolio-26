@@ -4,7 +4,6 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { LogOut, Edit } from 'lucide-react';
 import { PortfolioManager } from '@/components/admin/PortfolioManager';
 import { MediaUploader } from '@/components/admin/MediaUploader';
 import { CategoryManager } from '@/components/admin/CategoryManager';
@@ -139,37 +138,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/95 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 md:py-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 pl-12 lg:pl-0">
-              <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl">
-                <Edit className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-xl font-bold">
-                  <span className="hidden sm:inline">Painel Administrativo</span>
-                  <span className="sm:hidden">Admin</span>
-                </h1>
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  Olá, <span className="font-medium text-foreground">{user?.full_name}</span>
-                </p>
-              </div>
-            </div>
-            <Button 
-              variant="ghost" 
-              onClick={handleLogout}
-              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              size="sm"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              <span className="hidden sm:inline">Sair</span>
-            </Button>
-          </div>
-        </div>
-      </header>
-
       {/* Sidebar */}
       <AdminSidebar 
         activeTab={activeTab} 
@@ -180,13 +148,11 @@ export default function AdminDashboard() {
           }
         }}
         userRole={user?.role}
+        onLogout={handleLogout}
       />
 
       {/* Main Content */}
-      <main className={cn(
-        "transition-all duration-300 p-4 md:p-6 lg:p-8",
-        "lg:ml-56" // Match sidebar width
-      )}>
+      <main className="transition-all duration-300 p-4 md:p-6 lg:p-8 lg:ml-56">
         <div className="max-w-[1600px] mx-auto">
           {renderContent()}
         </div>

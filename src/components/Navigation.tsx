@@ -77,7 +77,7 @@ const Navigation = () => {
   return (
     <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
       isScrolled 
-        ? 'backdrop-blur-md bg-background/70' 
+        ? 'backdrop-blur-sm bg-white/5' 
         : 'mix-blend-difference'
     } text-foreground`}>
       {/* Regular header for desktop */}
@@ -172,40 +172,49 @@ const Navigation = () => {
         </button>
       </div>
 
-      {/* Mobile Menu with animated blur background */}
+      {/* Mobile Menu with animated blur background - fixed position with proper centering */}
       {isOpen && (
-        <div 
-          className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${
-            isAnimating ? 'backdrop-blur-md bg-background/90' : 'backdrop-blur-0 bg-transparent'
-          }`}
-        >
-          <div className={`flex flex-col items-center justify-center h-full space-y-8 transition-opacity duration-300 ${
-            isAnimating ? 'opacity-100' : 'opacity-0'
-          }`}>
-            {navItems.map((item, index) => (
-              <button
-                key={item.label}
-                onClick={() => handleNavClick(item)}
-                className="text-2xl uppercase tracking-[0.2em] text-foreground hover:line-through transition-all duration-300"
-                style={{ 
-                  animationDelay: `${index * 50}ms`,
-                  opacity: isAnimating ? 1 : 0,
-                  transform: isAnimating ? 'translateY(0)' : 'translateY(20px)',
-                  transition: `opacity 0.3s ease ${index * 50}ms, transform 0.3s ease ${index * 50}ms`
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          <button
+        <>
+          {/* Blurred background layer - covers everything behind */}
+          <div 
+            className={`md:hidden fixed inset-0 z-40 transition-all duration-300 ${
+              isAnimating ? 'backdrop-blur-lg' : 'backdrop-blur-0'
+            }`}
             onClick={handleClose}
-            className="absolute top-6 right-6 p-2"
-            aria-label="Fechar menu"
+            style={{ backgroundColor: isAnimating ? 'rgba(0,0,0,0.85)' : 'transparent' }}
+          />
+          
+          {/* Menu content layer - NOT blurred */}
+          <div 
+            className={`md:hidden fixed inset-0 z-50 flex flex-col items-center justify-center transition-opacity duration-300 ${
+              isAnimating ? 'opacity-100' : 'opacity-0'
+            }`}
           >
-            <X className="h-6 w-6 text-foreground" />
-          </button>
-        </div>
+            <div className="flex flex-col items-center space-y-8">
+              {navItems.map((item, index) => (
+                <button
+                  key={item.label}
+                  onClick={() => handleNavClick(item)}
+                  className="text-2xl uppercase tracking-[0.2em] text-white hover:line-through transition-all duration-300"
+                  style={{ 
+                    opacity: isAnimating ? 1 : 0,
+                    transform: isAnimating ? 'translateY(0)' : 'translateY(20px)',
+                    transition: `opacity 0.3s ease ${index * 50}ms, transform 0.3s ease ${index * 50}ms`
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={handleClose}
+              className="absolute top-6 right-6 p-2"
+              aria-label="Fechar menu"
+            >
+              <X className="h-6 w-6 text-white" />
+            </button>
+          </div>
+        </>
       )}
     </nav>
   );
