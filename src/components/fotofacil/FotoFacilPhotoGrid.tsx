@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Check, Plus, Share2, X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ShoppingCart, Share2, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import { toast } from 'sonner';
@@ -127,8 +127,8 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
 
   return (
     <div>
-      {/* Photos Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* Photos Grid - Closer spacing */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
         {photos.map((photo, index) => {
           const inCart = isInCart(photo.id);
           const price = getPhotoPrice(photo);
@@ -160,7 +160,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
                     : 'bg-white/95 text-gray-700 hover:bg-gray-900 hover:text-white'
                 }`}
               >
-                {inCart ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                {inCart ? <Check className="w-4 h-4" /> : <ShoppingCart className="w-4 h-4" />}
               </button>
 
               {/* Price & Info */}
@@ -171,7 +171,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
                   </p>
                   <button
                     onClick={(e) => handleShare(photo, e)}
-                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full"
                   >
                     <Share2 className="w-4 h-4" />
                   </button>
@@ -217,58 +217,60 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
             </button>
           )}
 
-          {/* Image Container */}
-          <div className="flex-1 flex items-center justify-center p-4 pb-24" onClick={e => e.stopPropagation()}>
-            <img 
-              src={selectedPhoto.url}
-              alt={selectedPhoto.title || 'Foto'}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-
-          {/* Bottom Info Bar */}
+          {/* Image Container - with space for bottom bar */}
           <div 
-            className="absolute bottom-0 left-0 right-0 bg-white p-4 md:p-5"
+            className="flex-1 flex items-center justify-center p-4" 
             onClick={e => e.stopPropagation()}
           >
-            <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4 text-center sm:text-left">
-                <div>
-                  <p className="font-semibold text-gray-900">{selectedPhoto.title || 'Foto'}</p>
-                  <p className="text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
-                </div>
-              </div>
+            <div className="relative max-w-full max-h-[calc(100vh-120px)] flex flex-col items-center">
+              <img 
+                src={selectedPhoto.url}
+                alt={selectedPhoto.title || 'Foto'}
+                className="max-w-full max-h-[calc(100vh-180px)] object-contain rounded-lg"
+              />
               
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleShare(selectedPhoto)}
-                  className="border-gray-300"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Compartilhar
-                </Button>
-                
-                <Button
-                  onClick={() => handleToggleCart(selectedPhoto)}
-                  className={`${isInCart(selectedPhoto.id) 
-                    ? 'bg-emerald-500 hover:bg-emerald-600' 
-                    : 'bg-gray-900 hover:bg-gray-800'
-                  } text-white`}
-                >
-                  {isInCart(selectedPhoto.id) ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      No carrinho
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar
-                    </>
-                  )}
-                </Button>
+              {/* Bottom Info Bar - Attached to image */}
+              <div className="w-full bg-white rounded-b-xl p-4 md:p-5 mt-0">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 text-center sm:text-left">
+                    <div>
+                      <p className="font-semibold text-gray-900">{selectedPhoto.title || 'Foto'}</p>
+                      <p className="text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleShare(selectedPhoto)}
+                      className="border-gray-300 rounded-lg"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Compartilhar
+                    </Button>
+                    
+                    <Button
+                      onClick={() => handleToggleCart(selectedPhoto)}
+                      className={`rounded-lg ${isInCart(selectedPhoto.id) 
+                        ? 'bg-emerald-500 hover:bg-emerald-600' 
+                        : 'bg-gray-900 hover:bg-gray-800'
+                      } text-white`}
+                    >
+                      {isInCart(selectedPhoto.id) ? (
+                        <>
+                          <Check className="w-4 h-4 mr-2" />
+                          No carrinho
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          Adicionar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

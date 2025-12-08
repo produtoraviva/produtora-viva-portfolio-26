@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Search, Shield, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Download, Search, Shield, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -48,7 +48,7 @@ const FotoFacilMyPhotos = () => {
     }
 
     setLoading(true);
-    setSearched(true);
+    setSearched(false);
 
     try {
       const { data, error } = await supabase.functions.invoke('fotofacil-lookup-orders', {
@@ -63,10 +63,12 @@ const FotoFacilMyPhotos = () => {
       if (data.error) {
         toast.error(data.error);
         setOrders([]);
+        setSearched(true);
         return;
       }
 
       setOrders(data.orders || []);
+      setSearched(true);
       
       if (data.orders?.length === 0) {
         toast.info('Nenhum pedido encontrado');
@@ -76,6 +78,7 @@ const FotoFacilMyPhotos = () => {
       console.error('Error searching orders:', error);
       toast.error('Erro ao buscar pedidos. Tente novamente.');
       setOrders([]);
+      setSearched(true);
     } finally {
       setLoading(false);
     }
@@ -121,10 +124,10 @@ const FotoFacilMyPhotos = () => {
             </div>
 
             {/* Search Type Tabs */}
-            <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-lg">
+            <div className="flex gap-2 mb-6 p-1 bg-gray-100 rounded-xl">
               <button
                 onClick={() => setSearchType('cpf')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                   searchType === 'cpf'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -134,7 +137,7 @@ const FotoFacilMyPhotos = () => {
               </button>
               <button
                 onClick={() => setSearchType('email')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
                   searchType === 'email'
                     ? 'bg-white text-gray-900 shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
@@ -158,7 +161,7 @@ const FotoFacilMyPhotos = () => {
                     searchType === 'cpf' ? formatCPF(e.target.value) : e.target.value
                   )}
                   placeholder={searchType === 'cpf' ? '000.000.000-00' : 'seu@email.com'}
-                  className="mt-1 bg-gray-50 border-gray-200"
+                  className="mt-1 bg-white border-gray-200 text-gray-900 placeholder:text-gray-400 rounded-lg"
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
@@ -166,12 +169,12 @@ const FotoFacilMyPhotos = () => {
               <Button
                 onClick={handleSearch}
                 disabled={loading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
                 size="lg"
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Buscando...
                   </>
                 ) : (
@@ -191,7 +194,12 @@ const FotoFacilMyPhotos = () => {
           </div>
 
           {/* Results */}
-          {searched && (
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-600 mb-4" />
+              <p className="text-gray-500">Buscando seus pedidos...</p>
+            </div>
+          ) : searched && (
             <div className="space-y-4">
               {orders.length === 0 ? (
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
@@ -235,7 +243,7 @@ const FotoFacilMyPhotos = () => {
                             ) : (
                               <Button
                                 onClick={() => handleAccessPhotos(order)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
                               >
                                 <Download className="w-4 h-4 mr-2" />
                                 Baixar

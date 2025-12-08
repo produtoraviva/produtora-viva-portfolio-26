@@ -51,6 +51,8 @@ export type Database = {
           id: string
           image_url: string
           is_active: boolean | null
+          opacity: number | null
+          slide_duration: number | null
           title: string
           updated_at: string | null
         }
@@ -60,6 +62,8 @@ export type Database = {
           id?: string
           image_url: string
           is_active?: boolean | null
+          opacity?: number | null
+          slide_duration?: number | null
           title: string
           updated_at?: string | null
         }
@@ -69,6 +73,8 @@ export type Database = {
           id?: string
           image_url?: string
           is_active?: boolean | null
+          opacity?: number | null
+          slide_duration?: number | null
           title?: string
           updated_at?: string | null
         }
@@ -240,6 +246,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fotofacil_footer_settings: {
+        Row: {
+          created_at: string
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       fotofacil_order_items: {
         Row: {
