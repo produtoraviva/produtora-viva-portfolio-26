@@ -44,6 +44,288 @@ export type Database = {
         }
         Relationships: []
       }
+      fotofacil_categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      fotofacil_customers: {
+        Row: {
+          cpf_hash: string
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          cpf_hash: string
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+        }
+        Update: {
+          cpf_hash?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      fotofacil_events: {
+        Row: {
+          category_id: string | null
+          cover_url: string | null
+          created_at: string | null
+          currency: string
+          default_price_cents: number
+          description: string | null
+          event_date: string | null
+          id: string
+          is_active: boolean | null
+          location: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          currency?: string
+          default_price_cents?: number
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          currency?: string
+          default_price_cents?: number
+          description?: string | null
+          event_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          location?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotofacil_events_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fotofacil_order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          order_id: string | null
+          photo_id: string | null
+          price_cents_snapshot: number | null
+          title_snapshot: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          photo_id?: string | null
+          price_cents_snapshot?: number | null
+          title_snapshot?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          order_id?: string | null
+          photo_id?: string | null
+          price_cents_snapshot?: number | null
+          title_snapshot?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotofacil_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotofacil_order_items_photo_id_fkey"
+            columns: ["photo_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_photos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fotofacil_orders: {
+        Row: {
+          created_at: string | null
+          currency: string
+          customer_id: string | null
+          delivered_at: string | null
+          delivery_expires_at: string | null
+          delivery_token: string | null
+          id: string
+          mercadopago_order_id: string | null
+          mercadopago_payment_id: string | null
+          pix_copia_cola: string | null
+          qr_code: string | null
+          qr_code_base64: string | null
+          status: string
+          total_cents: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_expires_at?: string | null
+          delivery_token?: string | null
+          id?: string
+          mercadopago_order_id?: string | null
+          mercadopago_payment_id?: string | null
+          pix_copia_cola?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          total_cents: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          customer_id?: string | null
+          delivered_at?: string | null
+          delivery_expires_at?: string | null
+          delivery_token?: string | null
+          id?: string
+          mercadopago_order_id?: string | null
+          mercadopago_payment_id?: string | null
+          pix_copia_cola?: string | null
+          qr_code?: string | null
+          qr_code_base64?: string | null
+          status?: string
+          total_cents?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotofacil_orders_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fotofacil_photos: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          event_id: string | null
+          height: number | null
+          id: string
+          is_active: boolean | null
+          price_cents: number | null
+          size_bytes: number | null
+          thumb_url: string | null
+          title: string | null
+          updated_at: string | null
+          url: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          event_id?: string | null
+          height?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_cents?: number | null
+          size_bytes?: number | null
+          thumb_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          url: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          event_id?: string | null
+          height?: number | null
+          id?: string
+          is_active?: boolean | null
+          price_cents?: number | null
+          size_bytes?: number | null
+          thumb_url?: string | null
+          title?: string | null
+          updated_at?: string | null
+          url?: string
+          width?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotofacil_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homepage_backgrounds: {
         Row: {
           created_at: string
