@@ -192,13 +192,6 @@ const Testimonials = () => {
         >
           <div className="bg-secondary/50 border border-border p-8 md:p-12 lg:p-16 select-none backdrop-blur-sm">
             <div className="max-w-4xl mx-auto">
-              {/* Stars - above testimonial */}
-              <div className="flex gap-1 mb-6">
-                {[...Array(currentTestimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-4 w-4 md:h-5 md:w-5 text-foreground fill-current" />
-                ))}
-              </div>
-
               {/* Quote Icon */}
               <div className="mb-8">
                 <Quote className="w-8 h-8 md:w-10 md:h-10 text-muted-foreground/30" />
@@ -208,6 +201,13 @@ const Testimonials = () => {
               <blockquote className="text-xl md:text-2xl lg:text-3xl font-light leading-relaxed tracking-tight mb-10 md:mb-12">
                 "{currentTestimonial.text}"
               </blockquote>
+
+              {/* Stars - below testimonial text */}
+              <div className="flex gap-1 mb-6">
+                {[...Array(currentTestimonial.rating)].map((_, i) => (
+                  <Star key={i} className="h-4 w-4 md:h-5 md:w-5 text-foreground fill-current" />
+                ))}
+              </div>
 
               {/* Author Info - below testimonial */}
               <div className="flex items-center gap-4 md:gap-6">
