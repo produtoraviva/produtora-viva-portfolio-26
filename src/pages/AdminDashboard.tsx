@@ -140,25 +140,27 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 md:py-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="space-y-1 md:space-y-2 pl-12 lg:pl-0">
-              <h1 className="text-2xl md:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent flex items-center gap-2 md:gap-3">
-                <div className="p-2 md:p-3 bg-primary/10 rounded-xl">
-                  <Edit className="h-5 w-5 md:h-8 md:w-8 text-primary" />
-                </div>
-                <span className="hidden sm:inline">Painel Administrativo</span>
-                <span className="sm:hidden">Admin</span>
-              </h1>
-              <p className="text-sm md:text-lg text-muted-foreground">
-                Olá, <span className="font-semibold text-foreground">{user?.full_name}</span>
-              </p>
+      <header className="border-b bg-card/95 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 pl-12 lg:pl-0">
+              <div className="p-2 bg-gradient-to-br from-primary/20 to-primary/5 rounded-xl">
+                <Edit className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+              </div>
+              <div>
+                <h1 className="text-lg md:text-xl font-bold">
+                  <span className="hidden sm:inline">Painel Administrativo</span>
+                  <span className="sm:hidden">Admin</span>
+                </h1>
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Olá, <span className="font-medium text-foreground">{user?.full_name}</span>
+                </p>
+              </div>
             </div>
             <Button 
-              variant="outline" 
+              variant="ghost" 
               onClick={handleLogout}
-              className="hover:bg-destructive hover:text-destructive-foreground transition-colors"
+              className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               size="sm"
             >
               <LogOut className="h-4 w-4 mr-2" />
@@ -182,10 +184,12 @@ export default function AdminDashboard() {
 
       {/* Main Content */}
       <main className={cn(
-        "transition-all duration-300 p-4 md:p-8",
+        "transition-all duration-300 p-4 md:p-6 lg:p-8",
         "lg:ml-56" // Match sidebar width
       )}>
-        {renderContent()}
+        <div className="max-w-[1600px] mx-auto">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );

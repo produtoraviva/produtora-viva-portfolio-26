@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, RefreshCw, Edit, Trash2, Eye, EyeOff, Home, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { EditMediaDialog } from './EditMediaDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,6 +50,7 @@ export function MediaSelector({
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [editingItem, setEditingItem] = useState<MediaItem | null>(null);
   const { toast } = useToast();
 
   const loadMediaItems = async () => {
@@ -116,9 +118,13 @@ export function MediaSelector({
 
 
   const handleEdit = (item: MediaItem) => {
-    const newTitle = prompt('Novo título:', item.title);
-    if (newTitle && newTitle.trim() !== item.title) {
-      updateItemTitle(item.id, newTitle.trim());
+    setEditingItem(item);
+  };
+
+  const handleSaveEdit = (newTitle: string) => {
+    if (editingItem) {
+      updateItemTitle(editingItem.id, newTitle);
+      setEditingItem(null);
     }
   };
 
@@ -480,6 +486,15 @@ export function MediaSelector({
           </div>
         )}
       </CardContent>
+
+      {/* Edit Dialog */}
+      <EditMediaDialog
+        open={!!editingItem}
+        onOpenChange={(open) => !open && setEditingItem(null)}
+        initialTitle={editingItem?.title || ''}
+        onSave={handleSaveEdit}
+        mediaType={editingItem?.media_type}
+      />
     </Card>
   );
 }

@@ -5,6 +5,7 @@ import { SortableItem } from './SortableItem';
 import { ItemEditor } from './ItemEditor';
 import { NewItemCreator } from './NewItemCreator';
 import { BatchEditor } from './BatchEditor';
+import { CategoryMultiSelect } from './CategoryMultiSelect';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X, Camera, Video } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, EyeOff, Move, RefreshCw, Home, HomeIcon, Filter, X, Camera, Video, LayoutGrid, List } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -60,10 +61,12 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   const [filteredItems, setFilteredItems] = useState<PortfolioItem[]>(items);
   const [categories, setCategories] = useState<any[]>([]);
   const [subcategories, setSubcategories] = useState<any[]>([]);
+  const [localViewMode, setLocalViewMode] = useState<'grid' | 'list'>(viewMode);
+  const [viewType, setViewType] = useState<'unified' | 'by-category'>('unified');
   
-  // Filtros
+  // Filtros - agora com multi-select para categorias
   const [mediaTypeFilter, setMediaTypeFilter] = useState<string>('all');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [subcategoryFilter, setSubcategoryFilter] = useState<string>('all');
   const [homepageFilter, setHomepageFilter] = useState<string>('all');
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -117,9 +120,9 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
       filtered = filtered.filter(item => item.media_type === mediaTypeFilter);
     }
     
-    // Filtro por categoria
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(item => item.category === categoryFilter);
+    // Filtro por categoria (multi-select)
+    if (selectedCategories.length > 0) {
+      filtered = filtered.filter(item => selectedCategories.includes(item.category));
     }
     
     // Filtro por subcategoria
@@ -142,14 +145,42 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
     }
     
     setFilteredItems(filtered);
-  }, [items, mediaTypeFilter, categoryFilter, subcategoryFilter, homepageFilter, searchFilter]);
+  }, [items, mediaTypeFilter, selectedCategories, subcategoryFilter, homepageFilter, searchFilter]);
 
   const clearFilters = () => {
     setMediaTypeFilter('all');
-    setCategoryFilter('all');
+    setSelectedCategories([]);
     setSubcategoryFilter('all');
     setHomepageFilter('all');
     setSearchFilter('');
+  };
+
+  // Group items by category for category view
+  const getGroupedItems = () => {
+    const photoItems = filteredItems.filter(item => item.media_type === 'photo');
+    const videoItems = filteredItems.filter(item => item.media_type === 'video');
+    
+    const photoGroups: { [key: string]: PortfolioItem[] } = {};
+    const videoGroups: { [key: string]: PortfolioItem[] } = {};
+    
+    photoItems.forEach(item => {
+      const catName = getCategoryName(item.category) || 'Sem categoria';
+      if (!photoGroups[catName]) photoGroups[catName] = [];
+      photoGroups[catName].push(item);
+    });
+    
+    videoItems.forEach(item => {
+      const catName = getCategoryName(item.category) || 'Sem categoria';
+      if (!videoGroups[catName]) videoGroups[catName] = [];
+      videoGroups[catName].push(item);
+    });
+    
+    return { photoGroups, videoGroups };
+  };
+
+  const getCategoryName = (categoryId: string) => {
+    const cat = categories.find(c => c.id === categoryId);
+    return cat?.name || null;
   };
 
   const handleDragEnd = async (event: any) => {
@@ -380,14 +411,36 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-semibold">Itens do Portfólio</h2>
           <p className="text-muted-foreground">
             {filteredItems.length} de {items.length} {items.length === 1 ? 'item' : 'itens'}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* View Type Toggle */}
+          <div className="flex rounded-lg border overflow-hidden">
+            <Button 
+              variant={viewType === 'unified' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setViewType('unified')}
+            >
+              <LayoutGrid className="h-4 w-4 mr-1" />
+              Unificado
+            </Button>
+            <Button 
+              variant={viewType === 'by-category' ? 'default' : 'ghost'}
+              size="sm"
+              className="rounded-none"
+              onClick={() => setViewType('by-category')}
+            >
+              <List className="h-4 w-4 mr-1" />
+              Por Categoria
+            </Button>
+          </div>
+          
           <Button 
             onClick={() => setIsDragEnabled(!isDragEnabled)}
             variant={isDragEnabled ? "default" : "outline"}
@@ -395,7 +448,7 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             className="flex items-center gap-2"
           >
             <Move className="h-4 w-4" />
-            {isDragEnabled ? "Desativar reordenação" : "Ativar reordenação"}
+            <span className="hidden sm:inline">{isDragEnabled ? "Desativar" : "Reordenar"}</span>
           </Button>
           <Button 
             onClick={onItemsChange}
@@ -404,15 +457,15 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             className="flex items-center gap-2"
           >
             <RefreshCw className="h-4 w-4" />
-            Atualizar
+            <span className="hidden sm:inline">Atualizar</span>
           </Button>
-          <Button onClick={() => setIsCreating(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Item
+          <Button onClick={() => setIsCreating(true)} size="sm">
+            <Plus className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Novo</span>
           </Button>
-          <Button onClick={() => setIsBatchEditing(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Adicionar Ensaio
+          <Button onClick={() => setIsBatchEditing(true)} size="sm" variant="secondary">
+            <Plus className="h-4 w-4 mr-1" />
+            <span className="hidden sm:inline">Ensaio</span>
           </Button>
         </div>
       </div>
@@ -458,22 +511,15 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
               </Select>
             </div>
             
-            {/* Categoria */}
+            {/* Categoria - Multi-Select */}
             <div>
-              <label className="text-sm font-medium">Categoria</label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <label className="text-sm font-medium">Categorias</label>
+              <CategoryMultiSelect
+                categories={categories}
+                selectedCategories={selectedCategories}
+                onChange={setSelectedCategories}
+                placeholder="Todas as categorias"
+              />
             </div>
             
             {/* Subcategoria */}
@@ -514,9 +560,12 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
 
       {filteredItems.length === 0 ? (
         items.length === 0 ? (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                <Camera className="h-8 w-8 text-muted-foreground" />
+              </div>
               <h3 className="text-lg font-semibold mb-2">Nenhum item encontrado</h3>
               <p className="text-muted-foreground mb-4">
                 Comece adicionando alguns itens ao seu portfólio.
@@ -529,9 +578,12 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
           </CardContent>
         </Card>
         ) : (
-          <Card>
+          <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
               <div className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+                  <Filter className="h-8 w-8 text-muted-foreground" />
+                </div>
                 <h3 className="text-lg font-semibold mb-2">Nenhum item encontrado</h3>
                 <p className="text-muted-foreground mb-4">
                   Tente ajustar os filtros para encontrar o que procura.
@@ -544,7 +596,101 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
             </CardContent>
           </Card>
         )
+      ) : viewType === 'by-category' ? (
+        // Category View
+        <div className="space-y-8">
+          {/* Photo Categories */}
+          {(() => {
+            const { photoGroups, videoGroups } = getGroupedItems();
+            return (
+              <>
+                {Object.keys(photoGroups).length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-lg font-semibold">
+                      <Camera className="h-5 w-5" />
+                      <span>Fotos</span>
+                    </div>
+                    {Object.entries(photoGroups).map(([catName, catItems]) => (
+                      <Card key={catName}>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-base">{catName}</CardTitle>
+                          <CardDescription>{catItems.length} {catItems.length === 1 ? 'item' : 'itens'}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            {catItems.map((item) => (
+                              <div key={item.id} className="relative group aspect-square overflow-hidden rounded-lg">
+                                <img
+                                  src={item.thumbnail_url || item.file_url}
+                                  alt={item.title}
+                                  className="w-full h-full object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)}>
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)}>
+                                    {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                  </Button>
+                                </div>
+                                {item.homepage_featured && (
+                                  <Badge className="absolute top-1 right-1 text-xs bg-blue-500">HP</Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+                
+                {Object.keys(videoGroups).length > 0 && (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-lg font-semibold">
+                      <Video className="h-5 w-5" />
+                      <span>Vídeos</span>
+                    </div>
+                    {Object.entries(videoGroups).map(([catName, catItems]) => (
+                      <Card key={catName}>
+                        <CardHeader className="py-3">
+                          <CardTitle className="text-base">{catName}</CardTitle>
+                          <CardDescription>{catItems.length} {catItems.length === 1 ? 'item' : 'itens'}</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                            {catItems.map((item) => (
+                              <div key={item.id} className="relative group aspect-video overflow-hidden rounded-lg">
+                                <video
+                                  src={item.file_url}
+                                  className="w-full h-full object-cover"
+                                  poster={item.thumbnail_url}
+                                />
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => setEditingItem(item)}>
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
+                                  <Button size="sm" variant="secondary" className="h-7 w-7 p-0" onClick={() => handleToggleVisibility(item)}>
+                                    {item.publish_status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                  </Button>
+                                </div>
+                                {item.homepage_featured && (
+                                  <Badge className="absolute top-1 right-1 text-xs bg-blue-500">HP</Badge>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
+        </div>
       ) : (
+        // Unified View with DnD
         <DndContext
           sensors={isDragEnabled ? sensors : []}
           collisionDetection={closestCenter}
@@ -552,18 +698,18 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
         >
           <SortableContext
             items={filteredItems.map(item => item.id)}
-            strategy={viewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}
+            strategy={localViewMode === 'grid' ? rectSortingStrategy : verticalListSortingStrategy}
           >
             <div className={
-              viewMode === 'grid' 
-                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-                : 'space-y-4'
+              localViewMode === 'grid' 
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                : 'space-y-3'
             }>
               {filteredItems.map((item) => (
                 <SortableItem key={item.id} id={item.id} isDragEnabled={isDragEnabled}>
-                  <Card className={`overflow-hidden ${item.is_featured ? 'border-yellow-400 border-2' : ''}`}>
-                    {viewMode === 'grid' && (
-                      <div className="aspect-video relative overflow-hidden">
+                  <Card className={`overflow-hidden transition-shadow hover:shadow-lg ${item.is_featured ? 'ring-2 ring-yellow-400' : ''}`}>
+                    {localViewMode === 'grid' && (
+                      <div className="aspect-video relative overflow-hidden bg-muted">
                         {item.media_type === 'video' ? (
                           <video
                             src={item.file_url}
@@ -578,108 +724,106 @@ export function PortfolioManager({ items, viewMode, onItemsChange }: PortfolioMa
                           />
                         )}
                         <div className="absolute top-2 right-2 flex gap-1">
-                          <Badge variant="secondary" className="text-xs flex items-center gap-1">
+                          <Badge variant="secondary" className="text-xs flex items-center gap-1 backdrop-blur-sm bg-background/80">
                             {item.media_type === 'photo' ? (
                               <Camera className="w-3 h-3" />
                             ) : (
                               <Video className="w-3 h-3" />
                             )}
                           </Badge>
-                          <Badge className={`text-xs text-white ${getStatusColor(item.publish_status)}`}>
+                          <Badge className={`text-xs text-white backdrop-blur-sm ${getStatusColor(item.publish_status)}`}>
                             {getStatusText(item.publish_status)}
                           </Badge>
                         </div>
+                        {item.homepage_featured && (
+                          <Badge className="absolute top-2 left-2 text-xs bg-blue-500 backdrop-blur-sm">
+                            <HomeIcon className="w-3 h-3" />
+                          </Badge>
+                        )}
                       </div>
                     )}
-                    <CardContent className={viewMode === 'grid' ? 'p-4' : 'p-4 flex items-center gap-4'}>
-                      {viewMode === 'list' && (
+                    <CardContent className={localViewMode === 'grid' ? 'p-3' : 'p-3 flex items-center gap-4'}>
+                      {localViewMode === 'list' && (
                         <div className="flex-shrink-0">
                           {item.media_type === 'video' ? (
                             <video
                               src={item.file_url}
-                              className="w-16 h-16 object-cover rounded"
+                              className="w-14 h-14 object-cover rounded"
                               poster={item.thumbnail_url}
                             />
                           ) : (
                             <img
                               src={item.thumbnail_url || item.file_url}
                               alt={item.title}
-                              className="w-16 h-16 object-cover rounded"
+                              className="w-14 h-14 object-cover rounded"
                             />
                           )}
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold truncate">{item.title}</h3>
+                        <h3 className="font-medium text-sm truncate">{item.title}</h3>
                         {item.description && (
-                          <p className="text-sm text-muted-foreground truncate">
+                          <p className="text-xs text-muted-foreground truncate">
                             {item.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-2 mt-2">
-                          {viewMode === 'list' && (
-                            <>
-                              <Badge variant="secondary" className="text-xs">
-                                {item.media_type === 'photo' ? '📷' : '🎥'}
-                              </Badge>
-                              <Badge className={`text-xs text-white ${getStatusColor(item.publish_status)}`}>
-                                {getStatusText(item.publish_status)}
-                              </Badge>
-                              {item.homepage_featured && (
-                                <Badge variant="default" className="text-xs bg-blue-500">
-                                  Homepage
-                                </Badge>
-                              )}
-                          {item.homepage_featured && (
-                            <Badge variant="default" className="text-xs bg-blue-500">
-                              Homepage
+                        {localViewMode === 'list' && (
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            <Badge variant="secondary" className="text-xs">
+                              {item.media_type === 'photo' ? '📷' : '🎥'}
                             </Badge>
-                          )}
-                            </>
-                          )}
-                        </div>
+                            <Badge className={`text-xs text-white ${getStatusColor(item.publish_status)}`}>
+                              {getStatusText(item.publish_status)}
+                            </Badge>
+                            {item.homepage_featured && (
+                              <Badge variant="default" className="text-xs bg-blue-500">
+                                HP
+                              </Badge>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => setEditingItem(item)}
-                          title="Editar publicação"
+                          title="Editar"
                           className="h-8 w-8 p-0"
                         >
-                          <Edit className="h-3 w-3" />
+                          <Edit className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleToggleVisibility(item)}
                           title={item.publish_status === 'published' ? 'Ocultar' : 'Publicar'}
                           className="h-8 w-8 p-0"
                         >
                           {item.publish_status === 'published' ? (
-                            <EyeOff className="h-3 w-3" />
+                            <EyeOff className="h-3.5 w-3.5" />
                           ) : (
-                            <Eye className="h-3 w-3" />
+                            <Eye className="h-3.5 w-3.5" />
                           )}
                         </Button>
                         <Button
                           size="sm"
-                          variant="outline"
+                          variant="ghost"
                           onClick={() => handleToggleHomepage(item)}
                           title={item.homepage_featured ? 'Remover da Homepage' : 'Adicionar à Homepage'}
                           className="h-8 w-8 p-0"
                         >
-                          <HomeIcon className={`h-3 w-3 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
+                          <HomeIcon className={`h-3.5 w-3.5 ${item.homepage_featured ? 'text-blue-500' : ''}`} />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button 
                               size="sm" 
-                              variant="outline" 
+                              variant="ghost" 
                               title="Excluir"
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                             >
-                              <Trash2 className="h-3 w-3" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
