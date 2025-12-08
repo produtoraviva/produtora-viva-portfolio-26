@@ -198,11 +198,11 @@ const Testimonials = () => {
                 >
                   <div className="max-w-5xl mx-auto select-none">
                     {/* Compact horizontal layout: Left (photo/name) | Right (stars/text) */}
-                    <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-start">
+                    <div className="flex flex-row gap-4 sm:gap-6 md:gap-10 items-start">
                       {/* Left side - Author info */}
-                      <div className="flex-shrink-0 flex flex-col items-center md:items-start text-center md:text-left md:w-40">
+                      <div className="flex-shrink-0 flex flex-col items-center text-center w-16 sm:w-24 md:w-40">
                         {testimonial.image && (
-                          <div className="w-16 h-16 mb-3 overflow-hidden border border-border">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 md:w-16 md:h-16 mb-2 sm:mb-3 overflow-hidden border border-border">
                             <img
                               src={testimonial.image}
                               alt={testimonial.name}
@@ -210,25 +210,25 @@ const Testimonials = () => {
                             />
                           </div>
                         )}
-                        <div className="font-bold uppercase tracking-[0.1em] text-xs mb-1">
+                        <div className="font-bold uppercase tracking-[0.05em] sm:tracking-[0.1em] text-[9px] sm:text-[10px] md:text-xs mb-0.5 sm:mb-1 leading-tight">
                           {testimonial.name}
                         </div>
-                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                        <div className="text-[8px] sm:text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-wider leading-tight">
                           {testimonial.event}
                         </div>
                       </div>
                       
                       {/* Right side - Stars and text */}
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         {/* Stars */}
-                        <div className="flex gap-1 mb-4">
+                        <div className="flex gap-0.5 sm:gap-1 mb-2 sm:mb-3 md:mb-4">
                           {[...Array(testimonial.rating)].map((_, i) => (
-                            <Star key={i} className="h-3 w-3 text-foreground fill-current" />
+                            <Star key={i} className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-foreground fill-current" />
                           ))}
                         </div>
 
                         {/* Text */}
-                        <blockquote className="text-base md:text-lg lg:text-xl font-light leading-relaxed tracking-tight italic">
+                        <blockquote className="text-sm sm:text-base md:text-lg lg:text-xl font-light leading-relaxed tracking-tight italic">
                           "{testimonial.text}"
                         </blockquote>
                       </div>
