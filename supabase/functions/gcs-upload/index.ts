@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { decode as base64Decode, encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
+import { Image } from "https://deno.land/x/imagescript@1.3.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,11 +18,7 @@ async function getAccessToken(): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const exp = now + 3600;
 
-  const header = {
-    alg: 'RS256',
-    typ: 'JWT',
-  };
-
+  const header = { alg: 'RS256', typ: 'JWT' };
   const payload = {
     iss: GCS_CLIENT_EMAIL,
     scope: 'https://www.googleapis.com/auth/devstorage.full_control',
@@ -35,7 +32,6 @@ async function getAccessToken(): Promise<string> {
   const payloadB64 = base64UrlEncode(encoder.encode(JSON.stringify(payload)));
   const signatureInput = `${headerB64}.${payloadB64}`;
 
-  // Import private key and sign
   const privateKey = await crypto.subtle.importKey(
     'pkcs8',
     pemToDer(GCS_PRIVATE_KEY!),
@@ -53,7 +49,6 @@ async function getAccessToken(): Promise<string> {
   const signatureB64 = base64UrlEncode(new Uint8Array(signature));
   const jwt = `${signatureInput}.${signatureB64}`;
 
-  // Exchange JWT for access token
   const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -96,7 +91,7 @@ async function uploadToGCS(
 ): Promise<string> {
   const uploadUrl = `https://storage.googleapis.com/upload/storage/v1/b/${GCS_BUCKET_NAME}/o?uploadType=media&name=${encodeURIComponent(objectPath)}`;
 
-  console.log(`Uploading to GCS: ${objectPath}`);
+  console.log(`Uploading to GCS: ${objectPath} (${data.length} bytes)`);
   
   const response = await fetch(uploadUrl, {
     method: 'POST',
@@ -117,45 +112,100 @@ async function uploadToGCS(
   const result = await response.json();
   console.log(`Upload successful: ${result.name}`);
   
-  // Return public URL
   return `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${objectPath}`;
 }
 
-// Reduce image quality for watermarked version (JPEG compression)
-function reduceImageQuality(imageData: Uint8Array, contentType: string): Uint8Array {
-  // For now, return original - watermark overlay is handled client-side for display
-  // The key security is that originals are never exposed publicly
-  // In production, use a service like Cloud Run with Sharp for server-side processing
-  return imageData;
-}
-
 // Fetch watermark from GCS
-async function getWatermarkUrl(): Promise<string | null> {
+async function getWatermarkImage(accessToken: string): Promise<Image | null> {
   try {
     const watermarkPath = 'watermarks/selo.png';
     const url = `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${watermarkPath}`;
-    return url;
+    
+    console.log('Fetching watermark from:', url);
+    
+    const response = await fetch(url, {
+      headers: { 'Authorization': `Bearer ${accessToken}` }
+    });
+    
+    if (!response.ok) {
+      console.log('Watermark not found, status:', response.status);
+      return null;
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const watermark = await Image.decode(new Uint8Array(arrayBuffer));
+    console.log(`Watermark loaded: ${watermark.width}x${watermark.height}`);
+    return watermark;
   } catch (error) {
-    console.log('Error getting watermark URL:', error);
+    console.error('Error loading watermark:', error);
+    return null;
   }
-  return null;
+}
+
+// Apply watermark to image with tiling and reduced quality
+async function applyWatermarkToImage(
+  imageData: Uint8Array,
+  watermark: Image,
+  quality: number = 70
+): Promise<Uint8Array> {
+  try {
+    console.log('Decoding main image...');
+    const mainImage = await Image.decode(imageData);
+    console.log(`Main image: ${mainImage.width}x${mainImage.height}`);
+    
+    // Calculate watermark size (15% of the smaller dimension)
+    const minDim = Math.min(mainImage.width, mainImage.height);
+    const watermarkSize = Math.max(100, Math.floor(minDim * 0.15));
+    
+    // Resize watermark proportionally
+    const scale = watermarkSize / Math.max(watermark.width, watermark.height);
+    const newWatermarkWidth = Math.floor(watermark.width * scale);
+    const newWatermarkHeight = Math.floor(watermark.height * scale);
+    
+    console.log(`Resizing watermark to: ${newWatermarkWidth}x${newWatermarkHeight}`);
+    const scaledWatermark = watermark.clone().resize(newWatermarkWidth, newWatermarkHeight);
+    
+    // Apply opacity to watermark (50% transparency)
+    for (let i = 0; i < scaledWatermark.bitmap.length; i += 4) {
+      scaledWatermark.bitmap[i + 3] = Math.floor(scaledWatermark.bitmap[i + 3] * 0.5);
+    }
+    
+    // Tile watermark across the image with spacing
+    const spacingX = Math.floor(mainImage.width / 4);
+    const spacingY = Math.floor(mainImage.height / 4);
+    
+    console.log('Tiling watermark across image...');
+    for (let y = spacingY; y < mainImage.height - newWatermarkHeight; y += spacingY * 1.5) {
+      for (let x = spacingX; x < mainImage.width - newWatermarkWidth; x += spacingX * 1.5) {
+        mainImage.composite(scaledWatermark, Math.floor(x), Math.floor(y));
+      }
+    }
+    
+    // Encode as JPEG with reduced quality
+    console.log(`Encoding with quality: ${quality}`);
+    const encoded = await mainImage.encodeJPEG(quality);
+    console.log(`Watermarked image size: ${encoded.length} bytes`);
+    
+    return encoded;
+  } catch (error) {
+    console.error('Error applying watermark:', error);
+    throw error;
+  }
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    // Validate GCS configuration
     if (!GCS_PROJECT_ID || !GCS_CLIENT_EMAIL || !GCS_PRIVATE_KEY) {
       throw new Error('GCS credentials not configured');
     }
 
     const formData = await req.formData();
     const file = formData.get('file') as File;
-    const type = formData.get('type') as string; // 'fotofacil' or 'portfolio'
+    const type = formData.get('type') as string;
     const eventId = formData.get('eventId') as string | null;
     const fileName = formData.get('fileName') as string | null;
     const generateWatermark = formData.get('generateWatermark') !== 'false';
@@ -170,10 +220,8 @@ serve(async (req) => {
 
     console.log(`Processing upload: type=${type}, fileName=${file.name}, size=${file.size}, generateWatermark=${generateWatermark}`);
 
-    // Get access token
     const accessToken = await getAccessToken();
     
-    // Read file data
     const fileBuffer = await file.arrayBuffer();
     const fileData = new Uint8Array(fileBuffer);
     
@@ -183,67 +231,57 @@ serve(async (req) => {
     const extension = file.name.split('.').pop() || 'jpg';
     const baseName = fileName || file.name.replace(/\.[^/.]+$/, '');
     const safeBaseName = baseName.replace(/[^a-zA-Z0-9-_]/g, '_');
+    const finalFileName = `${timestamp}-${uniqueId}-${safeBaseName}`;
     
     // Build paths
     let originalPath: string;
     let watermarkedPath: string;
     
     if (type === 'fotofacil' && eventId) {
-      originalPath = `originals/fotofacil/${eventId}/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
-      watermarkedPath = `watermarked/fotofacil/${eventId}/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
+      originalPath = `originals/fotofacil/${eventId}/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/fotofacil/${eventId}/${finalFileName}.jpg`;
     } else if (type === 'fotofacil') {
-      originalPath = `originals/fotofacil/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
-      watermarkedPath = `watermarked/fotofacil/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
+      originalPath = `originals/fotofacil/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/fotofacil/${finalFileName}.jpg`;
     } else {
-      originalPath = `originals/portfolio/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
-      watermarkedPath = `watermarked/portfolio/${timestamp}-${uniqueId}-${safeBaseName}.${extension}`;
+      originalPath = `originals/portfolio/${finalFileName}.${extension}`;
+      watermarkedPath = `watermarked/portfolio/${finalFileName}.jpg`;
     }
 
-    // Upload original (never publicly exposed - only accessed via signed URLs after purchase)
-    const originalUrl = await uploadToGCS(
-      accessToken,
-      originalPath,
-      fileData,
-      file.type
-    );
+    // Upload original (never publicly exposed)
+    const originalUrl = await uploadToGCS(accessToken, originalPath, fileData, file.type);
     console.log(`Original uploaded: ${originalUrl}`);
 
-    let watermarkedUrl = originalUrl; // Default to original if watermarking fails/skipped
+    let watermarkedUrl = originalUrl;
 
-    // For images, upload a version to the watermarked path
-    // The watermark overlay is applied client-side for display security
-    // but we store in the watermarked folder for organization
+    // Generate and upload watermarked version for images
     if (generateWatermark && file.type.startsWith('image/')) {
       try {
-        // Reduce quality for watermarked version
-        const processedData = reduceImageQuality(fileData, file.type);
+        const watermark = await getWatermarkImage(accessToken);
         
-        // Upload to watermarked path
-        watermarkedUrl = await uploadToGCS(
-          accessToken,
-          watermarkedPath,
-          processedData,
-          file.type
-        );
-        console.log(`Watermarked version uploaded: ${watermarkedUrl}`);
+        if (watermark) {
+          console.log('Applying watermark...');
+          const watermarkedData = await applyWatermarkToImage(fileData, watermark, 70);
+          
+          watermarkedUrl = await uploadToGCS(
+            accessToken,
+            watermarkedPath,
+            watermarkedData,
+            'image/jpeg'
+          );
+          console.log(`Watermarked version uploaded: ${watermarkedUrl}`);
+        } else {
+          console.log('No watermark available, uploading original to watermarked path');
+          watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
+        }
       } catch (error) {
-        console.error('Watermark processing failed, using original:', error);
+        console.error('Watermark processing failed:', error);
         // Upload original to watermarked path as fallback
-        watermarkedUrl = await uploadToGCS(
-          accessToken,
-          watermarkedPath,
-          fileData,
-          file.type
-        );
+        watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath, fileData, file.type);
       }
     } else if (file.type.startsWith('video/')) {
-      // For videos, just store in watermarked path for organization
-      watermarkedUrl = await uploadToGCS(
-        accessToken,
-        watermarkedPath,
-        fileData,
-        file.type
-      );
+      // For videos, upload to watermarked path as-is (video watermarking not supported)
+      watermarkedUrl = await uploadToGCS(accessToken, watermarkedPath.replace('.jpg', `.${extension}`), fileData, file.type);
     }
 
     return new Response(
@@ -253,7 +291,7 @@ serve(async (req) => {
         watermarkedUrl,
         originalPath,
         watermarkedPath,
-        fileName: `${timestamp}-${uniqueId}-${safeBaseName}.${extension}`,
+        fileName: `${finalFileName}.${extension}`,
         contentType: file.type,
         size: fileData.length,
       }),
