@@ -125,7 +125,7 @@ const Navigation = () => {
             <button
               key={item.label}
               onClick={() => handleNavClick(item)}
-              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 ${
+              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 font-bold ${
                 item.highlight 
                   ? 'border border-white/50 px-3 py-1.5 hover:bg-white hover:text-black' 
                   : 'hover:line-through'
@@ -153,7 +153,7 @@ const Navigation = () => {
             <button
               key={item.label}
               onClick={() => handleNavClick(item)}
-              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 ${
+              className={`text-xs uppercase tracking-[0.15em] text-white transition-all duration-300 font-bold ${
                 item.highlight 
                   ? 'border border-white/50 px-3 py-1.5 hover:bg-white hover:text-black' 
                   : 'hover:line-through'

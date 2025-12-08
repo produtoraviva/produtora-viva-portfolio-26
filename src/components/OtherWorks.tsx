@@ -119,13 +119,6 @@ const OtherWorks = () => {
             <span className="text-muted-foreground">Trabalhos</span>
           </h2>
         </div>
-        
-        <Link 
-          to="/portfolio"
-          className="mt-4 md:mt-0 text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-6 py-3 font-bold"
-        >
-          Ver Portfolio Completo
-        </Link>
       </div>
 
       {/* Grid - Max 2 items, 1 item takes full width */}
@@ -141,34 +134,44 @@ const OtherWorks = () => {
               <img
                 src={item.thumbnail_url}
                 alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
+                className="w-full h-full object-cover transition-all duration-700"
               />
             ) : (
               <LazyImage
                 src={item.image}
                 alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
+                className="w-full h-full object-cover transition-all duration-700"
               />
             )}
             
             {/* Play Icon for Video */}
             {item.media_type === "video" && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center transition-transform duration-300">
                 <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
               </div>
             )}
             
-            {/* Overlay */}
-            <div className="portfolio-overlay">
+            {/* Overlay - Bottom info only */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               {(item.subcategory || (item.category && item.category.trim() !== '')) && (
-                <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
+                <span className="text-[10px] font-mono text-white/80 uppercase tracking-wider mb-1 block">
                   {item.subcategory || item.category}
                 </span>
               )}
-              <h3 className="text-xl font-bold uppercase">{item.title}</h3>
+              <h3 className="text-lg font-light uppercase text-white">{item.title}</h3>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* CTA - Bottom like Projetos Recentes */}
+      <div className="text-center mt-20">
+        <Link 
+          to="/portfolio"
+          className="text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-8 py-4 font-bold inline-block"
+        >
+          Ver Portfolio Completo
+        </Link>
       </div>
 
       {/* Image Modal */}
