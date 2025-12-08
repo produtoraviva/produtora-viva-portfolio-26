@@ -160,127 +160,131 @@ const Testimonials = () => {
   const translateValue = `translateX(calc(-${currentIndex * 100}% - ${isDragging ? dragOffset : 0}px))`;
 
   return (
-    <section id="depoimentos" className="py-24 border-t border-border" style={{ background: 'linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 3%) 100%)' }}>
+    <section 
+      id="depoimentos" 
+      className="py-16 md:py-24 border-t border-border" 
+      style={{ background: 'linear-gradient(180deg, hsl(0 0% 6%) 0%, hsl(0 0% 2%) 100%)' }}
+    >
       <div className="max-w-[1600px] mx-auto px-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 pb-4">
-        <div>
-          <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
-            Depoimentos
-          </p>
-          <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
-            O que dizem
-            <br />
-            <span className="text-muted-foreground">nossos clientes</span>
-          </h2>
-          <p className="text-muted-foreground max-w-md mt-4">
-            Histórias reais de quem confiou em nosso trabalho.
-          </p>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 md:mb-16 pb-4">
+          <div>
+            <p className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] mb-4">
+              Depoimentos
+            </p>
+            <h2 className="text-3xl md:text-5xl font-light uppercase tracking-tighter">
+              O que dizem
+              <br />
+              <span className="text-muted-foreground">nossos clientes</span>
+            </h2>
+            <p className="text-muted-foreground max-w-md mt-4">
+              Histórias reais de quem confiou em nosso trabalho.
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Carousel */}
-      <div className="relative">
-        {/* Navigation Arrows */}
-        {testimonials.length > 1 && (
-          <>
-            <button 
-              onClick={handlePrev}
-              className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-            <button 
-              onClick={handleNext}
-              className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </button>
-          </>
-        )}
-
-        <div 
-          className="overflow-hidden cursor-grab active:cursor-grabbing"
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div 
-            ref={carouselRef}
-            className={`flex ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
-            style={{ transform: translateValue }}
-          >
-            {testimonials.map((testimonial) => (
-              <div 
-                key={testimonial.id}
-                className="w-full flex-shrink-0 px-4 md:px-8"
+        {/* Carousel */}
+        <div className="relative">
+          {/* Navigation Arrows */}
+          {testimonials.length > 1 && (
+            <>
+              <button 
+                onClick={handlePrev}
+                className="absolute -left-4 md:-left-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
               >
-                <div className="max-w-4xl mx-auto select-none">
-                  {/* Quote Icon */}
-                  <Quote className="h-12 w-12 text-muted-foreground/20 mb-8" />
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button 
+                onClick={handleNext}
+                className="absolute -right-4 md:-right-12 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-border bg-background flex items-center justify-center hover:bg-foreground hover:text-background transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
 
-                  {/* Stars */}
-                  <div className="flex gap-1 mb-6">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-foreground fill-current" />
-                    ))}
-                  </div>
+          <div 
+            className="overflow-hidden cursor-grab active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div 
+              ref={carouselRef}
+              className={`flex ${isDragging ? '' : 'transition-transform duration-500 ease-out'}`}
+              style={{ transform: translateValue }}
+            >
+              {testimonials.map((testimonial) => (
+                <div 
+                  key={testimonial.id}
+                  className="w-full flex-shrink-0 px-4 md:px-8"
+                >
+                  <div className="max-w-4xl mx-auto select-none">
+                    {/* Quote Icon */}
+                    <Quote className="h-8 md:h-12 w-8 md:w-12 text-muted-foreground/20 mb-6 md:mb-8" />
 
-                  {/* Text */}
-                  <blockquote className="text-2xl md:text-4xl font-light leading-relaxed mb-8 tracking-tight">
-                    "{testimonial.text}"
-                  </blockquote>
+                    {/* Stars */}
+                    <div className="flex gap-1 mb-4 md:mb-6">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-3 w-3 md:h-4 md:w-4 text-foreground fill-current" />
+                      ))}
+                    </div>
 
-                  {/* Author */}
-                  <div className="flex items-center gap-4 pt-8 border-t border-border">
-                    {testimonial.image && (
-                      <div className="w-12 h-12 overflow-hidden grayscale">
-                        <img
-                          src={testimonial.image}
-                          alt={testimonial.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <div>
-                      <div className="font-bold uppercase tracking-wide text-sm">
-                        {testimonial.name}
-                      </div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-wider">
-                        {testimonial.event}
+                    {/* Text - Smaller on mobile */}
+                    <blockquote className="text-lg md:text-2xl lg:text-4xl font-light leading-relaxed mb-6 md:mb-8 tracking-tight">
+                      "{testimonial.text}"
+                    </blockquote>
+
+                    {/* Author */}
+                    <div className="flex items-center gap-4 pt-6 md:pt-8 border-t border-border">
+                      {testimonial.image && (
+                        <div className="w-10 h-10 md:w-12 md:h-12 overflow-hidden grayscale">
+                          <img
+                            src={testimonial.image}
+                            alt={testimonial.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+                      <div>
+                        <div className="font-bold uppercase tracking-wide text-xs md:text-sm">
+                          {testimonial.name}
+                        </div>
+                        <div className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider">
+                          {testimonial.event}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Indicators */}
-        {testimonials.length > 1 && (
-          <div className="flex items-center justify-center gap-4 mt-12">
-            <span className="text-xs text-muted-foreground font-mono">
-              {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
-            </span>
-            <div className="flex gap-2">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-8 h-px transition-all duration-300 ${
-                    index === currentIndex ? "bg-foreground" : "bg-muted-foreground/30 hover:bg-muted-foreground"
-                  }`}
-                />
               ))}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Indicators */}
+          {testimonials.length > 1 && (
+            <div className="flex items-center justify-center gap-4 mt-8 md:mt-12">
+              <span className="text-xs text-muted-foreground font-mono">
+                {String(currentIndex + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
+              </span>
+              <div className="flex gap-2">
+                {testimonials.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentIndex(index)}
+                    className={`w-8 h-px transition-all duration-300 ${
+                      index === currentIndex ? "bg-foreground" : "bg-muted-foreground/30 hover:bg-muted-foreground"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );
