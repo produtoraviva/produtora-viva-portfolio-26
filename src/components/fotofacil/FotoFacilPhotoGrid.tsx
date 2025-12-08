@@ -135,8 +135,8 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
 
   return (
     <div>
-      {/* Photos Grid - Closer spacing */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-2">
+      {/* Photos Grid - Responsive: 1 col mobile, 2 col tablet, 4 col desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
         {photos.map((photo, index) => {
           const inCart = isInCart(photo.id);
           const price = getPhotoPrice(photo);
@@ -184,7 +184,7 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
                   <div className="flex items-center gap-1">
                     <button
                       onClick={(e) => handleToggleCart(photo, e)}
-                      className={`p-2 rounded-lg transition-all ${
+                      className={`p-2 rounded-full transition-all ${
                         inCart 
                           ? 'bg-emerald-500 text-white' 
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-900 hover:text-white'
@@ -194,7 +194,7 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
                     </button>
                     <button
                       onClick={(e) => handleShare(photo, e)}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg bg-gray-50"
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-full bg-gray-50"
                     >
                       <Share2 className="w-4 h-4" />
                     </button>
@@ -261,43 +261,43 @@ const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFaci
               />
               
               {/* Bottom Info Bar - Attached to image */}
-              <div className="w-full bg-white rounded-b-xl p-4 md:p-5">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="w-full bg-white rounded-b-xl p-3 md:p-5">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
                   <div className="flex items-center gap-4 text-center sm:text-left">
                     <div>
-                      <p className="font-semibold text-gray-900">{selectedPhoto.title || 'Foto'}</p>
+                      <p className="font-semibold text-gray-900 text-sm md:text-base">{selectedPhoto.title || 'Foto'}</p>
                       <p className="text-xs text-gray-500">ID: {selectedPhoto.id.slice(0, 8)}</p>
-                      <p className="text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
+                      <p className="text-lg md:text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 md:gap-3">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleShare(selectedPhoto)}
-                      className="border-gray-300 text-gray-700 hover:text-gray-900 rounded-xl"
+                      className="border-gray-300 text-gray-700 hover:text-gray-900 rounded-full"
                     >
-                      <Share2 className="w-4 h-4 mr-2" />
-                      <span className="text-gray-700">Compartilhar</span>
+                      <Share2 className="w-4 h-4 mr-1 md:mr-2" />
+                      <span className="text-gray-700 hidden sm:inline">Compartilhar</span>
                     </Button>
                     
                     <Button
                       onClick={() => handleToggleCart(selectedPhoto)}
-                      className={`rounded-xl ${isInCart(selectedPhoto.id) 
+                      className={`rounded-full ${isInCart(selectedPhoto.id) 
                         ? 'bg-emerald-500 hover:bg-emerald-600' 
                         : 'bg-gray-900 hover:bg-gray-800'
                       } text-white`}
                     >
                       {isInCart(selectedPhoto.id) ? (
                         <>
-                          <Check className="w-4 h-4 mr-2" />
-                          No carrinho
+                          <Check className="w-4 h-4 mr-1 md:mr-2" />
+                          <span className="hidden sm:inline">No carrinho</span>
                         </>
                       ) : (
                         <>
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Adicionar
+                          <ShoppingCart className="w-4 h-4 mr-1 md:mr-2" />
+                          <span className="hidden sm:inline">Adicionar</span>
                         </>
                       )}
                     </Button>

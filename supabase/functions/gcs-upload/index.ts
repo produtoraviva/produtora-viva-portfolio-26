@@ -137,17 +137,12 @@ async function fetchWatermark(accessToken: string): Promise<Uint8Array | null> {
   }
 }
 
-// Simple image watermarking using ImageMagick-like approach via external service
-// Since Deno Edge Functions have memory limits, we use a simple approach:
-// We'll store both original and a copy for watermarking, 
-// then use a lighter canvas approach with chunked processing
+// Create watermarked image with single large centered watermark at 100% size
 async function createWatermarkedImage(
   originalData: Uint8Array,
   watermarkData: Uint8Array,
   contentType: string
 ): Promise<Uint8Array> {
-  // For memory efficiency, we'll use the ImageScript library which is lighter
-  // Import dynamically to reduce initial load
   const { Image } = await import("https://deno.land/x/imagescript@1.2.15/mod.ts");
   
   try {
@@ -160,8 +155,8 @@ async function createWatermarkedImage(
     console.log('Decoding watermark...');
     const watermark = await Image.decode(watermarkData);
     
-    // Scale watermark to 50% of the smaller image dimension (single large centered watermark)
-    const targetWatermarkSize = Math.floor(Math.min(width, height) * 0.5);
+    // Scale watermark to 100% of the smaller image dimension (single large centered watermark)
+    const targetWatermarkSize = Math.min(width, height);
     const watermarkScale = targetWatermarkSize / Math.min(watermark.width, watermark.height);
     const scaledWatermarkWidth = Math.floor(watermark.width * watermarkScale);
     const scaledWatermarkHeight = Math.floor(watermark.height * watermarkScale);

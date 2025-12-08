@@ -174,7 +174,7 @@ export function FotoFacilFooterManager() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -182,9 +182,9 @@ export function FotoFacilFooterManager() {
   return (
     <div className="space-y-6">
       {/* Watermark Upload Section - MOST IMPORTANT */}
-      <Card className="border-2 border-amber-500/50 bg-amber-50/10">
+      <Card className="border-2 border-amber-400 bg-amber-50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-amber-700">
+          <CardTitle className="flex items-center gap-2 text-amber-800">
             <ImageIcon className="w-5 h-5" />
             Marca D'água (OBRIGATÓRIO)
           </CardTitle>
@@ -192,12 +192,12 @@ export function FotoFacilFooterManager() {
         <CardContent className="space-y-4">
           <div className="flex items-start gap-4">
             {watermarkExists ? (
-              <div className="flex items-center gap-2 text-green-600 bg-green-100 px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-2 text-green-700 bg-green-100 px-3 py-2 rounded-lg">
                 <CheckCircle className="w-5 h-5" />
                 <span className="font-medium">Marca d'água configurada</span>
               </div>
             ) : (
-              <div className="flex items-center gap-2 text-red-600 bg-red-100 px-3 py-2 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700 bg-red-100 px-3 py-2 rounded-lg">
                 <AlertCircle className="w-5 h-5" />
                 <span className="font-medium">Nenhuma marca d'água configurada - fotos serão enviadas SEM proteção!</span>
               </div>
@@ -208,23 +208,23 @@ export function FotoFacilFooterManager() {
             {...getWatermarkRootProps()}
             className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all ${
               isWatermarkDragActive 
-                ? 'border-amber-500 bg-amber-50' 
-                : 'border-muted-foreground/30 hover:border-amber-500/50 hover:bg-amber-50/50'
+                ? 'border-amber-500 bg-amber-100' 
+                : 'border-amber-300 hover:border-amber-500 hover:bg-amber-100'
             } ${uploadingWatermark ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             <input {...getWatermarkInputProps()} />
             {uploadingWatermark ? (
               <div className="flex flex-col items-center gap-2">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-500/30 border-t-amber-500" />
-                <p className="text-sm text-muted-foreground">Enviando marca d'água...</p>
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-amber-300 border-t-amber-600" />
+                <p className="text-sm text-gray-600">Enviando marca d'água...</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
                 <Upload className="w-8 h-8 text-amber-600" />
-                <p className="font-medium text-amber-700">
+                <p className="font-medium text-amber-800">
                   {isWatermarkDragActive ? 'Solte aqui...' : 'Clique ou arraste um arquivo PNG'}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-600">
                   Use um PNG com fundo transparente para melhores resultados
                 </p>
               </div>
@@ -232,8 +232,8 @@ export function FotoFacilFooterManager() {
           </div>
 
           {watermarkExists && (
-            <div className="p-4 bg-muted/50 rounded-xl">
-              <p className="text-xs text-muted-foreground mb-2">Preview da marca d'água atual:</p>
+            <div className="p-4 bg-white rounded-xl border border-gray-200">
+              <p className="text-xs text-gray-600 mb-2">Preview da marca d'água atual:</p>
               <div className="bg-gray-200 p-4 rounded-lg inline-block">
                 <img 
                   src={`https://storage.googleapis.com/rubensphotofilm/watermarks/selo.png?t=${Date.now()}`}
@@ -249,9 +249,9 @@ export function FotoFacilFooterManager() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-white border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
             <FileText className="w-5 h-5" />
             Configurações do Rodapé
           </CardTitle>
@@ -259,22 +259,22 @@ export function FotoFacilFooterManager() {
         <CardContent className="space-y-6">
           {/* Logo & Brand Section */}
           <div className="space-y-4">
-            <h4 className="font-medium text-lg">Logo & Marca</h4>
+            <h4 className="font-medium text-lg text-gray-900">Logo & Marca</h4>
             <div>
-              <Label>URL da Logo (opcional)</Label>
+              <Label className="text-gray-700">URL da Logo (opcional)</Label>
               <Input
                 value={settings.logo_url}
                 onChange={(e) => setSettings(prev => ({ ...prev, logo_url: e.target.value }))}
                 placeholder="https://exemplo.com/logo.png"
-                className="rounded-lg"
+                className="rounded-lg bg-white border-gray-300 text-gray-900"
               />
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-xs text-gray-500 mt-1">
                 Se configurada, a logo substituirá o nome nas páginas
               </p>
             </div>
             {settings.logo_url && (
-              <div className="p-4 bg-muted/50 rounded-xl">
-                <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+              <div className="p-4 bg-gray-100 rounded-xl">
+                <p className="text-xs text-gray-600 mb-2">Preview:</p>
                 <img 
                   src={settings.logo_url} 
                   alt="Logo preview" 
@@ -287,33 +287,33 @@ export function FotoFacilFooterManager() {
             )}
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label>Nome da Marca</Label>
+                <Label className="text-gray-700">Nome da Marca</Label>
                 <Input
                   value={settings.brand_name}
                   onChange={(e) => setSettings(prev => ({ ...prev, brand_name: e.target.value }))}
                   placeholder="FOTOFÁCIL"
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
             </div>
             <div>
-              <Label>Descrição</Label>
+              <Label className="text-gray-700">Descrição</Label>
               <Textarea
                 value={settings.brand_description}
                 onChange={(e) => setSettings(prev => ({ ...prev, brand_description: e.target.value }))}
                 placeholder="Sua plataforma de fotos de eventos..."
                 rows={3}
-                className="rounded-lg"
+                className="rounded-lg bg-white border-gray-300 text-gray-900"
               />
             </div>
           </div>
 
           {/* Contact Section */}
-          <div className="space-y-4 pt-4 border-t">
-            <h4 className="font-medium text-lg">Contato</h4>
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <h4 className="font-medium text-lg text-gray-900">Contato</h4>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <Mail className="w-4 h-4" />
                   E-mail
                 </Label>
@@ -322,11 +322,11 @@ export function FotoFacilFooterManager() {
                   value={settings.contact_email}
                   onChange={(e) => setSettings(prev => ({ ...prev, contact_email: e.target.value }))}
                   placeholder="contato@fotofacil.com"
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <Phone className="w-4 h-4" />
                   Telefone
                 </Label>
@@ -334,18 +334,18 @@ export function FotoFacilFooterManager() {
                   value={settings.contact_phone}
                   onChange={(e) => setSettings(prev => ({ ...prev, contact_phone: e.target.value }))}
                   placeholder="+55 (11) 99999-9999"
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
             </div>
           </div>
 
           {/* Social Links Section */}
-          <div className="space-y-4 pt-4 border-t">
-            <h4 className="font-medium text-lg">Redes Sociais</h4>
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <h4 className="font-medium text-lg text-gray-900">Redes Sociais</h4>
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <Instagram className="w-4 h-4" />
                   URL do Instagram
                 </Label>
@@ -353,11 +353,11 @@ export function FotoFacilFooterManager() {
                   value={settings.instagram_url}
                   onChange={(e) => setSettings(prev => ({ ...prev, instagram_url: e.target.value }))}
                   placeholder="https://instagram.com/..."
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
               <div>
-                <Label className="flex items-center gap-2">
+                <Label className="flex items-center gap-2 text-gray-700">
                   <MessageCircle className="w-4 h-4" />
                   URL do WhatsApp
                 </Label>
@@ -365,21 +365,21 @@ export function FotoFacilFooterManager() {
                   value={settings.whatsapp_url}
                   onChange={(e) => setSettings(prev => ({ ...prev, whatsapp_url: e.target.value }))}
                   placeholder="https://wa.me/..."
-                  className="rounded-lg"
+                  className="rounded-lg bg-white border-gray-300 text-gray-900"
                 />
               </div>
             </div>
           </div>
 
           {/* Options Section */}
-          <div className="space-y-4 pt-4 border-t">
-            <h4 className="font-medium text-lg">Opções</h4>
-            <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
+          <div className="space-y-4 pt-4 border-t border-gray-200">
+            <h4 className="font-medium text-lg text-gray-900">Opções</h4>
+            <div className="flex items-center justify-between p-4 bg-gray-100 rounded-xl">
               <div className="flex items-center gap-3">
-                <Shield className="w-5 h-5 text-muted-foreground" />
+                <Shield className="w-5 h-5 text-gray-600" />
                 <div>
-                  <p className="font-medium">Selos de Confiança</p>
-                  <p className="text-sm text-muted-foreground">Exibir selos de segurança no rodapé</p>
+                  <p className="font-medium text-gray-900">Selos de Confiança</p>
+                  <p className="text-sm text-gray-600">Exibir selos de segurança no rodapé</p>
                 </div>
               </div>
               <Switch
@@ -394,7 +394,7 @@ export function FotoFacilFooterManager() {
 
           {/* Save Button */}
           <div className="flex justify-end pt-4">
-            <Button onClick={handleSave} disabled={saving} className="rounded-lg">
+            <Button onClick={handleSave} disabled={saving} className="rounded-lg bg-gray-900 hover:bg-gray-800 text-white">
               {saving ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2" />
