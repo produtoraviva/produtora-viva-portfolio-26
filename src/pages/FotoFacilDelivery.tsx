@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, AlertTriangle, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, ArrowLeft, Package, Clock, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 
@@ -28,6 +28,7 @@ const FotoFacilDelivery = () => {
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
   useEffect(() => {
     if (orderId && token) {
@@ -61,8 +62,9 @@ const FotoFacilDelivery = () => {
     }
   };
 
-  const handleDownload = async (url: string, title: string) => {
+  const handleDownload = async (url: string, title: string, id: string) => {
     try {
+      setDownloading(id);
       const response = await fetch(url);
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -77,15 +79,17 @@ const FotoFacilDelivery = () => {
     } catch (err) {
       console.error('Error downloading:', err);
       toast.error('Erro ao baixar arquivo');
+    } finally {
+      setDownloading(null);
     }
   };
 
   const handleDownloadAll = async () => {
-    toast.info('Iniciando downloads...');
+    toast.info(`Baixando ${items.length} fotos...`);
     for (const item of items) {
       if (item.photo?.url) {
-        await handleDownload(item.photo.url, item.title_snapshot || 'foto');
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await handleDownload(item.photo.url, item.title_snapshot || 'foto', item.id);
+        await new Promise(resolve => setTimeout(resolve, 800));
       }
     }
     toast.success('Todos os downloads concluídos!');
@@ -93,9 +97,9 @@ const FotoFacilDelivery = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-300 border-t-gray-900 mx-auto mb-4"></div>
           <p className="text-gray-600">Validando acesso...</p>
         </div>
       </div>
@@ -104,35 +108,44 @@ const FotoFacilDelivery = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4">
         <div className="max-w-md text-center">
-          <AlertTriangle className="w-16 h-16 mx-auto text-red-500 mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Link Expirado ou Inválido</h1>
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+            <AlertTriangle className="w-10 h-10 text-red-500" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">Link Expirado ou Inválido</h1>
           <p className="text-gray-600 mb-6">{error}</p>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 mb-8">
             Se você acredita que isso é um erro, entre em contato com nosso suporte informando o número do seu pedido.
           </p>
-          <Link to="/fotofacil">
-            <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar ao Início
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/fotofacil/minhas-fotos">
+              <Button variant="outline">
+                Buscar minhas fotos
+              </Button>
+            </Link>
+            <Link to="/fotofacil">
+              <Button className="bg-gray-900 hover:bg-gray-800">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar ao Início
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Warning Banner */}
-      <div className="bg-yellow-50 border-b border-yellow-200">
-        <div className="max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-0.5" />
+      <div className="bg-amber-50 border-b border-amber-100">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-yellow-800">ATENÇÃO: Salve suas fotos agora!</p>
-              <p className="text-sm text-yellow-700">
+              <p className="font-medium text-amber-800 text-sm">Salve suas fotos agora!</p>
+              <p className="text-xs text-amber-700">
                 Este link expira em 24 horas e não poderá ser acessado novamente.
               </p>
             </div>
@@ -140,17 +153,18 @@ const FotoFacilDelivery = () => {
         </div>
       </div>
 
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">Suas Fotos</h1>
+              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">Suas Fotos</h1>
               <p className="text-sm text-gray-500">Pedido #{orderId?.slice(0, 8)}</p>
             </div>
             {items.length > 1 && (
-              <Button onClick={handleDownloadAll} className="bg-gray-900 hover:bg-gray-800">
+              <Button onClick={handleDownloadAll} className="bg-gray-900 hover:bg-gray-800 text-white">
                 <Download className="w-4 h-4 mr-2" />
-                Baixar Todas
+                <span className="hidden sm:inline">Baixar Todas</span>
+                <span className="sm:hidden">Todas</span>
               </Button>
             )}
           </div>
@@ -159,47 +173,64 @@ const FotoFacilDelivery = () => {
 
       <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Success Message */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-8">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="w-6 h-6 text-green-600" />
+        <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
             <div>
-              <p className="font-semibold text-green-800">Pagamento Confirmado!</p>
-              <p className="text-sm text-green-700">
-                Suas {items.length} foto{items.length > 1 ? 's estão prontas' : ' está pronta'} para download.
+              <p className="font-semibold text-emerald-800">Pagamento Confirmado!</p>
+              <p className="text-sm text-emerald-700">
+                {items.length === 1 
+                  ? 'Sua foto está pronta para download.'
+                  : `Suas ${items.length} fotos estão prontas para download.`
+                }
               </p>
             </div>
           </div>
         </div>
 
         {/* Photos Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map(item => (
             <div 
               key={item.id}
-              className="bg-white border border-gray-200 rounded-lg overflow-hidden"
+              className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group"
             >
-              <div className="aspect-square bg-gray-100">
+              <div className="aspect-square bg-gray-100 relative overflow-hidden">
                 {item.photo?.thumb_url || item.photo?.url ? (
                   <img 
                     src={item.photo.thumb_url || item.photo.url}
                     alt={item.title_snapshot}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    Foto não disponível
+                    <Package className="w-12 h-12" />
                   </div>
                 )}
               </div>
               <div className="p-4">
-                <p className="font-medium mb-3 truncate">{item.title_snapshot || 'Foto'}</p>
+                <p className="font-medium text-gray-900 mb-3 truncate">{item.title_snapshot || 'Foto'}</p>
                 {item.photo?.url && (
                   <Button 
-                    onClick={() => handleDownload(item.photo!.url, item.title_snapshot || 'foto')}
-                    className="w-full bg-gray-900 hover:bg-gray-800"
+                    onClick={() => handleDownload(item.photo!.url, item.title_snapshot || 'foto', item.id)}
+                    disabled={downloading === item.id}
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Baixar
+                    {downloading === item.id ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white mr-2"></div>
+                        Baixando...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" />
+                        Baixar Foto
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
@@ -208,8 +239,18 @@ const FotoFacilDelivery = () => {
         </div>
 
         {/* Footer Info */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Dúvidas? Entre em contato com nosso suporte.</p>
+        <div className="mt-12 text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-md mx-auto">
+            <p className="text-gray-600 text-sm mb-4">
+              Dúvidas sobre seu pedido? Entre em contato com nosso suporte.
+            </p>
+            <Link to="/fotofacil">
+              <Button variant="outline">
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar para FOTOFÁCIL
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>

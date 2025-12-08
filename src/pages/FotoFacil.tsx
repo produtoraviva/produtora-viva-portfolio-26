@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { ShoppingCart, ArrowLeft, Calendar, MapPin, Search } from 'lucide-react';
+import { Calendar, MapPin, ArrowLeft, Images } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import FotoFacilPhotoGrid from '@/components/fotofacil/FotoFacilPhotoGrid';
+import FotoFacilHeader from '@/components/fotofacil/FotoFacilHeader';
+import FotoFacilFooter from '@/components/fotofacil/FotoFacilFooter';
+import FotoFacilBanner from '@/components/fotofacil/FotoFacilBanner';
+import FotoFacilFloatingCartButton from '@/components/fotofacil/FotoFacilFloatingCartButton';
 
 interface Category {
   id: string;
@@ -33,7 +35,6 @@ const FotoFacil = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { itemCount, totalCents } = useFotoFacilCart();
 
   const selectedCategory = searchParams.get('categoria');
   const selectedEvent = searchParams.get('evento');
@@ -46,7 +47,7 @@ const FotoFacil = () => {
     if (selectedCategory) {
       loadEvents(selectedCategory);
     }
-  }, [selectedCategory]);
+  }, [selectedCategory, categories]);
 
   const loadCategories = async () => {
     try {
@@ -111,65 +112,54 @@ const FotoFacil = () => {
     }
   };
 
-  // Find selected event object
+  const handleSearch = (term: string) => {
+    setSearchTerm(term);
+  };
+
+  // Filter based on search
+  const filteredCategories = categories.filter(c => 
+    c.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredEvents = events.filter(e => 
+    e.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    e.location?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const currentEvent = events.find(e => e.slug === selectedEvent);
+  const currentCategory = categories.find(c => c.slug === selectedCategory);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/" className="text-gray-500 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <h1 className="text-2xl font-bold tracking-tight">FOTOFÁCIL</h1>
-            </div>
-            
-            <Link to="/fotofacil/carrinho">
-              <Button variant="outline" className="relative border-gray-300 hover:border-gray-900">
-                <ShoppingCart className="w-5 h-5 mr-2" />
-                <span>Carrinho</span>
-                {itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-gray-900 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {itemCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
-          </div>
-          
-          {itemCount > 0 && (
-            <div className="mt-2 text-sm text-gray-600">
-              Total: {formatPrice(totalCents)}
-            </div>
-          )}
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white font-sans">
+      <FotoFacilHeader 
+        onSearch={handleSearch}
+        searchPlaceholder={selectedCategory ? "Buscar eventos..." : "Buscar categorias..."}
+        showBack={!!(selectedCategory || selectedEvent)}
+        onBack={handleBack}
+      />
 
       {/* Breadcrumb */}
       {(selectedCategory || selectedEvent) && (
-        <div className="bg-gray-50 border-b border-gray-200">
+        <div className="bg-white border-b border-gray-100">
           <div className="max-w-7xl mx-auto px-4 py-3">
             <div className="flex items-center gap-2 text-sm">
-              <button onClick={() => setSearchParams({})} className="text-gray-500 hover:text-gray-900">
-                Categorias
+              <button onClick={() => setSearchParams({})} className="text-gray-500 hover:text-gray-900 transition-colors">
+                Início
               </button>
               {selectedCategory && (
                 <>
-                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-300">/</span>
                   <button 
                     onClick={() => setSearchParams({ categoria: selectedCategory })}
-                    className={selectedEvent ? "text-gray-500 hover:text-gray-900" : "text-gray-900 font-medium"}
+                    className={`transition-colors ${selectedEvent ? "text-gray-500 hover:text-gray-900" : "text-gray-900 font-medium"}`}
                   >
-                    {categories.find(c => c.slug === selectedCategory)?.name}
+                    {currentCategory?.name}
                   </button>
                 </>
               )}
               {selectedEvent && currentEvent && (
                 <>
-                  <span className="text-gray-400">/</span>
+                  <span className="text-gray-300">/</span>
                   <span className="text-gray-900 font-medium">{currentEvent.title}</span>
                 </>
               )}
@@ -178,40 +168,56 @@ const FotoFacil = () => {
         </div>
       )}
 
+      {/* Banner - only on home */}
+      {!selectedCategory && !selectedEvent && <FotoFacilBanner />}
+
       <main className="max-w-7xl mx-auto px-4 py-8">
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-300 border-t-gray-900"></div>
           </div>
         ) : selectedEvent && currentEvent ? (
           /* Photos Grid */
           <div>
             <div className="mb-8">
-              <Button variant="ghost" onClick={handleBack} className="mb-4 text-gray-600 hover:text-gray-900">
+              <Button 
+                variant="ghost" 
+                onClick={handleBack} 
+                className="mb-4 -ml-3 text-gray-600 hover:text-gray-900"
+              >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar aos eventos
               </Button>
-              <h2 className="text-3xl font-bold mb-2">{currentEvent.title}</h2>
-              <div className="flex flex-wrap gap-4 text-gray-600 text-sm">
-                {currentEvent.event_date && (
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(currentEvent.event_date).toLocaleDateString('pt-BR')}
-                  </span>
+              
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+                <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">{currentEvent.title}</h2>
+                <div className="flex flex-wrap gap-4 text-gray-600 text-sm mb-4">
+                  {currentEvent.event_date && (
+                    <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(currentEvent.event_date).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: 'long',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  )}
+                  {currentEvent.location && (
+                    <span className="flex items-center gap-1.5 bg-gray-100 px-3 py-1 rounded-full">
+                      <MapPin className="w-4 h-4" />
+                      {currentEvent.location}
+                    </span>
+                  )}
+                </div>
+                {currentEvent.description && (
+                  <p className="text-gray-600">{currentEvent.description}</p>
                 )}
-                {currentEvent.location && (
-                  <span className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {currentEvent.location}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <span className="text-lg font-semibold text-gray-900">
+                    Preço por foto: <span className="text-emerald-600">{formatPrice(currentEvent.default_price_cents)}</span>
                   </span>
-                )}
+                </div>
               </div>
-              {currentEvent.description && (
-                <p className="mt-4 text-gray-600">{currentEvent.description}</p>
-              )}
-              <p className="mt-2 text-lg font-semibold">
-                Preço por foto: {formatPrice(currentEvent.default_price_cents)}
-              </p>
             </div>
 
             <FotoFacilPhotoGrid 
@@ -222,59 +228,62 @@ const FotoFacil = () => {
         ) : selectedCategory ? (
           /* Events List */
           <div>
-            <Button variant="ghost" onClick={handleBack} className="mb-6 text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar às categorias
-            </Button>
-            
-            <h2 className="text-3xl font-bold mb-8">
-              {categories.find(c => c.slug === selectedCategory)?.name}
-            </h2>
+            <div className="mb-8">
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 text-gray-900">
+                {currentCategory?.name}
+              </h2>
+              {currentCategory?.description && (
+                <p className="text-gray-600">{currentCategory.description}</p>
+              )}
+            </div>
 
-            {events.length === 0 ? (
-              <div className="text-center py-20 text-gray-500">
-                <p className="text-lg">Nenhum evento disponível nesta categoria.</p>
+            {filteredEvents.length === 0 ? (
+              <div className="text-center py-20">
+                <Images className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-lg text-gray-500">
+                  {searchTerm ? 'Nenhum evento encontrado.' : 'Nenhum evento disponível nesta categoria.'}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {events.map(event => (
+                {filteredEvents.map(event => (
                   <button
                     key={event.id}
                     onClick={() => handleEventClick(event.slug)}
-                    className="group text-left bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                    className="group text-left bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300"
                   >
                     <div className="aspect-[16/10] bg-gray-100 overflow-hidden">
                       {event.cover_url ? (
                         <img 
                           src={event.cover_url} 
                           alt={event.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <Calendar className="w-12 h-12" />
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                          <Calendar className="w-12 h-12 text-gray-400" />
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg mb-1 group-hover:text-gray-600 transition-colors">
+                    <div className="p-5">
+                      <h3 className="font-semibold text-lg mb-2 text-gray-900 group-hover:text-gray-700 transition-colors">
                         {event.title}
                       </h3>
-                      <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-2 text-sm text-gray-500 mb-3">
                         {event.event_date && (
                           <span className="flex items-center gap-1">
-                            <Calendar className="w-3 h-3" />
+                            <Calendar className="w-3.5 h-3.5" />
                             {new Date(event.event_date).toLocaleDateString('pt-BR')}
                           </span>
                         )}
                         {event.location && (
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
+                            <MapPin className="w-3.5 h-3.5" />
                             {event.location}
                           </span>
                         )}
                       </div>
-                      <p className="mt-2 text-gray-900 font-medium">
+                      <p className="text-emerald-600 font-semibold">
                         A partir de {formatPrice(event.default_price_cents)}
                       </p>
                     </div>
@@ -287,37 +296,40 @@ const FotoFacil = () => {
           /* Categories List */
           <div>
             <div className="mb-8">
-              <h2 className="text-3xl font-bold mb-2">Escolha uma categoria</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-2 text-gray-900">Escolha uma categoria</h2>
               <p className="text-gray-600">Navegue pelas categorias para encontrar suas fotos</p>
             </div>
 
-            {categories.length === 0 ? (
-              <div className="text-center py-20 text-gray-500">
-                <p className="text-lg">Nenhuma categoria disponível no momento.</p>
+            {filteredCategories.length === 0 ? (
+              <div className="text-center py-20">
+                <Images className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                <p className="text-lg text-gray-500">
+                  {searchTerm ? 'Nenhuma categoria encontrada.' : 'Nenhuma categoria disponível no momento.'}
+                </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {categories.map(category => (
+                {filteredCategories.map(category => (
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.slug)}
-                    className="group text-left bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition-shadow"
+                    className="group text-left bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-gray-200 transition-all duration-300"
                   >
                     <div className="aspect-[16/10] bg-gray-100 overflow-hidden">
                       {category.image_url ? (
                         <img 
                           src={category.image_url} 
                           alt={category.name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <Search className="w-12 h-12" />
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                          <Images className="w-12 h-12 text-gray-400" />
                         </div>
                       )}
                     </div>
-                    <div className="p-4">
-                      <h3 className="font-semibold text-lg group-hover:text-gray-600 transition-colors">
+                    <div className="p-5">
+                      <h3 className="font-semibold text-lg text-gray-900 group-hover:text-gray-700 transition-colors">
                         {category.name}
                       </h3>
                       {category.description && (
@@ -333,6 +345,9 @@ const FotoFacil = () => {
           </div>
         )}
       </main>
+
+      <FotoFacilFloatingCartButton />
+      <FotoFacilFooter />
     </div>
   );
 };
