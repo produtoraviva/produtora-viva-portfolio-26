@@ -99,8 +99,8 @@ const OtherWorks = () => {
         </div>
       </div>
 
-      {/* Grid - Max 2 items */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Grid - Max 2 items, 1 item takes full width */}
+      <div className={`grid gap-6 ${otherWorksItems.length === 1 ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}>
         {otherWorksItems.map((item, index) => (
           <div 
             key={item.id} 

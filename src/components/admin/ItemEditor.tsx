@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Save, X, Upload } from 'lucide-react';
+import { Save, X, Image } from 'lucide-react';
 
 interface Category {
   id: string;
@@ -63,6 +63,7 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
     homepage_featured: boolean;
     location: string;
     date_taken: string;
+    thumbnail_url: string;
   }>({
     title: '',
     description: '',
@@ -74,6 +75,7 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
     homepage_featured: false,
     location: '',
     date_taken: '',
+    thumbnail_url: '',
   });
   const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
@@ -125,6 +127,7 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
         homepage_featured: (item as any).homepage_featured || false,
         location: item.location || '',
         date_taken: item.date_taken || '',
+        thumbnail_url: item.thumbnail_url || '',
       });
     }
   }, [item]);
@@ -156,6 +159,7 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
           homepage_featured: formData.homepage_featured,
           location: formData.location || null,
           date_taken: formData.date_taken || null,
+          thumbnail_url: formData.thumbnail_url || null,
         })
         .eq('id', item.id);
 
@@ -240,6 +244,38 @@ export function ItemEditor({ item, onSave, onCancel }: ItemEditorProps) {
                     onChange={(e) => setFormData({ ...formData, date_taken: e.target.value })}
                   />
                 </div>
+
+                {/* Thumbnail URL for videos */}
+                {formData.media_type === 'video' && (
+                  <div>
+                    <Label htmlFor="thumbnail_url" className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      URL da Thumbnail
+                    </Label>
+                    <Input
+                      id="thumbnail_url"
+                      value={formData.thumbnail_url}
+                      onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
+                      placeholder="https://exemplo.com/imagem.jpg"
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Cole o link de uma imagem para usar como capa do vídeo
+                    </p>
+                    {formData.thumbnail_url && (
+                      <div className="mt-2 relative aspect-video w-full max-w-xs rounded-lg overflow-hidden border">
+                        <img 
+                          src={formData.thumbnail_url} 
+                          alt="Preview da thumbnail" 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
