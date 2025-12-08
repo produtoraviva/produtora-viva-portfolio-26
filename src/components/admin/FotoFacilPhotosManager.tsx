@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Save, X, Link as LinkIcon, Upload } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Plus, Pencil, Trash2, Save, X, Link as LinkIcon, Upload, Cloud, Loader2, Check, Image } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { useDropzone } from 'react-dropzone';
+import { uploadMultipleToGCS, type GCSUploadResult } from '@/lib/gcs';
 
 interface Event {
   id: string;
@@ -57,6 +61,11 @@ export function FotoFacilPhotosManager() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [importUrls, setImportUrls] = useState('');
   const [importEventId, setImportEventId] = useState('');
+  
+  // GCS Upload state
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({ completed: 0, total: 0, currentFile: '' });
+  const [uploadResults, setUploadResults] = useState<GCSUploadResult[]>([]);
   
   const [formData, setFormData] = useState({
     event_id: '',
@@ -261,6 +270,78 @@ export function FotoFacilPhotosManager() {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  // GCS Upload handler
+  const handleGCSUpload = useCallback(async (files: File[]) => {
+    if (selectedEventId === 'all') {
+      toast({ title: 'Selecione um evento primeiro', variant: 'destructive' });
+      return;
+    }
+
+    if (files.length === 0) return;
+
+    setUploading(true);
+    setUploadResults([]);
+    setUploadProgress({ completed: 0, total: files.length, currentFile: '' });
+
+    try {
+      const results = await uploadMultipleToGCS(
+        files,
+        'fotofacil',
+        selectedEventId,
+        (completed, total, currentFile) => {
+          setUploadProgress({ completed, total, currentFile });
+        }
+      );
+
+      setUploadResults(results);
+
+      // Save successful uploads to database
+      const successfulUploads = results.filter(r => r.success);
+      
+      for (const result of successfulUploads) {
+        const maxOrder = photos.length > 0 
+          ? Math.max(...photos.map(p => p.display_order || 0)) 
+          : 0;
+
+        await supabase
+          .from('fotofacil_photos')
+          .insert({
+            event_id: selectedEventId,
+            title: result.fileName?.replace(/\.[^/.]+$/, '') || 'Foto',
+            url: result.originalUrl,
+            thumb_url: result.watermarkedUrl,
+            display_order: maxOrder + 1,
+            is_active: true,
+          });
+      }
+
+      const successCount = successfulUploads.length;
+      const failCount = results.length - successCount;
+
+      if (successCount > 0) {
+        toast({ title: `${successCount} foto(s) enviada(s) com sucesso!` });
+        loadPhotos();
+      }
+      if (failCount > 0) {
+        toast({ title: `${failCount} foto(s) falharam no upload`, variant: 'destructive' });
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({ title: 'Erro no upload das fotos', variant: 'destructive' });
+    } finally {
+      setUploading(false);
+    }
+  }, [selectedEventId, photos, toast]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+      'video/*': ['.mp4', '.mov', '.avi', '.webm'],
+    },
+    onDrop: handleGCSUpload,
+    disabled: uploading || selectedEventId === 'all',
+  });
+
   if (isLoading) {
     return <div className="flex items-center justify-center p-8">Carregando...</div>;
   }
@@ -270,31 +351,112 @@ export function FotoFacilPhotosManager() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold">Fotos FOTOFÁCIL</h2>
-          <p className="text-muted-foreground text-sm">Gerencie as fotos dos eventos</p>
+          <p className="text-muted-foreground text-sm">Upload para Google Cloud Storage com marca d'água automática</p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={selectedEventId} onValueChange={setSelectedEventId}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filtrar por evento" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os eventos</SelectItem>
-              {events.map((event) => (
-                <SelectItem key={event.id} value={event.id}>{event.title}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-            <LinkIcon className="h-4 w-4 mr-2" />
-            Importar URLs
-          </Button>
-          <Button onClick={openCreateDialog}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Foto
-          </Button>
+          <Cloud className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Google Cloud Storage</span>
         </div>
       </div>
 
+      {/* Event Selector */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+          <SelectTrigger className="w-[250px] rounded-lg">
+            <SelectValue placeholder="Filtrar por evento" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os eventos</SelectItem>
+            {events.map((event) => (
+              <SelectItem key={event.id} value={event.id}>{event.title}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button variant="outline" onClick={() => setIsImportDialogOpen(true)} className="rounded-lg">
+          <LinkIcon className="h-4 w-4 mr-2" />
+          Importar URLs
+        </Button>
+        <Button onClick={openCreateDialog} className="rounded-lg">
+          <Plus className="h-4 w-4 mr-2" />
+          Nova Foto
+        </Button>
+      </div>
+
+      {/* GCS Upload Zone */}
+      {selectedEventId && selectedEventId !== 'all' && (
+        <Card className="rounded-xl">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Upload className="h-5 w-5" />
+              Upload de Fotos para Google Cloud Storage
+            </CardTitle>
+            <CardDescription>
+              Arraste fotos ou clique para selecionar. As fotos serão enviadas para o GCS com marca d'água automática.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div
+              {...getRootProps()}
+              className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors ${
+                isDragActive 
+                  ? 'border-emerald-500 bg-emerald-50' 
+                  : 'border-gray-300 hover:border-gray-400'
+              } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <input {...getInputProps()} />
+              {uploading ? (
+                <div className="space-y-3">
+                  <Loader2 className="h-8 w-8 mx-auto animate-spin text-emerald-600" />
+                  <div>
+                    <p className="font-medium">Enviando fotos para GCS...</p>
+                    <p className="text-sm text-muted-foreground">
+                      {uploadProgress.completed} de {uploadProgress.total} - {uploadProgress.currentFile}
+                    </p>
+                  </div>
+                  <Progress value={(uploadProgress.completed / uploadProgress.total) * 100} className="h-2" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Cloud className="h-8 w-8 mx-auto text-gray-400" />
+                  <p className="font-medium">
+                    {isDragActive ? 'Solte as fotos aqui' : 'Arraste fotos ou clique para selecionar'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Suporta JPG, PNG, WebP, GIF e vídeos MP4, MOV
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Upload Results */}
+            {uploadResults.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="font-medium text-sm">Resultados do upload:</p>
+                <div className="max-h-32 overflow-y-auto space-y-1">
+                  {uploadResults.map((result, index) => (
+                    <div 
+                      key={index}
+                      className={`flex items-center gap-2 text-sm p-2 rounded-lg ${
+                        result.success ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'
+                      }`}
+                    >
+                      {result.success ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <X className="h-4 w-4" />
+                      )}
+                      <span className="truncate">{result.fileName || `Arquivo ${index + 1}`}</span>
+                      {!result.success && <span className="text-xs">- {result.error}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Photos Grid */}
       <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {photos.map((photo) => (
           <div 

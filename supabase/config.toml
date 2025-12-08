@@ -23,3 +23,15 @@ verify_jwt = false
 
 [functions.fotofacil-validate-delivery]
 verify_jwt = false
+
+[functions.gcs-upload]
+verify_jwt = false
+
+[functions.gcs-signed-url]
+verify_jwt = false
+
+[functions.gcs-delete]
+verify_jwt = false
+
+[functions.gcs-upload-watermark]
+verify_jwt = false
