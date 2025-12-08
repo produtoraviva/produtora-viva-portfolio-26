@@ -63,26 +63,26 @@ const FotoFacilFooter = () => {
       {settings.show_trust_badges && (
         <div className="border-b border-gray-800">
           <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 text-center">
-              <div className="flex flex-col items-center gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              <div className="flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-full flex items-center justify-center">
                   <Shield className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                 </div>
                 <span className="text-xs md:text-sm text-gray-300">Compra Segura</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-full flex items-center justify-center">
                   <CreditCard className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                 </div>
                 <span className="text-xs md:text-sm text-gray-300">Pagamento PIX</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-full flex items-center justify-center">
                   <Camera className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                 </div>
                 <span className="text-xs md:text-sm text-gray-300">Alta Resolução</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-2 text-center">
                 <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-800 rounded-full flex items-center justify-center">
                   <Download className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
                 </div>
@@ -93,19 +93,19 @@ const FotoFacilFooter = () => {
         </div>
       )}
 
-      {/* Main Footer */}
+      {/* Main Footer - Centered content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
           {/* Brand */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <h3 className="text-xl font-black tracking-tight mb-4">{settings.brand_name}</h3>
-            <p className="text-gray-400 text-sm leading-relaxed">
+            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
               {settings.brand_description}
             </p>
           </div>
 
           {/* Links */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <h4 className="font-semibold mb-4 text-gray-300">Links Úteis</h4>
             <ul className="space-y-2 text-sm">
               <li>
@@ -127,17 +127,17 @@ const FotoFacilFooter = () => {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <h4 className="font-semibold mb-4 text-gray-300">Contato</h4>
             <ul className="space-y-2 text-sm text-gray-400">
               {settings.contact_email && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center justify-center md:justify-start gap-2">
                   <Mail className="w-4 h-4" />
                   <span>{settings.contact_email}</span>
                 </li>
               )}
               {settings.contact_phone && (
-                <li className="flex items-center gap-2">
+                <li className="flex items-center justify-center md:justify-start gap-2">
                   <Phone className="w-4 h-4" />
                   <span>{settings.contact_phone}</span>
                 </li>
@@ -145,7 +145,7 @@ const FotoFacilFooter = () => {
             </ul>
             
             {/* Social Links */}
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-3 mt-4 justify-center md:justify-start">
               {settings.instagram_url && (
                 <a 
                   href={settings.instagram_url} 
@@ -170,7 +170,7 @@ const FotoFacilFooter = () => {
           </div>
         </div>
 
-        {/* Bottom */}
+        {/* Bottom - Centered */}
         <div className="border-t border-gray-800 mt-8 pt-6 text-center">
           <p className="text-sm text-gray-500">
             © {new Date().getFullYear()} {settings.brand_name}. Todos os direitos reservados.

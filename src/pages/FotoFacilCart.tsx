@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, ShoppingBag, CreditCard, Shield, Lock, Tag, X, Check, Copy, Clock, QrCode, Package } from 'lucide-react';
+import { ArrowLeft, Trash2, ShoppingBag, CreditCard, Shield, Lock, Tag, X, Check, Copy, Clock, QrCode, Package, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,17 @@ import { useFotoFacilCart } from '@/contexts/FotoFacilCartContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import FotoFacilFooter from '@/components/fotofacil/FotoFacilFooter';
+
+// Mercado Pago Logo component
+const MercadoPagoLogo = () => (
+  <div className="flex items-center gap-2 text-gray-500">
+    <span className="text-xs">Pagamento processado por</span>
+    <div className="flex items-center gap-1 bg-[#009EE3] text-white px-2 py-0.5 rounded text-xs font-bold">
+      <span>Mercado</span>
+      <span className="text-[#FFE600]">Pago</span>
+    </div>
+  </div>
+);
 
 const FotoFacilCart = () => {
   const { items, removeItem, clearCart, totalCents } = useFotoFacilCart();
@@ -63,6 +74,34 @@ const FotoFacilCart = () => {
       }
     };
   }, []);
+
+  // Auto-approve if total is 0
+  useEffect(() => {
+    if (step === 'payment' && paymentData && finalTotalCents === 0) {
+      // Auto-approve free orders
+      handleFreeOrder();
+    }
+  }, [step, paymentData, finalTotalCents]);
+
+  const handleFreeOrder = async () => {
+    if (!paymentData) return;
+    
+    try {
+      // Call check-payment which should auto-approve free orders
+      const { data, error } = await supabase.functions.invoke('fotofacil-check-payment', {
+        body: { orderId: paymentData.orderId }
+      });
+
+      if (error) throw error;
+
+      if (data.status === 'paid') {
+        clearCart();
+        navigate(`/fotofacil/entrega/${paymentData.orderId}/${data.deliveryToken}`);
+      }
+    } catch (error) {
+      console.error('Error handling free order:', error);
+    }
+  };
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -136,6 +175,12 @@ const FotoFacilCart = () => {
       // Check min order
       if (data.min_order_cents && totalCents < data.min_order_cents) {
         toast.error(`Pedido mínimo: ${formatPrice(data.min_order_cents)}`);
+        return;
+      }
+
+      // Check min photos
+      if (data.min_photos && items.length < data.min_photos) {
+        toast.error(`Mínimo de ${data.min_photos} foto${data.min_photos > 1 ? 's' : ''} para usar este cupom`);
         return;
       }
 
@@ -240,8 +285,10 @@ const FotoFacilCart = () => {
       });
       setStep('payment');
       
-      // Start checking for payment
-      startPaymentCheck(data.orderId);
+      // Start checking for payment (only if not free)
+      if (finalTotalCents > 0) {
+        startPaymentCheck(data.orderId);
+      }
 
     } catch (error: any) {
       console.error('Error creating order:', error);
@@ -261,32 +308,37 @@ const FotoFacilCart = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
-          <div className="max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-xl font-bold tracking-tight text-gray-900">Pagamento PIX</h1>
-              <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          <div className="max-w-2xl mx-auto px-4 py-3 md:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-3">
+                <ShoppingCart className="w-5 h-5 text-emerald-600" />
+                <h1 className="text-base md:text-xl font-bold tracking-tight text-gray-900">Pagamento PIX</h1>
+              </div>
+              <Link to="/fotofacil" className="text-base md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                 FOTOFÁCIL
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 max-w-lg mx-auto px-4 py-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+        <main className="flex-1 max-w-lg mx-auto px-4 py-6 md:py-8 w-full">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 mb-6">
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-100 rounded-full mb-4">
-                <QrCode className="w-8 h-8 text-emerald-600" />
+              <div className="inline-flex items-center justify-center w-14 h-14 md:w-16 md:h-16 bg-emerald-100 rounded-full mb-4">
+                <QrCode className="w-7 h-7 md:w-8 md:h-8 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Pedido Criado</h2>
-              <p className="text-gray-600">Escaneie o QR Code ou copie o código PIX</p>
+              <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Pedido Criado</h2>
+              <p className="text-gray-600 text-sm md:text-base">
+                {finalTotalCents === 0 ? 'Processando seu pedido gratuito...' : 'Escaneie o QR Code ou copie o código PIX'}
+              </p>
             </div>
 
             {/* Order Info */}
             <div className="bg-emerald-50 rounded-xl p-4 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-emerald-700">Valor total</span>
-                <span className="text-2xl font-bold text-emerald-600">{formatPrice(finalTotalCents)}</span>
+                <span className="text-xl md:text-2xl font-bold text-emerald-600">{formatPrice(finalTotalCents)}</span>
               </div>
               <div className="flex justify-between items-center text-sm text-emerald-600">
                 <span>{items.length} foto{items.length > 1 ? 's' : ''}</span>
@@ -294,57 +346,66 @@ const FotoFacilCart = () => {
               </div>
             </div>
 
-            {paymentData.qrCodeBase64 && (
-              <div className="flex justify-center mb-6">
-                <div className="bg-white p-4 rounded-xl border-2 border-gray-200">
-                  <img 
-                    src={`data:image/png;base64,${paymentData.qrCodeBase64}`} 
-                    alt="QR Code PIX"
-                    className="w-48 h-48"
-                  />
+            {finalTotalCents > 0 && (
+              <>
+                {paymentData.qrCodeBase64 && (
+                  <div className="flex justify-center mb-6">
+                    <div className="bg-white p-3 md:p-4 rounded-xl border-2 border-gray-200">
+                      <img 
+                        src={`data:image/png;base64,${paymentData.qrCodeBase64}`} 
+                        alt="QR Code PIX"
+                        className="w-40 h-40 md:w-48 md:h-48"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {paymentData.pixCopiaCola && (
+                  <div className="mb-6">
+                    <p className="text-sm text-gray-700 mb-2 font-bold">PIX Copia e Cola:</p>
+                    <div className="flex gap-2">
+                      <Input 
+                        value={paymentData.pixCopiaCola} 
+                        readOnly 
+                        className="font-mono text-xs bg-gray-50 text-gray-800 border-gray-300 rounded-xl"
+                      />
+                      <Button 
+                        onClick={() => copyToClipboard(paymentData.pixCopiaCola)} 
+                        variant="outline"
+                        className="shrink-0 rounded-full border-gray-300"
+                      >
+                        <Copy className="w-4 h-4 text-gray-700" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl mb-6">
+                  <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">Aguardando pagamento...</p>
+                    <p className="text-xs text-blue-700">Você será redirecionado automaticamente após a confirmação</p>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
-            {paymentData.pixCopiaCola && (
-              <div className="mb-6">
-                <p className="text-sm text-gray-700 mb-2 font-bold">PIX Copia e Cola:</p>
-                <div className="flex gap-2">
-                  <Input 
-                    value={paymentData.pixCopiaCola} 
-                    readOnly 
-                    className="font-mono text-xs bg-gray-50 text-gray-800 border-gray-300 rounded-xl"
-                  />
-                  <Button 
-                    onClick={() => copyToClipboard(paymentData.pixCopiaCola)} 
-                    variant="outline"
-                    className="shrink-0 rounded-xl border-gray-300"
-                  >
-                    <Copy className="w-4 h-4 text-gray-700" />
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl mb-6">
-              <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-blue-900">Aguardando pagamento...</p>
-                <p className="text-xs text-blue-700">Você será redirecionado automaticamente após a confirmação</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl">
+            <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-xl mb-4">
               <Shield className="w-5 h-5 text-amber-600 flex-shrink-0" />
               <p className="text-xs text-amber-800">
                 Suas fotos estarão disponíveis para download imediatamente após a confirmação do pagamento.
               </p>
             </div>
+
+            {/* Mercado Pago Badge */}
+            <div className="flex justify-center">
+              <MercadoPagoLogo />
+            </div>
           </div>
 
           <div className="text-center">
             <Link to="/fotofacil">
-              <Button variant="ghost" className="text-gray-600 rounded-xl">
+              <Button variant="ghost" className="text-gray-600 rounded-full">
                 Continuar Navegando
               </Button>
             </Link>
@@ -361,26 +422,27 @@ const FotoFacilCart = () => {
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
         <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
-          <div className="max-w-4xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900 transition-colors rounded-lg">
+          <div className="max-w-4xl mx-auto px-4 py-3 md:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 md:gap-4">
+                <button onClick={() => setStep('cart')} className="text-gray-500 hover:text-gray-900 transition-colors rounded-full p-1">
                   <ArrowLeft className="w-5 h-5" />
                 </button>
-                <h1 className="text-xl font-bold tracking-tight text-gray-900">Finalizar Compra</h1>
+                <ShoppingCart className="w-5 h-5 text-emerald-600 hidden sm:block" />
+                <h1 className="text-base md:text-xl font-bold tracking-tight text-gray-900">Finalizar Compra</h1>
               </div>
-              <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+              <Link to="/fotofacil" className="text-base md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
                 FOTOFÁCIL
               </Link>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 max-w-4xl mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-5 gap-8">
+        <main className="flex-1 max-w-4xl mx-auto px-4 py-6 md:py-8 w-full">
+          <div className="grid lg:grid-cols-5 gap-6 md:gap-8">
             {/* Form */}
             <div className="lg:col-span-3">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Seus Dados</h2>
                 
                 <div className="space-y-5">
@@ -424,7 +486,7 @@ const FotoFacilCart = () => {
 
                 {/* Security Badges */}
                 <div className="mt-8 pt-6 border-t border-gray-100">
-                  <div className="flex flex-wrap items-center justify-center gap-6 text-gray-400">
+                  <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-gray-400">
                     <div className="flex items-center gap-2">
                       <Shield className="w-5 h-5" />
                       <span className="text-xs">Compra Segura</span>
@@ -434,13 +496,16 @@ const FotoFacilCart = () => {
                       <span className="text-xs">Dados Criptografados</span>
                     </div>
                   </div>
+                  <div className="flex justify-center mt-4">
+                    <MercadoPagoLogo />
+                  </div>
                 </div>
               </div>
             </div>
 
             {/* Order Summary */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 sticky top-24">
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo do Pedido</h2>
                 
                 <div className="space-y-3 mb-4 max-h-48 overflow-y-auto">
@@ -482,7 +547,7 @@ const FotoFacilCart = () => {
                 <Button 
                   onClick={handlePayment} 
                   disabled={loading}
-                  className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-xl"
+                  className="w-full mt-6 bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-full"
                 >
                   {loading ? (
                     <>
@@ -492,7 +557,7 @@ const FotoFacilCart = () => {
                   ) : (
                     <>
                       <QrCode className="w-5 h-5 mr-2" />
-                      Pagar com PIX
+                      {finalTotalCents === 0 ? 'Finalizar Pedido' : 'Pagar com PIX'}
                     </>
                   )}
                 </Button>
@@ -510,40 +575,41 @@ const FotoFacilCart = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900 transition-colors rounded-lg">
+        <div className="max-w-6xl mx-auto px-4 py-3 md:py-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 md:gap-4">
+              <Link to="/fotofacil" className="text-gray-500 hover:text-gray-900 transition-colors rounded-full p-1">
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900">Carrinho</h1>
+              <ShoppingCart className="w-5 h-5 text-emerald-600 hidden sm:block" />
+              <h1 className="text-base md:text-xl font-bold tracking-tight text-gray-900">Carrinho</h1>
             </div>
-            <Link to="/fotofacil" className="text-lg md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <Link to="/fotofacil" className="text-base md:text-xl font-black tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               FOTOFÁCIL
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-6xl mx-auto px-4 py-6 md:py-8 w-full">
         {items.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gray-100 rounded-full mb-6">
-              <ShoppingBag className="w-10 h-10 text-gray-400" />
+          <div className="text-center py-16 md:py-20">
+            <div className="inline-flex items-center justify-center w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-full mb-6">
+              <ShoppingBag className="w-8 h-8 md:w-10 md:h-10 text-gray-400" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Seu carrinho está vazio</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">Seu carrinho está vazio</h2>
             <p className="text-gray-500 mb-6">Adicione algumas fotos para continuar</p>
             <Link to="/fotofacil">
-              <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl">Ver Fotos</Button>
+              <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-full">Ver Fotos</Button>
             </Link>
           </div>
         ) : (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="grid lg:grid-cols-3 gap-6 md:gap-8">
             {/* Products - Grouped by Event */}
             <div className="lg:col-span-2">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-base md:text-lg font-semibold text-gray-900">
                     {items.length} foto{items.length > 1 ? 's' : ''} selecionada{items.length > 1 ? 's' : ''}
                   </h2>
                   <button
@@ -560,8 +626,8 @@ const FotoFacilCart = () => {
                       {/* Event Header */}
                       <div className="flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
                         <Package className="w-4 h-4 text-emerald-600" />
-                        <span className="font-semibold text-gray-800">{group.eventTitle}</span>
-                        <span className="text-sm text-gray-400">({group.items.length} foto{group.items.length > 1 ? 's' : ''})</span>
+                        <span className="font-semibold text-gray-800 text-sm md:text-base">{group.eventTitle}</span>
+                        <span className="text-xs md:text-sm text-gray-400">({group.items.length} foto{group.items.length > 1 ? 's' : ''})</span>
                       </div>
                       
                       {/* Event Items */}
@@ -569,17 +635,17 @@ const FotoFacilCart = () => {
                         {group.items.map(item => (
                           <div 
                             key={item.photoId}
-                            className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
+                            className="flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-gray-50 rounded-xl"
                           >
                             <img 
                               src={item.thumbUrl}
                               alt={item.title}
-                              className="w-20 h-20 object-cover rounded-lg"
+                              className="w-16 h-16 md:w-20 md:h-20 object-cover rounded-lg"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{item.title}</p>
+                              <p className="font-medium text-gray-900 truncate text-sm md:text-base">{item.title}</p>
                               <p className="text-xs text-gray-400">ID: {item.photoId.slice(0, 8)}</p>
-                              <p className="text-lg font-bold text-emerald-600">{formatPrice(item.priceCents)}</p>
+                              <p className="text-base md:text-lg font-bold text-emerald-600">{formatPrice(item.priceCents)}</p>
                             </div>
                             <button
                               onClick={() => removeItem(item.photoId)}
@@ -598,7 +664,7 @@ const FotoFacilCart = () => {
 
             {/* Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-6 sticky top-24">
                 <h2 className="text-lg font-semibold text-gray-900 mb-6">Resumo</h2>
 
                 {/* Coupon */}
@@ -619,13 +685,13 @@ const FotoFacilCart = () => {
                         placeholder="Código do cupom"
                         value={couponCode}
                         onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                        className="bg-white border-gray-200 text-gray-900 rounded-xl"
+                        className="bg-white border-gray-200 text-gray-900 rounded-l-full rounded-r-none border-r-0"
                       />
                       <Button 
                         variant="outline" 
                         onClick={handleApplyCoupon}
                         disabled={couponLoading}
-                        className="shrink-0 rounded-xl text-gray-700 border-gray-300"
+                        className="shrink-0 rounded-l-none rounded-r-full text-gray-700 border-gray-300"
                       >
                         {couponLoading ? '...' : 'Aplicar'}
                       </Button>
@@ -654,7 +720,7 @@ const FotoFacilCart = () => {
 
                 <Button 
                   onClick={handleCheckout}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-xl"
+                  className="w-full bg-gray-900 hover:bg-gray-800 text-white h-12 rounded-full"
                   size="lg"
                 >
                   Continuar
@@ -671,6 +737,9 @@ const FotoFacilCart = () => {
                       <Lock className="w-4 h-4" />
                       <span className="text-xs">Pagamento via PIX</span>
                     </div>
+                  </div>
+                  <div className="flex justify-center mt-4">
+                    <MercadoPagoLogo />
                   </div>
                 </div>
               </div>
