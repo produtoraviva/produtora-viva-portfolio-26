@@ -129,13 +129,21 @@ const FotoFacil = () => {
   const currentEvent = events.find(e => e.slug === selectedEvent);
   const currentCategory = categories.find(c => c.slug === selectedCategory);
 
+  // Determine search placeholder
+  const getSearchPlaceholder = () => {
+    if (selectedEvent) return `Buscar eventos na categoria ${currentCategory?.name || ''}...`;
+    if (selectedCategory) return `Buscar eventos na categoria ${currentCategory?.name || ''}...`;
+    return "Buscar categorias...";
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white font-sans">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white font-sans flex flex-col">
       <FotoFacilHeader 
         onSearch={handleSearch}
-        searchPlaceholder={selectedCategory ? "Buscar eventos..." : "Buscar categorias..."}
+        searchPlaceholder={getSearchPlaceholder()}
         showBack={!!(selectedCategory || selectedEvent)}
         onBack={handleBack}
+        categoryName={currentCategory?.name}
       />
 
       {/* Breadcrumb */}
@@ -171,7 +179,7 @@ const FotoFacil = () => {
       {/* Banner - only on home */}
       {!selectedCategory && !selectedEvent && <FotoFacilBanner />}
 
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 flex-1">
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-2 border-gray-300 border-t-gray-900"></div>
@@ -183,7 +191,7 @@ const FotoFacil = () => {
               <Button 
                 variant="ghost" 
                 onClick={handleBack} 
-                className="mb-4 -ml-3 text-gray-600 hover:text-gray-900"
+                className="mb-4 -ml-3 text-gray-600 hover:text-gray-900 rounded-lg"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar aos eventos

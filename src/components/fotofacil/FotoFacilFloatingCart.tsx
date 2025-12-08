@@ -18,18 +18,22 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
     }).format(cents / 100);
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 z-50 transition-opacity"
+        className={`fixed inset-0 bg-black/50 z-50 transition-opacity duration-300 ${
+          isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={onClose}
       />
       
-      {/* Cart Panel */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform transition-transform animate-slide-in-right">
+      {/* Cart Panel - Slide from right */}
+      <div 
+        className={`fixed right-0 top-0 h-full w-full max-w-md bg-white z-50 shadow-2xl transform transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -59,7 +63,7 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Carrinho vazio</h3>
                 <p className="text-gray-500 mb-6">Adicione algumas fotos para continuar</p>
-                <Button onClick={onClose} variant="outline">
+                <Button onClick={onClose} variant="outline" className="rounded-lg">
                   Continuar comprando
                 </Button>
               </div>
@@ -68,12 +72,12 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
                 {items.map(item => (
                   <div 
                     key={item.photoId}
-                    className="flex items-center gap-3 bg-gray-50 rounded-lg p-3 group"
+                    className="flex items-center gap-3 bg-gray-50 rounded-xl p-3 group"
                   >
                     <img 
                       src={item.thumbUrl}
                       alt={item.title}
-                      className="w-16 h-16 object-cover rounded-md"
+                      className="w-16 h-16 object-cover rounded-lg"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-gray-900 truncate">{item.title}</p>
@@ -81,7 +85,7 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
                     </div>
                     <button
                       onClick={() => removeItem(item.photoId)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -100,7 +104,7 @@ const FotoFacilFloatingCart = ({ isOpen, onClose }: FotoFacilFloatingCartProps) 
               </div>
               
               <Link to="/fotofacil/carrinho" onClick={onClose}>
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" size="lg">
                   Ir ao Carrinho
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
