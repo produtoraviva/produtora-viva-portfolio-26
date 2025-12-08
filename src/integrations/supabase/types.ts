@@ -128,6 +128,7 @@ export type Database = {
           is_active: boolean | null
           max_uses: number | null
           min_order_cents: number | null
+          min_photos: number | null
           updated_at: string | null
           valid_from: string | null
           valid_until: string | null
@@ -143,6 +144,7 @@ export type Database = {
           is_active?: boolean | null
           max_uses?: number | null
           min_order_cents?: number | null
+          min_photos?: number | null
           updated_at?: string | null
           valid_from?: string | null
           valid_until?: string | null
@@ -158,6 +160,7 @@ export type Database = {
           is_active?: boolean | null
           max_uses?: number | null
           min_order_cents?: number | null
+          min_photos?: number | null
           updated_at?: string | null
           valid_from?: string | null
           valid_until?: string | null

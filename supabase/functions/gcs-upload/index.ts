@@ -160,8 +160,8 @@ async function createWatermarkedImage(
     console.log('Decoding watermark...');
     const watermark = await Image.decode(watermarkData);
     
-    // Scale watermark to 12% of the smaller image dimension
-    const targetWatermarkSize = Math.floor(Math.min(width, height) * 0.12);
+    // Scale watermark to 50% of the smaller image dimension (single large centered watermark)
+    const targetWatermarkSize = Math.floor(Math.min(width, height) * 0.5);
     const watermarkScale = targetWatermarkSize / Math.min(watermark.width, watermark.height);
     const scaledWatermarkWidth = Math.floor(watermark.width * watermarkScale);
     const scaledWatermarkHeight = Math.floor(watermark.height * watermarkScale);
@@ -169,11 +169,11 @@ async function createWatermarkedImage(
     console.log(`Scaling watermark to ${scaledWatermarkWidth}x${scaledWatermarkHeight}`);
     const scaledWatermark = watermark.resize(scaledWatermarkWidth, scaledWatermarkHeight);
     
-    // Apply opacity to watermark (40% opacity)
+    // Apply opacity to watermark (50% opacity)
     for (let i = 0; i < scaledWatermark.width * scaledWatermark.height; i++) {
       const pixel = scaledWatermark.getPixelAt((i % scaledWatermark.width) + 1, Math.floor(i / scaledWatermark.width) + 1);
       const alpha = (pixel >> 24) & 0xff;
-      const newAlpha = Math.floor(alpha * 0.4);
+      const newAlpha = Math.floor(alpha * 0.5);
       scaledWatermark.setPixelAt(
         (i % scaledWatermark.width) + 1, 
         Math.floor(i / scaledWatermark.width) + 1,
@@ -181,16 +181,12 @@ async function createWatermarkedImage(
       );
     }
     
-    // Tile the watermark across the image
-    const spacingX = scaledWatermarkWidth + 40;
-    const spacingY = scaledWatermarkHeight + 40;
+    // Center the watermark on the image (single watermark, not tiled)
+    const centerX = Math.floor((width - scaledWatermarkWidth) / 2);
+    const centerY = Math.floor((height - scaledWatermarkHeight) / 2);
     
-    console.log('Applying tiled watermark...');
-    for (let y = 20; y < height; y += spacingY) {
-      for (let x = 20; x < width; x += spacingX) {
-        originalImage.composite(scaledWatermark, x, y);
-      }
-    }
+    console.log('Applying centered watermark...');
+    originalImage.composite(scaledWatermark, centerX, centerY);
     
     // Encode to JPEG at 75% quality
     console.log('Encoding watermarked image...');
