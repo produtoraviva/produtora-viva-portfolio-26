@@ -79,8 +79,8 @@ const Hero = () => {
     }
   };
 
-  // Zoom effect - scale increases with scroll
-  const zoomScale = 1 + (scrollY * 0.0005);
+  // Zoom effect - smooth with CSS transition
+  const zoomScale = 1 + Math.min(scrollY * 0.0003, 0.2);
 
   return (
     <header 
@@ -91,11 +91,10 @@ const Hero = () => {
       {/* Background Image with Zoom Effect */}
       {heroImage && (
         <div 
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 z-0 will-change-transform"
           style={{ 
             transform: `scale(${zoomScale})`,
             transformOrigin: 'center center',
-            transition: 'transform 0.1s ease-out'
           }}
         >
           <img 

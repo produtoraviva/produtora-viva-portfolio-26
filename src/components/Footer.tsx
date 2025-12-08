@@ -16,8 +16,8 @@ const Footer = () => {
   }
 
   return (
-    <footer id="contact" className="bg-[hsl(0,0%,6%)] py-20 px-4 text-center border-t border-border">
-      <h2 className="text-4xl md:text-6xl lg:text-7xl font-bold uppercase mb-8 tracking-tighter">
+    <footer id="contact" className="bg-[hsl(0,0%,5%)] py-12 px-4 text-center border-t border-border">
+      <h2 className="text-3xl md:text-5xl font-bold uppercase mb-6 tracking-tighter">
         Vamos Criar?
       </h2>
       
@@ -62,7 +62,7 @@ const Footer = () => {
         )}
       </div>
 
-      <div className="mt-20 text-[10px] text-muted-foreground uppercase font-mono tracking-wider">
+      <div className="mt-12 text-[10px] text-muted-foreground uppercase font-mono tracking-wider">
         &copy; {new Date().getFullYear()} {config.company_name || 'Rubens Photofilm'}. Todos os direitos reservados.
       </div>
     </footer>

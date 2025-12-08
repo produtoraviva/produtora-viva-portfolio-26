@@ -51,20 +51,22 @@ export function AdminSidebar({ activeTab, onTabChange, userRole, onLogout }: Adm
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <Button
-        variant="outline"
-        size="icon"
-        className="fixed top-4 left-4 z-50 lg:hidden shadow-lg bg-card"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-      </Button>
+      {/* Mobile Toggle Button - Fixed at top */}
+      <div className="fixed top-0 left-0 right-0 h-14 bg-card border-b border-border z-50 lg:hidden flex items-center px-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+        <span className="ml-3 font-semibold text-sm">Admin Panel</span>
+      </div>
 
       {/* Mobile Overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden transition-opacity"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden transition-opacity pt-14"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -72,7 +74,8 @@ export function AdminSidebar({ activeTab, onTabChange, userRole, onLogout }: Adm
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full bg-card border-r border-border z-40 transition-all duration-300 shadow-sm flex flex-col",
+          "fixed left-0 h-full bg-card border-r border-border z-40 transition-all duration-300 shadow-sm flex flex-col",
+          "top-14 lg:top-0", // Below mobile header on mobile, at top on desktop
           isOpen ? "translate-x-0" : "-translate-x-full",
           "lg:translate-x-0",
           isCollapsed ? "lg:w-16" : "lg:w-56"

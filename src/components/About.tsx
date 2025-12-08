@@ -44,10 +44,8 @@ const About = () => {
     return () => observer.disconnect();
   }, []);
 
-  const eventsCount = useCountUp(500, 2000, isVisible);
-  const yearsCount = useCountUp(5, 1500, isVisible);
-  const satisfactionCount = useCountUp(98, 1800, isVisible);
-  const responseCount = useCountUp(24, 1200, isVisible);
+  const worksCount = useCountUp(80, 2000, isVisible);
+  const satisfactionCount = useCountUp(100, 1800, isVisible);
 
   return (
     <section ref={sectionRef} id="sobre" className="max-w-[1600px] mx-auto px-4 py-24 border-t border-border">
@@ -82,20 +80,24 @@ const About = () => {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-8">
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{eventsCount}+</div>
-            <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Eventos</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{worksCount}+</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Trabalhos</div>
           </div>
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{yearsCount}</div>
-            <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Anos</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2 flex flex-col">
+              <span className="text-3xl md:text-4xl">Anos de</span>
+              <span className="text-2xl md:text-3xl text-muted-foreground">Experiência</span>
+            </div>
           </div>
           <div className="border-l border-border pl-6 py-4">
             <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{satisfactionCount}%</div>
             <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Satisfação</div>
           </div>
           <div className="border-l border-border pl-6 py-4">
-            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2">{responseCount}h</div>
-            <div className="text-xs text-muted-foreground uppercase tracking-[0.2em]">Resposta</div>
+            <div className="text-5xl md:text-7xl font-bold tracking-tighter mb-2 flex flex-col">
+              <span className="text-3xl md:text-4xl">Rápido</span>
+              <span className="text-2xl md:text-3xl text-muted-foreground">Orçamento</span>
+            </div>
           </div>
         </div>
       </div>

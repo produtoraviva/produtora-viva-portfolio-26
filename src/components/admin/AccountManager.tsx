@@ -136,6 +136,8 @@ export function AccountManager() {
     }
 
     try {
+      console.log('Creating admin user with data:', { email: newAdmin.email, full_name: newAdmin.full_name });
+      
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
           email: newAdmin.email,
@@ -145,8 +147,16 @@ export function AccountManager() {
         },
       });
 
+      console.log('Create admin response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao criar conta');
+      }
+
+      if (data?.error) {
+        console.error('API error:', data.error);
+        throw new Error(data.error);
       }
 
       toast({
@@ -157,11 +167,11 @@ export function AccountManager() {
       setNewAdmin({ email: '', password: '', full_name: '' });
       setIsDialogOpen(false);
       loadAdminUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating admin:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao criar conta de administrador.',
+        description: error.message || 'Erro ao criar conta de administrador.',
         variant: 'destructive',
       });
     }
@@ -212,6 +222,8 @@ export function AccountManager() {
     }
 
     try {
+      console.log('Creating collaborator with data:', { email: newCollaborator.email, full_name: newCollaborator.full_name });
+      
       const { data, error } = await supabase.functions.invoke('create-admin-user', {
         body: {
           email: newCollaborator.email,
@@ -221,8 +233,16 @@ export function AccountManager() {
         },
       });
 
+      console.log('Create collaborator response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Erro ao criar conta');
+      }
+
+      if (data?.error) {
+        console.error('API error:', data.error);
+        throw new Error(data.error);
       }
 
       toast({
@@ -233,11 +253,11 @@ export function AccountManager() {
       setNewCollaborator({ email: '', password: '', full_name: '' });
       setIsCollaboratorDialogOpen(false);
       loadAdminUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating collaborator:', error);
       toast({
         title: 'Erro',
-        description: 'Erro ao criar conta de colaborador.',
+        description: error.message || 'Erro ao criar conta de colaborador.',
         variant: 'destructive',
       });
     }

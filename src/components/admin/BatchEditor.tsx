@@ -235,7 +235,7 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Adicionar Ensaio</CardTitle>
+          <CardTitle>Alteração em Massa</CardTitle>
           <CardDescription>
             Selecione múltiplas mídias e edite todas de uma vez com as mesmas informações
           </CardDescription>
@@ -363,7 +363,7 @@ export function BatchEditor({ onSave, onCancel }: BatchEditorProps) {
 
           {/* Formulário de Edição */}
           <div className="space-y-4">
-            <Label className="text-base font-semibold">Informações do Ensaio</Label>
+            <Label className="text-base font-semibold">Informações da Mídia</Label>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">

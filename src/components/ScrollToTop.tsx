@@ -31,7 +31,7 @@ const ScrollToTop = () => {
   return (
     <button
       onClick={scrollToTop}
-      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 bg-foreground/50 hover:bg-foreground/70 text-background w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center transition-all duration-300"
+      className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 sm:right-6 z-40 bg-foreground/50 hover:bg-foreground/70 text-background w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center transition-all duration-300"
       aria-label="Voltar ao topo"
     >
       <ChevronUp className="h-5 w-5 sm:h-6 sm:w-6" />

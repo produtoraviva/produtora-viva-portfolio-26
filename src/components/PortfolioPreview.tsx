@@ -130,15 +130,24 @@ const PortfolioPreview = () => {
       return 'aspect-[3/4]';
     }
     if (count === 4) {
-      // 4 items: first 3 normal, 4th horizontal
+      // 4 items: first 3 normal, 4th horizontal spanning 3 cols
       return index === 3 ? 'aspect-video md:col-span-3' : 'aspect-[3/4]';
     }
     if (count === 5) {
-      // 5 items: first 3 normal, last 2 square
+      // 5 items: first 3 normal, last 2 square but spanning 1.5 cols each (full width)
       return index >= 3 ? 'aspect-square' : 'aspect-[3/4]';
     }
     // 6 items: all normal portrait
     return 'aspect-[3/4]';
+  };
+
+  // Get special width class for 5-item layout (last 2 items fill the row)
+  const getItemWidthClass = (index: number) => {
+    const count = filteredItems.length;
+    if (count === 5 && index >= 3) {
+      return 'md:col-span-1'; // Each takes half of remaining 2 cols in a 2-col grid
+    }
+    return '';
   };
 
   // Dynamic grid based on item count
@@ -147,10 +156,75 @@ const PortfolioPreview = () => {
     if (count === 1) return 'grid-cols-1';
     if (count === 2) return 'grid-cols-2';
     if (count === 3) return 'grid-cols-3';
-    if (count === 4) return 'grid-cols-3'; // 3 + 1 spanning 3
-    if (count === 5) return 'grid-cols-3 md:grid-cols-3'; // 3 + 2
-    return 'grid-cols-3'; // 6: 3 + 3
+    if (count === 4) return 'grid-cols-3';
+    if (count === 5) return 'grid-cols-3'; // First row 3, second row will have 2 spanning equally
+    return 'grid-cols-3';
   };
+
+  // Wrapper for 5 items - special handling for bottom row
+  const renderGridItems = () => {
+    const count = filteredItems.length;
+    
+    if (count === 5) {
+      // Split into two grids: 3 on top, 2 on bottom (each taking 50% width)
+      return (
+        <>
+          <div className="grid grid-cols-3 gap-4">
+            {filteredItems.slice(0, 3).map((item, index) => renderItem(item, index))}
+          </div>
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {filteredItems.slice(3).map((item, index) => renderItem(item, index + 3))}
+          </div>
+        </>
+      );
+    }
+    
+    return (
+      <div className={`grid gap-4 ${getGridClass()}`}>
+        {filteredItems.map((item, index) => renderItem(item, index))}
+      </div>
+    );
+  };
+
+  const renderItem = (item: PortfolioItem, index: number) => (
+    <div 
+      key={item.id} 
+      className={`image-card group relative overflow-hidden bg-secondary cursor-pointer ${getItemAspectClass(index)}`}
+      onClick={() => handleImageClick(index)}
+    >
+      {/* Use thumbnail for videos if available */}
+      {item.media_type === "video" && item.thumbnail_url ? (
+        <img
+          src={item.thumbnail_url}
+          alt={item.title}
+          className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100 group-hover:scale-[1.03]"
+        />
+      ) : (
+        <LazyImage
+          src={item.image}
+          alt={item.title}
+          className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100 group-hover:scale-[1.03]"
+        />
+      )}
+      
+      {/* Play Icon for Video */}
+      {item.media_type === "video" && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+          <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
+        </div>
+      )}
+      
+      {/* Overlay - Only show category if it exists and is not empty */}
+      <div className="portfolio-overlay">
+        {(item.subcategory || (item.category && item.category.trim() !== '')) && (
+          <span className="text-[8px] md:text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
+            {item.subcategory || item.category}
+          </span>
+        )}
+        <h3 className="text-sm md:text-xl font-bold uppercase">{item.title}</h3>
+      </div>
+    </div>
+  );
 
   const handleImageClick = (index: number) => {
     setCurrentImageIndex(index);
@@ -184,53 +258,13 @@ const PortfolioPreview = () => {
       </div>
 
       {/* Portfolio Grid - Dynamic based on count */}
-      <div className={`grid gap-4 ${getGridClass()}`}>
-        {filteredItems.map((item, index) => (
-          <div 
-            key={item.id} 
-            className={`image-card group relative overflow-hidden bg-secondary cursor-pointer ${getItemAspectClass(index)}`}
-            onClick={() => handleImageClick(index)}
-          >
-            {/* Use thumbnail for videos if available */}
-            {item.media_type === "video" && item.thumbnail_url ? (
-              <img
-                src={item.thumbnail_url}
-                alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
-              />
-            ) : (
-              <LazyImage
-                src={item.image}
-                alt={item.title}
-                className="w-full h-full object-cover transition-all duration-700 opacity-80 group-hover:opacity-100"
-              />
-            )}
-            
-            {/* Play Icon for Video */}
-            {item.media_type === "video" && (
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-foreground/20 backdrop-blur-sm flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <Play className="w-6 h-6 text-foreground ml-1" fill="currentColor" />
-              </div>
-            )}
-            
-            {/* Overlay - Only show category if it exists and is not empty */}
-            <div className="portfolio-overlay">
-              {(item.subcategory || (item.category && item.category.trim() !== '')) && (
-                <span className="text-[10px] font-mono border border-foreground/30 w-fit px-2 py-0.5 mb-2">
-                  {item.subcategory || item.category}
-                </span>
-              )}
-              <h3 className="text-xl font-bold uppercase">{item.title}</h3>
-            </div>
-          </div>
-        ))}
-      </div>
+      {renderGridItems()}
 
       {/* CTA */}
       <div className="text-center mt-20">
         <Link 
           to="/portfolio"
-          className="text-sm uppercase tracking-[0.2em] text-white hover:text-white/80 transition-colors duration-300 border-b border-white hover:border-white/80 pb-1 font-bold"
+          className="text-sm uppercase tracking-[0.15em] text-foreground hover:text-foreground/80 transition-colors duration-300 border border-foreground hover:bg-foreground hover:text-background px-8 py-4 font-bold inline-block"
         >
           Ver Portfolio Completo
         </Link>

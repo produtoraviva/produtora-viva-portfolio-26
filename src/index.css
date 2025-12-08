@@ -229,13 +229,13 @@
     @apply relative overflow-hidden;
   }
 
-  /* Image card hover effect */
+  /* Image card hover effect - reduced zoom */
   .image-card img {
     @apply transition-transform duration-700;
   }
 
   .image-card:hover img {
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
 
   /* Grayscale to color on hover */
@@ -247,9 +247,9 @@
     @apply grayscale-0 opacity-100;
   }
 
-  /* Dark overlay with gradient */
+  /* Dark overlay without gradient - just subtle darkening */
   .portfolio-overlay {
-    @apply absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 transition-opacity duration-300 flex flex-col justify-end p-6;
+    @apply absolute inset-0 bg-black/60 opacity-0 transition-opacity duration-300 flex flex-col justify-end p-4 md:p-6;
   }
 
   .portfolio-item:hover .portfolio-overlay,
