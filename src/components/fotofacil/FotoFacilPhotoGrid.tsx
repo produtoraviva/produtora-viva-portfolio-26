@@ -15,10 +15,11 @@ interface Photo {
 
 interface FotoFacilPhotoGridProps {
   eventId: string;
+  eventTitle?: string;
   defaultPriceCents: number;
 }
 
-const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridProps) => {
+const FotoFacilPhotoGrid = ({ eventId, eventTitle, defaultPriceCents }: FotoFacilPhotoGridProps) => {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState<number | null>(null);
@@ -69,6 +70,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
       addItem({
         photoId: photo.id,
         eventId,
+        eventTitle: eventTitle || 'Evento',
         title: photo.title || 'Foto',
         thumbUrl: photo.thumb_url || photo.url,
         priceCents
@@ -128,7 +130,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
   return (
     <div>
       {/* Photos Grid - Closer spacing */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 md:gap-2">
         {photos.map((photo, index) => {
           const inCart = isInCart(photo.id);
           const price = getPhotoPrice(photo);
@@ -179,6 +181,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
                 {photo.title && (
                   <p className="text-xs text-gray-500 truncate mt-1">{photo.title}</p>
                 )}
+                <p className="text-xs text-gray-400 mt-0.5">ID: {photo.id.slice(0, 8)}</p>
               </div>
             </div>
           );
@@ -226,15 +229,16 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
               <img 
                 src={selectedPhoto.url}
                 alt={selectedPhoto.title || 'Foto'}
-                className="max-w-full max-h-[calc(100vh-180px)] object-contain rounded-lg"
+                className="max-w-full max-h-[calc(100vh-180px)] object-contain rounded-t-xl"
               />
               
               {/* Bottom Info Bar - Attached to image */}
-              <div className="w-full bg-white rounded-b-xl p-4 md:p-5 mt-0">
+              <div className="w-full bg-white rounded-b-xl p-4 md:p-5">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="flex items-center gap-4 text-center sm:text-left">
                     <div>
                       <p className="font-semibold text-gray-900">{selectedPhoto.title || 'Foto'}</p>
+                      <p className="text-xs text-gray-500">ID: {selectedPhoto.id.slice(0, 8)}</p>
                       <p className="text-xl font-bold text-emerald-600">{formatPrice(getPhotoPrice(selectedPhoto))}</p>
                     </div>
                   </div>
@@ -244,7 +248,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
                       variant="outline"
                       size="sm"
                       onClick={() => handleShare(selectedPhoto)}
-                      className="border-gray-300 rounded-lg"
+                      className="border-gray-300 text-gray-700 rounded-xl"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       Compartilhar
@@ -252,7 +256,7 @@ const FotoFacilPhotoGrid = ({ eventId, defaultPriceCents }: FotoFacilPhotoGridPr
                     
                     <Button
                       onClick={() => handleToggleCart(selectedPhoto)}
-                      className={`rounded-lg ${isInCart(selectedPhoto.id) 
+                      className={`rounded-xl ${isInCart(selectedPhoto.id) 
                         ? 'bg-emerald-500 hover:bg-emerald-600' 
                         : 'bg-gray-900 hover:bg-gray-800'
                       } text-white`}

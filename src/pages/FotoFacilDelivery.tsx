@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, AlertTriangle, CheckCircle, ArrowLeft, Package, Clock, Share2 } from 'lucide-react';
+import { Download, AlertTriangle, CheckCircle, ArrowLeft, Package, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import FotoFacilFooter from '@/components/fotofacil/FotoFacilFooter';
 
 interface OrderItem {
   id: string;
@@ -108,36 +109,39 @@ const FotoFacilDelivery = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center p-4">
-        <div className="max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-500" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-3">Link Expirado ou Inválido</h1>
-          <p className="text-gray-600 mb-6">{error}</p>
-          <p className="text-sm text-gray-500 mb-8">
-            Se você acredita que isso é um erro, entre em contato com nosso suporte informando o número do seu pedido.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/fotofacil/minhas-fotos">
-              <Button variant="outline">
-                Buscar minhas fotos
-              </Button>
-            </Link>
-            <Link to="/fotofacil">
-              <Button className="bg-gray-900 hover:bg-gray-800">
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar ao Início
-              </Button>
-            </Link>
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="max-w-md text-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-6">
+              <AlertTriangle className="w-10 h-10 text-red-500" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Link Expirado ou Inválido</h1>
+            <p className="text-gray-600 mb-6">{error}</p>
+            <p className="text-sm text-gray-500 mb-8">
+              Se você acredita que isso é um erro, entre em contato com nosso suporte informando o número do seu pedido.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to="/fotofacil/minhas-fotos">
+                <Button variant="outline" className="rounded-xl">
+                  Buscar minhas fotos
+                </Button>
+              </Link>
+              <Link to="/fotofacil">
+                <Button className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl">
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Voltar ao Início
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
+        <FotoFacilFooter />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex flex-col">
       {/* Warning Banner */}
       <div className="bg-amber-50 border-b border-amber-100">
         <div className="max-w-4xl mx-auto px-4 py-3">
@@ -161,7 +165,7 @@ const FotoFacilDelivery = () => {
               <p className="text-sm text-gray-500">Pedido #{orderId?.slice(0, 8)}</p>
             </div>
             {items.length > 1 && (
-              <Button onClick={handleDownloadAll} className="bg-gray-900 hover:bg-gray-800 text-white">
+              <Button onClick={handleDownloadAll} className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl">
                 <Download className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Baixar Todas</span>
                 <span className="sm:hidden">Todas</span>
@@ -171,7 +175,7 @@ const FotoFacilDelivery = () => {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="flex-1 max-w-4xl mx-auto px-4 py-8">
         {/* Success Message */}
         <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-5 mb-8">
           <div className="flex items-center gap-4">
@@ -218,7 +222,7 @@ const FotoFacilDelivery = () => {
                   <Button 
                     onClick={() => handleDownload(item.photo!.url, item.title_snapshot || 'foto', item.id)}
                     disabled={downloading === item.id}
-                    className="w-full bg-gray-900 hover:bg-gray-800 text-white"
+                    className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl"
                   >
                     {downloading === item.id ? (
                       <>
@@ -245,7 +249,7 @@ const FotoFacilDelivery = () => {
               Dúvidas sobre seu pedido? Entre em contato com nosso suporte.
             </p>
             <Link to="/fotofacil">
-              <Button variant="outline">
+              <Button variant="outline" className="rounded-xl text-gray-700 border-gray-300">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar para FOTOFÁCIL
               </Button>
@@ -253,6 +257,8 @@ const FotoFacilDelivery = () => {
           </div>
         </div>
       </main>
+
+      <FotoFacilFooter />
     </div>
   );
 };

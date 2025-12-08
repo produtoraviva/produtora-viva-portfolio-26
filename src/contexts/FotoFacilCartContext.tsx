@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 export interface CartItem {
   photoId: string;
   eventId: string;
+  eventTitle: string;
   title: string;
   thumbUrl: string;
   priceCents: number;
