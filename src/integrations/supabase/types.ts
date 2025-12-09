@@ -191,6 +191,41 @@ export type Database = {
         }
         Relationships: []
       }
+      fotofacil_event_discounts: {
+        Row: {
+          created_at: string | null
+          discount_percent: number
+          event_id: string
+          id: string
+          min_quantity: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          discount_percent: number
+          event_id: string
+          id?: string
+          min_quantity: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          discount_percent?: number
+          event_id?: string
+          id?: string
+          min_quantity?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fotofacil_event_discounts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "fotofacil_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fotofacil_events: {
         Row: {
           category_id: string | null

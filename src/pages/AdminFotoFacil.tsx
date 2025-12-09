@@ -7,10 +7,10 @@ import { FotoFacilEventsManager } from '@/components/admin/FotoFacilEventsManage
 import { FotoFacilPhotosManager } from '@/components/admin/FotoFacilPhotosManager';
 import { FotoFacilSalesManager } from '@/components/admin/FotoFacilSalesManager';
 import { FotoFacilBannersManager } from '@/components/admin/FotoFacilBannersManager';
-import { FotoFacilCouponsManager } from '@/components/admin/FotoFacilCouponsManager';
+import FotoFacilDiscountsManager from '@/components/admin/FotoFacilDiscountsManager';
 import { FotoFacilFooterManager } from '@/components/admin/FotoFacilFooterManager';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { Folder, Calendar, Image, ShoppingCart, ImageIcon, Ticket, Settings, Camera } from 'lucide-react';
+import { Folder, Calendar, Image, ShoppingCart, ImageIcon, TrendingDown, Settings, Camera } from 'lucide-react';
 
 export default function AdminFotoFacil() {
   const { user, logout, isAuthenticated } = useAdmin();
@@ -37,7 +37,7 @@ export default function AdminFotoFacil() {
     { id: 'events', label: 'Eventos', icon: Calendar, description: 'Crie e edite eventos de fotos' },
     { id: 'photos', label: 'Fotos', icon: Image, description: 'Upload e gestão de fotos' },
     { id: 'banners', label: 'Banners', icon: ImageIcon, description: 'Banners da página inicial' },
-    { id: 'coupons', label: 'Cupons', icon: Ticket, description: 'Cupons de desconto' },
+    { id: 'discounts', label: 'Descontos', icon: TrendingDown, description: 'Descontos e cupons' },
     { id: 'footer', label: 'Configurações', icon: Settings, description: 'Rodapé e configurações gerais' },
     { id: 'sales', label: 'Vendas', icon: ShoppingCart, description: 'Histórico de vendas' },
   ];
@@ -106,8 +106,8 @@ export default function AdminFotoFacil() {
               <TabsContent value="banners" className="m-0">
                 <FotoFacilBannersManager />
               </TabsContent>
-              <TabsContent value="coupons" className="m-0">
-                <FotoFacilCouponsManager />
+              <TabsContent value="discounts" className="m-0">
+                <FotoFacilDiscountsManager />
               </TabsContent>
               <TabsContent value="footer" className="m-0">
                 <FotoFacilFooterManager />

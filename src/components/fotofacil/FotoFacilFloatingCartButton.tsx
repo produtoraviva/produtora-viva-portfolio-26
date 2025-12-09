@@ -26,6 +26,13 @@ const FotoFacilFloatingCartButton = ({ lightMode = false }: FotoFacilFloatingCar
   // Hide if cart is empty
   if (itemCount === 0) return null;
 
+  // Hide button when cart panel is open
+  if (showCart) {
+    return (
+      <FotoFacilFloatingCart isOpen={showCart} onClose={() => setShowCart(false)} />
+    );
+  }
+
   return (
     <>
       <button
@@ -33,13 +40,13 @@ const FotoFacilFloatingCartButton = ({ lightMode = false }: FotoFacilFloatingCar
           e.stopPropagation();
           setShowCart(true);
         }}
-        className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-2 md:gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ${
+        className={`fixed bottom-4 right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-2 md:gap-3 px-4 md:px-5 py-2.5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 ${
           lightMode 
             ? 'bg-white hover:bg-gray-50 text-gray-800' 
             : 'bg-gray-800 hover:bg-gray-900 text-white'
         }`}
       >
-        <div className="relative">
+        <div className="relative flex items-center justify-center">
           <ShoppingCart className="w-5 h-5" />
           <span className={`absolute -top-2 -right-2 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center ${
             lightMode ? 'bg-emerald-500 text-white' : 'bg-emerald-500 text-white'
