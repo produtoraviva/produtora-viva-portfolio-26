@@ -1,8 +1,118 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4'
+import { encode as base64Encode } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// GCS Configuration
+const GCS_CLIENT_EMAIL = Deno.env.get('GCS_CLIENT_EMAIL');
+const GCS_PRIVATE_KEY = Deno.env.get('GCS_PRIVATE_KEY')?.replace(/\\n/g, '\n');
+const GCS_BUCKET_NAME = Deno.env.get('GCS_BUCKET_NAME') || 'rubensphotofilm';
+
+function pemToDer(pem: string): ArrayBuffer {
+  const lines = pem.split('\n');
+  const base64 = lines.filter(line => !line.startsWith('-----')).join('');
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
+
+// Generate V4 signed URL for GCS
+async function generateSignedUrl(
+  objectPath: string,
+  expirationMinutes: number = 60
+): Promise<string> {
+  const host = `${GCS_BUCKET_NAME}.storage.googleapis.com`;
+  const canonicalUri = `/${encodeURIComponent(objectPath).replace(/%2F/g, '/')}`;
+  
+  // Create string to sign for V4 signing
+  const datestamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const credentialScope = `${datestamp.slice(0, 8)}/auto/storage/goog4_request`;
+  const credential = `${GCS_CLIENT_EMAIL}/${credentialScope}`;
+  
+  const queryParams = new URLSearchParams({
+    'X-Goog-Algorithm': 'GOOG4-RSA-SHA256',
+    'X-Goog-Credential': credential,
+    'X-Goog-Date': datestamp,
+    'X-Goog-Expires': String(expirationMinutes * 60),
+    'X-Goog-SignedHeaders': 'host',
+  });
+  
+  const canonicalQueryString = queryParams.toString();
+  
+  const canonicalRequest = [
+    'GET',
+    canonicalUri,
+    canonicalQueryString,
+    `host:${host}`,
+    '',
+    'host',
+    'UNSIGNED-PAYLOAD',
+  ].join('\n');
+  
+  const encoder = new TextEncoder();
+  const canonicalRequestHash = await crypto.subtle.digest(
+    'SHA-256',
+    encoder.encode(canonicalRequest)
+  );
+  const canonicalRequestHashHex = Array.from(new Uint8Array(canonicalRequestHash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  const stringToSign = [
+    'GOOG4-RSA-SHA256',
+    datestamp,
+    credentialScope,
+    canonicalRequestHashHex,
+  ].join('\n');
+  
+  // Sign with private key
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToDer(GCS_PRIVATE_KEY!),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    privateKey,
+    encoder.encode(stringToSign)
+  );
+  
+  const signatureHex = Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+  
+  return `https://${host}${canonicalUri}?${canonicalQueryString}&X-Goog-Signature=${signatureHex}`;
+}
+
+// Extract GCS path from URL and convert to original path
+function getOriginalPath(url: string): string | null {
+  // Handle both public URLs and storage.googleapis.com URLs
+  const patterns = [
+    /https:\/\/storage\.googleapis\.com\/[^\/]+\/(.+)/,
+    /https:\/\/[^\/]+\.storage\.googleapis\.com\/(.+)/
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      let path = match[1];
+      // Convert watermarked path to original path
+      if (path.includes('watermarked/')) {
+        path = path.replace('watermarked/', 'originals/');
+      }
+      return path;
+    }
+  }
+  return null;
 }
 
 Deno.serve(async (req) => {
@@ -114,11 +224,41 @@ Deno.serve(async (req) => {
         .eq('id', orderId);
     }
 
-    // Format response
-    const formattedItems = (items || []).map(item => ({
-      id: item.id,
-      title_snapshot: item.title_snapshot,
-      photo: item.fotofacil_photos
+    // Generate signed URLs for original files (without watermark)
+    const formattedItems = await Promise.all((items || []).map(async (item) => {
+      let downloadUrl = null;
+      let thumbUrl = null;
+      
+      if (item.fotofacil_photos?.url) {
+        // Get the original file path and generate a signed URL
+        const originalPath = getOriginalPath(item.fotofacil_photos.url);
+        if (originalPath && GCS_CLIENT_EMAIL && GCS_PRIVATE_KEY) {
+          try {
+            // Generate signed URL for original (unwatermarked) file - valid for 60 minutes
+            downloadUrl = await generateSignedUrl(originalPath, 60);
+            console.log(`Generated signed URL for: ${originalPath}`);
+          } catch (err) {
+            console.error('Error generating signed URL:', err);
+            // Fallback to the stored URL
+            downloadUrl = item.fotofacil_photos.url;
+          }
+        } else {
+          downloadUrl = item.fotofacil_photos.url;
+        }
+        
+        // Use watermarked version for thumbnail
+        thumbUrl = item.fotofacil_photos.thumb_url || item.fotofacil_photos.url;
+      }
+      
+      return {
+        id: item.id,
+        title_snapshot: item.title_snapshot,
+        photo: {
+          id: item.fotofacil_photos?.id || item.photo_id,
+          url: downloadUrl, // This is now the signed URL to the original file
+          thumb_url: thumbUrl
+        }
+      };
     }));
 
     return new Response(

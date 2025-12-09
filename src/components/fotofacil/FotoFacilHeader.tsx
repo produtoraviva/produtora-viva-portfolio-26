@@ -16,7 +16,7 @@ interface FotoFacilHeaderProps {
 }
 
 const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, categoryName }: FotoFacilHeaderProps) => {
-  const { itemCount, totalCents } = useFotoFacilCart();
+  const { itemCount } = useFotoFacilCart();
   const [showFloatingCart, setShowFloatingCart] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const navigate = useNavigate();
@@ -27,13 +27,6 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
     setSearchTerm('');
     onSearch?.('');
   }, [searchParams.get('categoria'), searchParams.get('evento')]);
-
-  const formatPrice = (cents: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(cents / 100);
-  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -80,9 +73,9 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
               </Link>
             </div>
             
-            {/* Search Bar - Desktop (attached button) */}
+            {/* Search Bar - Desktop */}
             <form onSubmit={handleSearchSubmit} className="hidden md:flex flex-1 max-w-md mx-4">
-              <div className="relative w-full flex">
+              <div className="relative w-full flex h-10">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
@@ -90,12 +83,12 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
                     placeholder={getPlaceholder()}
                     value={searchTerm}
                     onChange={handleSearchChange}
-                    className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-l-full rounded-r-none border-r-0 h-10"
+                    className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-l-full rounded-r-none border-r-0 h-full"
                   />
                 </div>
                 <Button 
                   type="submit" 
-                  className="bg-gray-800 hover:bg-gray-900 text-white rounded-l-none rounded-r-full px-4 h-10 border-l-0"
+                  className="bg-gray-800 hover:bg-gray-900 text-white rounded-l-none rounded-r-full px-4 h-full shrink-0"
                 >
                   <Search className="w-4 h-4" />
                 </Button>
@@ -113,11 +106,11 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
               
               <Button 
                 onClick={() => setShowFloatingCart(true)}
-                className="relative bg-gray-800 hover:bg-gray-900 text-white rounded-full"
+                className="relative bg-gray-800 hover:bg-gray-900 text-white rounded-full h-9 px-3 md:px-4 flex items-center justify-center"
                 size="sm"
               >
-                <ShoppingCart className="w-4 h-4 mr-1 md:mr-2" />
-                <span className="text-white hidden xs:inline">Carrinho</span>
+                <ShoppingCart className="w-4 h-4" />
+                <span className="text-white hidden xs:inline ml-2">Carrinho</span>
                 {itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-emerald-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
                     {itemCount}
@@ -127,9 +120,9 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
             </div>
           </div>
           
-          {/* Search Bar - Mobile (attached button) */}
+          {/* Search Bar - Mobile */}
           <form onSubmit={handleSearchSubmit} className="mt-3 md:hidden">
-            <div className="flex">
+            <div className="flex h-10">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
@@ -137,12 +130,12 @@ const FotoFacilHeader = ({ onSearch, searchPlaceholder, showBack, onBack, catego
                   placeholder={getPlaceholder()}
                   value={searchTerm}
                   onChange={handleSearchChange}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-l-full rounded-r-none border-r-0 h-10"
+                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white text-gray-900 placeholder:text-gray-400 transition-colors rounded-l-full rounded-r-none border-r-0 h-full"
                 />
               </div>
               <Button 
                 type="submit" 
-                className="bg-gray-800 hover:bg-gray-900 text-white rounded-l-none rounded-r-full px-4 h-10"
+                className="bg-gray-800 hover:bg-gray-900 text-white rounded-l-none rounded-r-full px-4 h-full shrink-0"
               >
                 <Search className="w-4 h-4" />
               </Button>
